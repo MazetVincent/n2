@@ -294,6 +294,7 @@
   "ds_review_requested_pr": "Revue demandée sur la PR",
   "ds_reviews": "Revues",
   "ds_section_content": "Contenu de la section.",
+  "ds_stale_data": "Données de {ago} : la dernière lecture a échoué ·",
   "ds_text": "Texte",
   "guide_all": "Tous",
   "guide_branch_none": "Le guide ne cite aucun des fichiers modifiés par cette branche.",

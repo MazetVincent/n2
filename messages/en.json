@@ -294,6 +294,7 @@
   "ds_review_requested_pr": "Review requested on the PR",
   "ds_reviews": "Reviews",
   "ds_section_content": "Section content.",
+  "ds_stale_data": "Data from {ago}: the last read failed ·",
   "ds_text": "Text",
   "guide_all": "All",
   "guide_branch_none": "The guide cites none of the files changed by this branch.",

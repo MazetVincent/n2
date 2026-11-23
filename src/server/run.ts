@@ -69,7 +69,10 @@ export function redact(text: string): string {
 }
 
 // Petit cache mémoire (rien n'est écrit sur disque).
-const cache = new Map<string, { at: number; value: SourceResult<unknown> }>();
+// `lastGood` : la dernière lecture réussie, resservie si la suivante échoue (voir cached()).
+const cache = new Map<string, { at: number; value: SourceResult<unknown>; lastGood?: { data: unknown; fetchedAt: string } }>();
+/** Au-delà, des données trop anciennes ne sont plus resservies : l'erreur s'affiche seule */
+const STALE_MAX_MS = 24 * 3_600_000;
 
 // ---------- État des sources : l'observabilité de N2 lui-même ----------
 const stats = new Map<string, SourceStat>();
@@ -122,9 +125,16 @@ export async function cached<T>(
     value = { ok: false, error: toSourceError(e), fetchedAt: new Date().toISOString() };
   }
   record(key, performance.now() - started, value);
+  const lastGood = value.ok ? { data: value.data, fetchedAt: value.fetchedAt } : hit?.lastGood;
+  // Échec après un succès : on garde les dernières bonnes données, avec l'erreur et l'heure de l'échec
+  // (une panne passagère ou une session expirée ne vide pas la carte ; 24 h au plus).
+  const served: SourceResult<T> =
+    !value.ok && lastGood && Date.now() - Date.parse(lastGood.fetchedAt) < STALE_MAX_MS
+      ? { ok: true, data: lastGood.data as T, fetchedAt: lastGood.fetchedAt, stale: { error: value.error, failedAt: value.fetchedAt } }
+      : value;
   // Les erreurs ne sont gardées que 15 s, pour qu'un rafraîchissement après reconnexion marche vite.
-  cache.set(key, { at: value.ok ? Date.now() : Date.now() - ttlMs + 15_000, value });
-  return value;
+  cache.set(key, { at: value.ok ? Date.now() : Date.now() - ttlMs + 15_000, value: served, lastGood });
+  return served;
 }
 
 /** Oublie une source du cache (ex. après une connexion : la prochaine lecture repart de zéro) */
