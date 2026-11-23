@@ -54,6 +54,14 @@ Chaque partie est indépendante : si un outil n'est pas connecté ou qu'une sect
 
 ## Démarrer
 
+### Essayer sans rien configurer : le mode démo
+
+```bash
+bun install && bun run demo
+```
+
+N2 démarre sur `http://n2.localhost:4848` avec des données inventées pour tout ce qui demande un compte (PR, sprint, Sentry, AWS, Slack, agenda), sans `config.local.json` ni CLI connectée ; un badge « Démo » le rappelle sous le logo. La carte du code, « Ma branche » et la recherche dans les README analysent N2 lui-même. Déverrouille-le une fois avec `N2_PORT=4848 bun run open`. Les préférences ne sont pas enregistrées.
+
 ### Prérequis
 
 - **macOS**, **Linux**, ou **Windows avec WSL2** (voir [Linux et Windows (WSL2)](#linux-et-windows-wsl2) ; Windows sans WSL n'est pas pris en charge) ;
@@ -490,6 +498,7 @@ sh scripts/autostart.sh uninstall
 |---|---|
 | `bun run setup` | hooks anti-secrets, `config.local.json`, traductions, styles Panda |
 | `bun run dev` | serveur de développement (rechargement à chaud) |
+| `bun run demo` | N2 avec des données inventées (port 4848), sans config ni compte : pour essayer, montrer ou tester |
 | `bun run open` | ouvre N2 dans Chrome et le déverrouille pour ce navigateur ; `--reset` : nouveau jeton, déconnecte tous les navigateurs |
 | `bun run status` | l'état de N2 en une ligne (urgences, CI de la branche principale et de ta branche, sources en échec) ; `--json` : le JSON versionné de `/api/status` (`schemaVersion`), pour une barre de menus ou un script |
 | `bun run mcp` | serveur MCP de N2 (stdio), à déclarer dans Claude Code ou Codex ; voir [Fonctions transverses](#fonctions-transverses) |

@@ -116,6 +116,12 @@ export async function cached<T>(
 ): Promise<SourceResult<T>> {
   const hit = cache.get(key);
   if (!force && hit && Date.now() - hit.at < ttlMs) return hit.value as SourceResult<T>;
+  // mode démo : données inventées pour les sources qui demandent un compte (import à la demande : pas de cycle)
+  if (process.env.N2_DEMO === "1") {
+    const { demoData } = await import("./demo.ts");
+    const data = demoData(key);
+    if (data !== undefined) return { ok: true, data: data as T, fetchedAt: new Date().toISOString() };
+  }
 
   let value: SourceResult<T>;
   const started = performance.now();

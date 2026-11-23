@@ -205,6 +205,9 @@ export const getSentryFrames = createServerFn({ method: "GET" })
   .validator(z.object({ issueId: z.string().regex(/^\d{1,20}$/), env: sentryEnv.optional() }))
   .handler(({ data }) => cached(`frames:${data.issueId}:${data.env ?? ""}`, 10 * MIN, false, () => sentryFrames(loadConfig(), data.issueId, data.env || null)));
 
+// Mode de N2 vu par la page : démo (données inventées, N2_DEMO=1) ou non
+export const getAppInfo = createServerFn({ method: "GET" }).handler(async () => ({ demo: process.env.N2_DEMO === "1" }));
+
 // ---------- État des sources (observabilité de N2 lui-même) ----------
 let n2Commit: Promise<string | null> | null = null;
 export const getSourceStatus = createServerFn({ method: "GET" }).handler(async (): Promise<SourceStatus> => {

@@ -8,6 +8,7 @@
   "scripts": {
     "setup": "chmod +x .githooks/pre-commit scripts/*.sh && git config core.hooksPath .githooks && (test -f config.local.json || cp config.example.json config.local.json) && chmod 600 config.local.json && bun run i18n && bunx panda codegen --silent && echo '→ Remplis config.local.json puis lance bun run dev'",
     "dev": "panda codegen --silent && vite dev",
+    "demo": "panda codegen --silent && N2_DEMO=1 N2_PORT=${N2_PORT:-4848} vite dev",
     "open": "bun scripts/open.ts",
     "status": "bun scripts/status.ts",
     "mcp": "bun scripts/mcp.ts",

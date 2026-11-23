@@ -4,6 +4,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { msg } from "./messages.ts";
 import { SourceFailure } from "./run.ts";
+import { demoConfig } from "./demo.ts";
 
 export interface Config {
   /** obsolète : le port se règle avec la variable N2_PORT (4747 par défaut) */
@@ -146,6 +147,8 @@ export function loadConfig(): Config {
 }
 
 function readConfig(): Config {
+  // mode démo : comptes factices, carte du code sur N2 lui-même (src/server/demo.ts)
+  if (process.env.N2_DEMO === "1") return demoConfig(ROOT);
   if (!existsSync(CONFIG_PATH)) {
     throw new SourceFailure({ kind: "config", message: msg("srv_config_missing") });
   }
