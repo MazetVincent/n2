@@ -11,7 +11,6 @@ import { z } from "zod";
 
 export const GUIDE_JSON_SCHEMA = "n2-guide/1";
 
-const lang = z.enum(["fr", "en"]);
 /** Texte dans une ou plusieurs langues (au moins une) */
 const localized = <T extends z.ZodType>(t: T) =>
   z.object({ fr: t.optional(), en: t.optional() }).refine((v) => v.fr !== undefined || v.en !== undefined, "au moins une langue");
@@ -42,7 +41,8 @@ export const guideJson = z.object({
   schema: z.literal(GUIDE_JSON_SCHEMA),
   title: z.string(),
   inline: z.string(),
-  langs: z.array(lang).min(1),
+  /** langues du guide ; N2 lit « fr » et « en », une autre langue est ignorée */
+  langs: z.array(z.string()).min(1),
   source: z
     .object({ repository: z.string().optional(), commit: z.string().optional(), committedAt: z.string().optional(), dirty: z.boolean().optional() })
     .optional(),

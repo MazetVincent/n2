@@ -211,19 +211,28 @@ interface PageSource {
   /** ids des sections de la page ; null : inconnus (les objets avec un id juste sous la page en font office) */
   sectionIds: Set<string> | null;
   verifiedAgainst?: string;
+  /** titres donnés à part (guide.json) : prioritaires sur ceux trouvés dans le texte */
+  title?: Partial<GuideText>;
+  sectionTitles?: Map<string, Partial<GuideText>>;
 }
+
+/** Titre donné à part, mise en forme retirée ; null s'il est absent ou vide */
+const given = (t: string | undefined) => (t ? cleanText(t) || null : null);
 
 /** Ajoute une page à l'index : sa fiche, ses sections (fichiers cités) et leur texte (recherche) */
 function indexPage(p: PageSource, out: { pages: GuidePage[]; sections: GuideSection[]; passages: DocPassage[] }) {
   const { key } = p;
   const fr = collectPage(p.fr, p.sectionIds);
   const en = isObject(p.en) ? collectPage(p.en, p.sectionIds) : fr;
-  const frTitle = (isObject(p.fr) && titleOf(p.fr)) || key;
-  const enTitle = (isObject(p.en) && titleOf(p.en)) || frTitle;
+  const frTitle = given(p.title?.fr) ?? ((isObject(p.fr) && titleOf(p.fr)) || key);
+  const enTitle = given(p.title?.en) ?? ((isObject(p.en) && titleOf(p.en)) || frTitle);
   out.pages.push({ key, title: { fr: frTitle, en: enTitle }, ...(p.verifiedAgainst ? { verifiedAgainst: p.verifiedAgainst } : {}) });
   for (const [id, c] of fr) {
+    const s = id === null ? undefined : p.sectionTitles?.get(id);
     const title: GuideText =
-      id === null ? { fr: frTitle, en: enTitle } : { fr: c.title ?? humanize(id), en: en.get(id)?.title ?? c.title ?? humanize(id) };
+      id === null
+        ? { fr: frTitle, en: enTitle }
+        : { fr: given(s?.fr) ?? c.title ?? humanize(id), en: given(s?.en) ?? en.get(id)?.title ?? given(s?.fr) ?? c.title ?? humanize(id) };
     const text = { fr: c.text.join(" "), en: (en.get(id) ?? c).text.join(" ") };
     if (text.fr || text.en) out.passages.push({ kind: "guide", key: `guide:${guideTarget(key, id)}`, title, where: { fr: frTitle, en: enTitle }, text, target: guideTarget(key, id) });
     if (id === null && !c.refs.size) continue;
@@ -241,19 +250,33 @@ export function guideFromJson(doc: GuideJson, modifiedAt = new Date(0).toISOStri
   const sections: GuideSection[] = [];
   const passages: DocPassage[] = [];
   for (const page of doc.pages) {
-    // une langue absente prend le texte de l'autre
-    const fr = (page.text.fr ?? page.text.en) as Literal;
-    const en = (page.text.en ?? page.text.fr) as Literal;
+    // une langue absente ou illisible prend le texte de l'autre
+    const fr = (isObject(page.text.fr) ? page.text.fr : page.text.en) as Literal;
+    const en = (isObject(page.text.en) ? page.text.en : fr) as Literal;
     if (!isObject(fr)) {
       warnings.push(`Page illisible : ${page.key}`);
       continue;
     }
-    indexPage({ key: page.key, fr, en, sectionIds: new Set(page.sections.map((s) => s.id)), verifiedAgainst: page.verifiedAgainst }, { pages, sections, passages });
+    indexPage(
+      {
+        key: page.key,
+        fr,
+        en,
+        sectionIds: new Set(page.sections.map((s) => s.id)),
+        verifiedAgainst: page.verifiedAgainst,
+        title: page.title,
+        sectionTitles: new Map(page.sections.filter((s) => s.title).map((s) => [s.id, s.title!])),
+      },
+      { pages, sections, passages },
+    );
   }
+  // comme pour le HTML : un texte anglais vide prend le texte français
   const terms: GuideTerm[] = doc.glossary.map(({ id, text }) => {
     const fr = text.fr ?? text.en!;
     const en = text.en ?? fr;
-    return { id, term: { fr: cleanText(fr.term), en: cleanText(en.term) }, short: { fr: cleanText(fr.short ?? ""), en: cleanText(en.short ?? fr.short ?? "") } };
+    const term = cleanText(fr.term) || cleanText(en.term);
+    const short = cleanText(fr.short ?? "") || cleanText(en.short ?? "");
+    return { id, term: { fr: term, en: cleanText(en.term) || term }, short: { fr: short, en: cleanText(en.short ?? "") || short } };
   });
   const { written, revised } = doc.revision ?? {};
   return {

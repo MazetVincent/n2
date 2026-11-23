@@ -191,6 +191,37 @@ describe("guide en JSON (n2-guide/1)", () => {
     expect(indexGuide(html, null, "t").warnings).toEqual([]);
   });
 
+  it("reconnaît un commit écrit court d'un côté et long de l'autre", () => {
+    const html = fakeGuide("bbbbbbb");
+    const doc = fakeGuideJson("bbbbbbb0123456789", true);
+    doc.revision.written.commit = "aaaaaaa0123456789";
+    const g = indexGuide(html, JSON.stringify(doc), "t");
+    expect(g.warnings).toEqual([]);
+    expect(g.sections.some((s) => s.id === "json-only")).toBe(true);
+  });
+
+  it("sans pied de page dans le HTML : prend le JSON, en le signalant ; un fichier illisible : le HTML", () => {
+    const html = fakeGuide().replace(/Rédigé le|Révisé le/g, "Écrit");
+    const g = indexGuide(html, JSON.stringify(fakeGuideJson("bbbbbbb", true)), "t");
+    expect(g.sections.some((s) => s.id === "json-only")).toBe(true);
+    expect(g.warnings[0]).toMatch(/Pied de page du HTML introuvable/);
+    expect(indexGuide(fakeGuide(), new Error("EACCES"), "t").warnings[0]).toMatch(/guide\.json illisible : EACCES : index lu dans le HTML/);
+  });
+
+  it("titres donnés à part dans le JSON, langue illisible remplacée par l'autre, glossaire anglais vide pris en français", () => {
+    const doc = fakeGuideJson();
+    const demo = doc.pages[1] as Record<string, unknown> & { text: { fr: Record<string, unknown>; en: unknown } };
+    delete demo.text.fr.title;
+    demo.text.en = "pas un objet";
+    demo.sections = [{ id: "open-file", title: { fr: "Ouvrir `a.ts`", en: "Open `a.ts`" } }, { id: "other" }];
+    doc.glossary[0].text.en.term = "";
+    const g = guideFromJson(readGuideJson(JSON.stringify(doc)));
+    expect(g.pages[1].title).toEqual({ fr: "Démo", en: "Demo" });
+    expect(g.sections.find((s) => s.id === "open-file")!.title).toEqual({ fr: "Ouvrir a.ts", en: "Open a.ts" });
+    expect(g.sections.find((s) => s.id === "other")!.title).toEqual({ fr: "Autre", en: "Autre" });
+    expect(g.terms[0].term).toEqual({ fr: "HYDRATION FR", en: "HYDRATION FR" });
+  });
+
   it("lit le guide.json posé à côté du HTML, et le relit quand il change", async () => {
     const dir = tempDir();
     try {

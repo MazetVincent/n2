@@ -30,18 +30,29 @@ export const guideJsonPath = (htmlPath: string) => join(dirname(htmlPath), "guid
 const footerCommits = (html: string) =>
   [/Rédigé le [^"]{0,250}?`commit:([0-9a-f]{7,40})`/, /Révisé le [^"]{0,250}?`commit:([0-9a-f]{7,40})`/].map((re) => re.exec(html)?.[1] ?? null);
 
+/** Même commit, écrit court ou long (« 1a2b3c4 » et « 1a2b3c4d5e… ») */
+const sameCommit = (a: string | null, b: string | null) => (a && b ? a.startsWith(b) || b.startsWith(a) : a === b);
+
 /**
  * Index du guide : depuis guide.json s'il est là et correspond au HTML (mêmes commits de rédaction et de révision),
- * sinon depuis le HTML. Un guide.json écarté est signalé dans `warnings`.
+ * sinon depuis le HTML. Un guide.json écarté, ou pris sans pouvoir le comparer au HTML, est signalé dans `warnings`.
+ * `json` : texte du fichier, null s'il n'y en a pas, Error s'il n'a pas pu être lu.
  */
-export function indexGuide(html: string, json: string | null, modifiedAt: string): ParsedGuide {
+export function indexGuide(html: string, json: string | Error | null, modifiedAt: string): ParsedGuide {
   if (json === null) return parseGuide(html, modifiedAt);
   let reason: string;
   try {
+    if (json instanceof Error) throw new Error(`guide.json illisible : ${json.message}`);
     const doc = readGuideJson(json);
     const [written, revised] = footerCommits(html);
-    if (written === (doc.revision?.written?.commit ?? null) && revised === (doc.revision?.revised?.commit ?? null)) return guideFromJson(doc, modifiedAt);
-    reason = `guide.json ne correspond pas au HTML (révision ${doc.revision?.revised?.commit ?? "?"} au lieu de ${revised ?? "?"})`;
+    const own = [doc.revision?.written?.commit ?? null, doc.revision?.revised?.commit ?? null];
+    if (written === null && revised === null) {
+      // pied de page introuvable (nouvelle mise en forme du guide) : le JSON voisin est pris tel quel, et ça se voit
+      const fromJson = guideFromJson(doc, modifiedAt);
+      return { ...fromJson, warnings: ["Pied de page du HTML introuvable : guide.json pris sans vérifier qu'il vient du même guide.", ...fromJson.warnings] };
+    }
+    if (sameCommit(written, own[0]) && sameCommit(revised, own[1])) return guideFromJson(doc, modifiedAt);
+    reason = `guide.json ne correspond pas au HTML (rédaction ${own[0] ?? "?"}, révision ${own[1] ?? "?"} ; HTML : ${written ?? "?"}, ${revised ?? "?"})`;
   } catch (e) {
     reason = (e as Error).message;
   }
@@ -62,9 +73,10 @@ async function load(cfg: Config) {
   }
   const jsonPath = guideJsonPath(path);
   const jsonInfo = await stat(jsonPath).catch(() => null);
-  const version = `${info.mtimeMs}:${jsonInfo?.mtimeMs ?? "-"}`;
+  // date et taille : un fichier remplacé en gardant sa date (cp -p) est quand même relu s'il a changé de taille
+  const version = `${info.mtimeMs}:${info.size}:${jsonInfo ? `${jsonInfo.mtimeMs}:${jsonInfo.size}` : "-"}`;
   if (memo && memo.path === path && memo.version === version) return memo;
-  const [html, json] = await Promise.all([readFile(path, "utf8"), jsonInfo ? readFile(jsonPath, "utf8").catch(() => null) : null]);
+  const [html, json] = await Promise.all([readFile(path, "utf8"), jsonInfo ? readFile(jsonPath, "utf8").catch((e: Error) => e) : null]);
   memo = { path, version, html, parsed: indexGuide(html, json, info.mtime.toISOString()) };
   return memo;
 }
