@@ -389,6 +389,14 @@ export function demoData(key: string, now = Date.now()): unknown {
       return activity(now);
     case "stats":
       return stats(now);
+    case "lib-overview":
+      return {
+        details: { name: arg, summary: "Librairie de démonstration (mode démo : rien n'est demandé à GitHub ni au registre npm).", docsUrl: null, npmUrl: `https://www.npmjs.com/package/${arg}`, repoUrl: null, installed: null, latest: null, license: null, private: false },
+        about: null,
+        news: [],
+        newsUrl: null,
+        advisories: [],
+      };
     case "libs":
       return [lib("react", "19.3.1", "19.3.1", "none"), lib("zod", "4.6.7", "4.7.0", "minor"), lib("vite", "8.3.8", "8.4.0", "minor")];
     default:

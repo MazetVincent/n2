@@ -29,6 +29,8 @@ export async function listBranches(cfg: Config): Promise<BranchList> {
 
 /** Met à jour les branches distantes (git fetch), sans jamais demander d'identifiants, puis relit la liste. */
 export async function fetchRemoteBranches(cfg: Config): Promise<BranchList> {
+  // mode démo : pas de git fetch (aucun accès distant), seulement les branches déjà connues
+  if (process.env.N2_DEMO === "1") return listBranches(cfg);
   await git(cfg, ["fetch", "--prune", "--no-tags", "--quiet", REMOTE], 60_000, NO_PROMPT).catch(() => {
     throw new SourceFailure({ kind: "unavailable", message: msg("srv_git_fetch_failed"), hint: msg("srv_hint_check_remote") });
   });

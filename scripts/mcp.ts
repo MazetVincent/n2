@@ -1,14 +1,14 @@
 // Serveur MCP de N2 (stdio) : une session Claude Code, Codex… peut demander ce qui l'attend sur le projet.
 //   claude mcp add n2 -- bun /chemin/vers/n2/scripts/mcp.ts
 // Lecture seule : il interroge N2 en marche (127.0.0.1:<N2_PORT>) avec le jeton de session (~/.config/n2/session),
-// comme bun run status ; il ne lance aucune commande et n'écrit rien. N2 doit tourner.
+// comme bun run status, et seulement si ce N2 appartient au même compte (scripts/n2-client.ts) ; il ne lance aucune
+// commande et n'écrit rien. N2 doit tourner.
 // Protocole : JSON-RPC 2.0, un message par ligne sur stdin / stdout (diagnostics sur stderr).
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { createInterface } from "node:readline";
-import { stateDir } from "../src/server/session.ts";
+import { fetchN2, type N2Response } from "./n2-client.ts";
 
-const PROTOCOL_VERSION = "2025-06-18";
+/** Versions du protocole MCP prises en charge, la plus récente d'abord */
+const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 
 type Json = Record<string, unknown>;
 interface Request {
@@ -37,38 +37,37 @@ export const TOOLS = [
   },
 ] as const;
 
-/** Appel à N2 avec le cookie de session ; renvoie le JSON, ou une erreur lisible pour l'agent */
-export type N2Fetch = (path: string) => Promise<{ ok: true; body: unknown } | { ok: false; error: string }>;
+/** Appel à N2 (chemin de l'API) : la réponse, ou une erreur lisible */
+export type N2Fetch = (path: string) => Promise<N2Response>;
 
-export function n2Fetch(port = process.env.N2_PORT ?? "4747"): N2Fetch {
-  return async (path) => {
-    let token: string;
-    try {
-      token = readFileSync(join(stateDir(), "session"), "utf8").trim();
-    } catch {
-      return { ok: false, error: "Jeton de session de N2 introuvable : N2 n'a jamais démarré sur cette machine." };
-    }
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}${path}`, { headers: { Cookie: `n2-session=${token}` }, signal: AbortSignal.timeout(60_000) });
-      if (res.status === 404) return { ok: false, error: "Branche inconnue dans le projet suivi." };
-      if (!res.ok) return { ok: false, error: `N2 a répondu ${res.status}.` };
-      return { ok: true, body: await res.json() };
-    } catch {
-      return { ok: false, error: `N2 ne répond pas sur 127.0.0.1:${port} : il doit être lancé (bun run dev ou démarrage automatique).` };
-    }
-  };
+/** Message pour l'agent quand N2 refuse ou échoue, selon l'outil */
+function toolError(tool: "n2_status" | "n2_branch", r: Extract<N2Response, { ok: false }>): string {
+  if (r.status === 404 && tool === "n2_branch") return "Branche inconnue dans le projet suivi.";
+  if (r.status === 404) return "Ce N2 ne connaît pas /api/status : il est d'une version plus ancienne, redémarre-le pour le mettre à jour.";
+  if (r.status === 503 && tool === "n2_branch") return "N2 n'a pas pu lire cette branche (projet introuvable ou dépôt git illisible).";
+  return r.error;
 }
 
 const result = (id: Request["id"], value: unknown) => ({ jsonrpc: "2.0", id, result: value });
 const failure = (id: Request["id"], code: number, message: string) => ({ jsonrpc: "2.0", id, error: { code, message } });
 
-/** Réponse à un message (null pour une notification) */
-export async function handle(req: Request, fetchN2: N2Fetch): Promise<Json | null> {
-  const isNotification = req.id === undefined;
+/** Réponse à un message ; null pour une notification (sans id), qui ne reçoit jamais de réponse */
+export async function handle(raw: unknown, callN2: N2Fetch): Promise<Json | null> {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw) || typeof (raw as Request).method !== "string") {
+    const id = typeof raw === "object" && raw !== null && !Array.isArray(raw) ? ((raw as Request).id ?? null) : null;
+    return failure(id, -32600, "Requête JSON-RPC invalide");
+  }
+  const req = raw as Request;
+  const res = await respond(req, callN2);
+  return req.id === undefined ? null : res;
+}
+
+async function respond(req: Request, callN2: N2Fetch): Promise<Json> {
   switch (req.method) {
     case "initialize":
       return result(req.id, {
-        protocolVersion: typeof req.params?.protocolVersion === "string" ? req.params.protocolVersion : PROTOCOL_VERSION,
+        // la version du client si elle est prise en charge, sinon la plus récente (le client décide alors s'il continue)
+        protocolVersion: PROTOCOL_VERSIONS.includes(String(req.params?.protocolVersion)) ? String(req.params?.protocolVersion) : PROTOCOL_VERSIONS[0],
         capabilities: { tools: {} },
         serverInfo: { name: "n2", version: "1.0.0" },
         instructions: "N2 est le tableau de bord local du développeur : appelle n2_status pour savoir ce qui attend, n2_branch pour le contexte d'une branche.",
@@ -86,27 +85,30 @@ export async function handle(req: Request, fetchN2: N2Fetch): Promise<Json | nul
         if (args.name !== undefined && typeof args.name !== "string") return failure(req.id, -32602, "name doit être une chaîne");
         path = `/api/branch${typeof args.name === "string" && args.name ? `?name=${encodeURIComponent(args.name)}` : ""}`;
       } else return failure(req.id, -32602, `Outil inconnu : ${String(name)}`);
-      const r = await fetchN2(path);
-      return result(req.id, r.ok ? { content: [{ type: "text", text: JSON.stringify(r.body, null, 2) }] } : { content: [{ type: "text", text: r.error }], isError: true });
+      const r = await callN2(path);
+      return result(req.id, r.ok ? { content: [{ type: "text", text: JSON.stringify(r.body, null, 2) }] } : { content: [{ type: "text", text: toolError(name, r) }], isError: true });
     }
     default:
-      return isNotification ? null : failure(req.id, -32601, `Méthode non prise en charge : ${req.method}`);
+      return failure(req.id, -32601, `Méthode non prise en charge : ${req.method}`);
   }
 }
 
 if (import.meta.main) {
-  const fetchN2 = n2Fetch();
+  const callN2: N2Fetch = (path) => fetchN2(path);
   const rl = createInterface({ input: process.stdin });
   rl.on("line", async (line) => {
     if (!line.trim()) return;
-    let req: Request;
+    let msg: unknown;
     try {
-      req = JSON.parse(line) as Request;
+      msg = JSON.parse(line);
     } catch {
       process.stdout.write(`${JSON.stringify(failure(null, -32700, "JSON invalide"))}\n`);
       return;
     }
-    const res = await handle(req, fetchN2).catch((e) => failure(req.id, -32603, e instanceof Error ? e.message : String(e)));
+    const res = await handle(msg, callN2).catch((e) => {
+      const id = typeof msg === "object" && msg !== null && "id" in msg ? ((msg as Request).id ?? null) : null;
+      return id === null ? null : failure(id, -32603, e instanceof Error ? e.message : String(e));
+    });
     if (res) process.stdout.write(`${JSON.stringify(res)}\n`);
   });
 }

@@ -74,6 +74,14 @@ const cache = new Map<string, { at: number; value: SourceResult<unknown>; lastGo
 /** Au-delà, des données trop anciennes ne sont plus resservies : l'erreur s'affiche seule */
 const STALE_MAX_MS = 24 * 3_600_000;
 
+/**
+ * Sources des onglets (lues en continu) : elles seules resservent leurs dernières bonnes données après un échec et
+ * comptent dans « sources en échec » de l'état JSON. Les lectures à la demande (une branche, une trace, une requête
+ * de logs, git fetch…) répondent toujours avec le résultat de l'instant : un échec doit s'y voir.
+ */
+const DASHBOARD_SOURCES = new Set(["prs", "open-prs", "jira", "libs", "workspace-libs", "cloudwatch", "alarm-charts", "log-queries", "calendar", "slack", "activity", "stats", "deploy", "codemap", "guide", "guide-freshness", "docs"]);
+export const isDashboardSource = (key: string) => DASHBOARD_SOURCES.has(key) || key.startsWith("sentry:") || key.startsWith("ci:");
+
 // ---------- État des sources : l'observabilité de N2 lui-même ----------
 const stats = new Map<string, SourceStat>();
 export const STARTED_AT = new Date().toISOString();
@@ -135,7 +143,7 @@ export async function cached<T>(
   // Échec après un succès : on garde les dernières bonnes données, avec l'erreur et l'heure de l'échec
   // (une panne passagère ou une session expirée ne vide pas la carte ; 24 h au plus).
   const served: SourceResult<T> =
-    !value.ok && lastGood && Date.now() - Date.parse(lastGood.fetchedAt) < STALE_MAX_MS
+    !value.ok && lastGood && isDashboardSource(key) && Date.now() - Date.parse(lastGood.fetchedAt) < STALE_MAX_MS
       ? { ok: true, data: lastGood.data as T, fetchedAt: lastGood.fetchedAt, stale: { error: value.error, failedAt: value.fetchedAt } }
       : value;
   // Les erreurs ne sont gardées que 15 s, pour qu'un rafraîchissement après reconnexion marche vite.

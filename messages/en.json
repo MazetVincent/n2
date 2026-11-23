@@ -1197,7 +1197,7 @@
   "topbar_connecting": "connecting…",
   "topbar_connecting_aws": "Connecting to AWS…",
   "topbar_demo": "Demo",
-  "topbar_demo_hint": "Made-up data: nothing is read from your accounts",
+  "topbar_demo_hint": "Made-up data for GitHub, Jira, Sentry, AWS, Slack and the calendar; the code map is N2's own",
   "topbar_expired": "expired",
   "topbar_finish_signing_browser": "Finish signing in in the browser.",
   "topbar_key": "key",

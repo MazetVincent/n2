@@ -1197,7 +1197,7 @@
   "topbar_connecting": "connexion…",
   "topbar_connecting_aws": "Connexion à AWS…",
   "topbar_demo": "Démo",
-  "topbar_demo_hint": "Données inventées : rien n'est lu dans tes comptes",
+  "topbar_demo_hint": "Données inventées pour GitHub, Jira, Sentry, AWS, Slack et l'agenda ; la carte du code est celle de N2",
   "topbar_expired": "expirée",
   "topbar_finish_signing_browser": "Termine la connexion dans le navigateur.",
   "topbar_key": "touche",

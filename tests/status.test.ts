@@ -35,17 +35,22 @@ describe("buildStatus", () => {
     expect(s.branch).toEqual({ name: "origin/feat/DEMO-1", ahead: 2, files: 1, parts: ["web"] });
   });
 
-  it("sources en échec : celles dont la dernière lecture a échoué, pas les non configurées", async () => {
+  it("sources en échec : seulement celles des onglets, pas les non configurées ni les lectures à la demande", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    await cached("status-test:panne", 60_000, true, async () => {
+    const { SourceFailure } = await import("../src/server/run.ts");
+    await cached("slack", 60_000, true, async () => {
       throw new Error("panne");
     });
-    await cached("status-test:off", 60_000, true, async () => {
-      const { SourceFailure } = await import("../src/server/run.ts");
-      throw new SourceFailure({ kind: "config", message: { key: "srv_slack_not_configured" } });
+    await cached("calendar", 60_000, true, async () => {
+      throw new SourceFailure({ kind: "config", message: { key: "srv_calendar_not_configured" } });
+    });
+    await cached("branch:faute-de-frappe", 60_000, true, async () => {
+      throw new SourceFailure({ kind: "config", message: { key: "srv_branch_not_found", params: { name: "x" } } });
     });
     const s = await buildStatus();
-    expect(s.failingSources).toContain("status-test:panne");
-    expect(s.failingSources).not.toContain("status-test:off");
+    expect(s.failingSources).toEqual(["slack"]);
+    expect(s.n2.demo).toBe(false);
+    expect(s.staleSources).toEqual([]);
   });
+
 });

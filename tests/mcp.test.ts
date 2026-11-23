@@ -2,12 +2,23 @@
 import { describe, expect, it, vi } from "vitest";
 import { handle, TOOLS, type N2Fetch } from "../scripts/mcp.ts";
 
-const fake = (body: unknown = { schemaVersion: 1 }) => vi.fn<N2Fetch>(async () => ({ ok: true, body }));
+const fake = (body: unknown = { schemaVersion: 1 }) => vi.fn<N2Fetch>(async () => ({ ok: true, status: 200, body }));
 
 describe("serveur MCP", () => {
-  it("initialize : reprend la version du client et annonce des outils", async () => {
+  it("initialize : la version du client si elle est prise en charge, sinon la plus récente", async () => {
     const r = await handle({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-03-26" } }, fake());
     expect(r).toMatchObject({ id: 1, result: { protocolVersion: "2025-03-26", capabilities: { tools: {} }, serverInfo: { name: "n2" } } });
+    const other = await handle({ jsonrpc: "2.0", id: 2, method: "initialize", params: { protocolVersion: "1999-01-01" } }, fake());
+    expect(other).toMatchObject({ result: { protocolVersion: "2025-06-18" } });
+  });
+
+  it("message qui n'est pas une requête (null, nombre, tableau) : erreur -32600, sans planter", async () => {
+    for (const bad of [null, 42, "x", [], { id: 3 }]) expect(await handle(bad, fake())).toMatchObject({ error: { code: -32600 } });
+  });
+
+  it("notification (sans id) : jamais de réponse, même pour une méthode connue", async () => {
+    expect(await handle({ jsonrpc: "2.0", method: "ping" }, fake())).toBeNull();
+    expect(await handle({ jsonrpc: "2.0", method: "tools/list" }, fake())).toBeNull();
   });
 
   it("notification : pas de réponse ; méthode inconnue : erreur -32601", async () => {
@@ -42,5 +53,13 @@ describe("serveur MCP", () => {
     expect(await handle({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "rm_rf" } }, f)).toMatchObject({ error: { code: -32602 } });
     expect(await handle({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "n2_branch", arguments: { name: 42 } } }, f)).toMatchObject({ error: { code: -32602 } });
     expect(f).not.toHaveBeenCalled();
+  });
+
+  it("erreurs de N2 traduites selon l'outil : branche inconnue, autre échec, N2 trop ancien", async () => {
+    const answer = (status: number): N2Fetch => async () => ({ ok: false, status, error: `N2 a répondu ${status}.` });
+    const text = async (name: string, f: N2Fetch) => ((await handle({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name } }, f)) as { result: { content: { text: string }[] } }).result.content[0].text;
+    expect(await text("n2_branch", answer(404))).toBe("Branche inconnue dans le projet suivi.");
+    expect(await text("n2_branch", answer(503))).toMatch(/n'a pas pu lire cette branche/);
+    expect(await text("n2_status", answer(404))).toMatch(/version plus ancienne/);
   });
 });
