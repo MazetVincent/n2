@@ -8,9 +8,11 @@
 //  - le glossaire : X={en:A,fr:B}, où B = { terme: { term, short, body } } ;
 //  - le pied de page : « Rédigé le … `commit:1a2b3c4d5`. Révisé le … `commit:9f8e7d6c5` ».
 // Si une partie manque (nouvelle version du guide), l'index est construit avec le reste et `warnings` le dit.
+// Quand le guide fournit son contenu en JSON (format/schema.ts), guideFromJson construit le même index sans rien deviner.
 import type { DocPassage, GuideContent, GuideFileRef, GuidePage, GuideSection, GuideTerm, GuideText } from "~/server/types";
 import { isObject, isRef, readLiteral, type Literal } from "./literal";
 import { guideTarget } from "./logic";
+import type { GuideJson } from "./format/schema";
 
 type Lang = "fr" | "en";
 const LANGS: Lang[] = ["fr", "en"];
@@ -202,6 +204,72 @@ function collectPage(page: Literal, sectionIds: Set<string> | null): Map<string 
 /** Ce qu'on tire du fichier HTML (le nom et les liens des onglets viennent de la config, voir fetchGuide) */
 export type ParsedGuide = GuideContent & { passages: DocPassage[] };
 
+interface PageSource {
+  key: string;
+  fr: Literal;
+  en: Literal;
+  /** ids des sections de la page ; null : inconnus (les objets avec un id juste sous la page en font office) */
+  sectionIds: Set<string> | null;
+  verifiedAgainst?: string;
+}
+
+/** Ajoute une page à l'index : sa fiche, ses sections (fichiers cités) et leur texte (recherche) */
+function indexPage(p: PageSource, out: { pages: GuidePage[]; sections: GuideSection[]; passages: DocPassage[] }) {
+  const { key } = p;
+  const fr = collectPage(p.fr, p.sectionIds);
+  const en = isObject(p.en) ? collectPage(p.en, p.sectionIds) : fr;
+  const frTitle = (isObject(p.fr) && titleOf(p.fr)) || key;
+  const enTitle = (isObject(p.en) && titleOf(p.en)) || frTitle;
+  out.pages.push({ key, title: { fr: frTitle, en: enTitle }, ...(p.verifiedAgainst ? { verifiedAgainst: p.verifiedAgainst } : {}) });
+  for (const [id, c] of fr) {
+    const title: GuideText =
+      id === null ? { fr: frTitle, en: enTitle } : { fr: c.title ?? humanize(id), en: en.get(id)?.title ?? c.title ?? humanize(id) };
+    const text = { fr: c.text.join(" "), en: (en.get(id) ?? c).text.join(" ") };
+    if (text.fr || text.en) out.passages.push({ kind: "guide", key: `guide:${guideTarget(key, id)}`, title, where: { fr: frTitle, en: enTitle }, text, target: guideTarget(key, id) });
+    if (id === null && !c.refs.size) continue;
+    out.sections.push({ page: key, id, title, files: [...c.refs.values()] });
+  }
+}
+
+/**
+ * Index du guide à partir de son contenu en JSON (format n2-guide/1, voir format/schema.ts) : même résultat que
+ * parseGuide sur le HTML, sans deviner où est le contenu dans le JS compilé.
+ */
+export function guideFromJson(doc: GuideJson, modifiedAt = new Date(0).toISOString()): ParsedGuide {
+  const warnings: string[] = [];
+  const pages: GuidePage[] = [];
+  const sections: GuideSection[] = [];
+  const passages: DocPassage[] = [];
+  for (const page of doc.pages) {
+    // une langue absente prend le texte de l'autre
+    const fr = (page.text.fr ?? page.text.en) as Literal;
+    const en = (page.text.en ?? page.text.fr) as Literal;
+    if (!isObject(fr)) {
+      warnings.push(`Page illisible : ${page.key}`);
+      continue;
+    }
+    indexPage({ key: page.key, fr, en, sectionIds: new Set(page.sections.map((s) => s.id)), verifiedAgainst: page.verifiedAgainst }, { pages, sections, passages });
+  }
+  const terms: GuideTerm[] = doc.glossary.map(({ id, text }) => {
+    const fr = text.fr ?? text.en!;
+    const en = text.en ?? fr;
+    return { id, term: { fr: cleanText(fr.term), en: cleanText(en.term) }, short: { fr: cleanText(fr.short ?? ""), en: cleanText(en.short ?? fr.short ?? "") } };
+  });
+  const { written, revised } = doc.revision ?? {};
+  return {
+    modifiedAt,
+    writtenAt: written ? (written.date.fr ?? written.date.en ?? null) : null,
+    writtenCommit: written?.commit ?? null,
+    revisedAt: revised ? (revised.date.fr ?? revised.date.en ?? null) : null,
+    revisedCommit: revised?.commit ?? null,
+    pages,
+    sections,
+    terms,
+    warnings,
+    passages,
+  };
+}
+
 /** Construit l'index du guide à partir du texte de son fichier HTML */
 export function parseGuide(html: string, modifiedAt = new Date(0).toISOString()): ParsedGuide {
   const warnings: string[] = [];
@@ -227,19 +295,7 @@ export function parseGuide(html: string, modifiedAt = new Date(0).toISOString())
         continue;
       }
       const ids = sectionIdsByPage?.get(key);
-      const fr = collectPage(objects.fr, ids ? new Set(ids) : sectionIdsByPage ? new Set() : null);
-      const en = isObject(objects.en) ? collectPage(objects.en, ids ? new Set(ids) : sectionIdsByPage ? new Set() : null) : fr;
-      const frTitle = titleOf(objects.fr) ?? key;
-      const enTitle = (isObject(objects.en) && titleOf(objects.en)) || frTitle;
-      pages.push({ key, title: { fr: frTitle, en: enTitle }, ...(verified[key] ? { verifiedAgainst: verified[key] } : {}) });
-      for (const [id, c] of fr) {
-        const title: GuideText =
-          id === null ? { fr: frTitle, en: enTitle } : { fr: c.title ?? humanize(id), en: en.get(id)?.title ?? c.title ?? humanize(id) };
-        const text = { fr: c.text.join(" "), en: (en.get(id) ?? c).text.join(" ") };
-        if (text.fr || text.en) passages.push({ kind: "guide", key: `guide:${guideTarget(key, id)}`, title, where: { fr: frTitle, en: enTitle }, text, target: guideTarget(key, id) });
-        if (id === null && !c.refs.size) continue;
-        sections.push({ page: key, id, title, files: [...c.refs.values()] });
-      }
+      indexPage({ key, fr: objects.fr, en: objects.en, sectionIds: ids ? new Set(ids) : sectionIdsByPage ? new Set() : null, verifiedAgainst: verified[key] }, { pages, sections, passages });
     }
   }
 

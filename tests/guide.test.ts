@@ -1,19 +1,20 @@
 // Guide de l'équipe : lecture du fichier HTML compilé (sans exécuter son JS), liens guide ↔ fichiers, fraîcheur des citations.
 // Le guide de test est un faux bundle qui reprend la forme du vrai (tables de pages, de sections, glossaire, pied de page).
 import { execFileSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createContext, runInContext } from "node:vm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { readLiteral } from "../src/features/guide/literal.ts";
-import { fileRefs, parseGuide } from "../src/features/guide/parse.ts";
+import { fileRefs, guideFromJson, parseGuide } from "../src/features/guide/parse.ts";
+import { readGuideJson } from "../src/features/guide/format/schema.ts";
 import { freshnessMarkdown, isGuideTarget, resolveRefs, sectionsForFiles, sectionsUnder } from "../src/features/guide/logic.ts";
 import { buildIndex, searchIndex } from "../src/features/search/index.ts";
 import { embedGuide, guideSettings, guideStyle, type GuideSettings } from "../src/features/guide/embed.ts";
 import { guideCsp } from "../src/routes/guide-html.ts";
 import { allowedHosts } from "../src/server/session.ts";
 import { COLORS } from "../src/styles/colors.ts";
-import { fetchGuide, guideFreshness, parseHunks, staleRefs } from "../src/server/sources/guide.ts";
+import { fetchGuide, guideFreshness, indexGuide, parseHunks, staleRefs } from "../src/server/sources/guide.ts";
 import type { GuideContent, GuideIndex } from "../src/server/types.ts";
 import { gitInit, makeConfig, remove, tempDir, writeFiles } from "./helpers.ts";
 
@@ -110,6 +111,108 @@ describe("réglages du guide dans la config", () => {
     const g = await fetchGuide(cfg({ name: "  Guide Démo  ", links: { deploy: ["guide/demo/open-file", "../../etc", 42, "a//b"], prs: "guide/demo" } }));
     expect(g.name).toBe("Guide Démo");
     expect(g.links).toEqual({ deploy: ["guide/demo/open-file"], observability: [], prs: [] });
+  });
+});
+
+/** Le même faux guide en JSON (format n2-guide/1), comme l'exporte le build du guide. `extra` : section absente du HTML. */
+function fakeGuideJson(revised = "bbbbbbb", extra = false) {
+  const term = (t: string, lang: string) => ({ term: `${t.toUpperCase()} ${lang}`, short: `Définition ${lang} de ${t}`, body: "Corps" });
+  const demo = (lang: "fr" | "en") => {
+    const fr = lang === "fr";
+    return {
+      title: fr ? "Démo" : "Demo",
+      inShort: { title: fr ? "En bref" : "In short" },
+      open: {
+        id: "open-file",
+        title: fr ? "Ouvrir un [[file|fichier]]" : "Open a [[file|file]]",
+        sources: fr ? ["`apps/web/src/a.ts:3-5`", "`docs/x.md`"] : ["`apps/web/src/a.ts:3-5`"],
+        legacy: { id: "old-id", sources: ["`apps/web/src/legacy.ts`"] },
+      },
+      other: {
+        id: "other",
+        heading: fr ? "Autre" : "Other",
+        body: `${fr ? "Voir" : "See"} \`packages/x/src/b.ts\` ${fr ? "et" : "and"} \`1a2b3c4d5:apps/web/src/a.ts:1\``,
+        ...(fr ? { ok: true, no: false, n: -150 } : {}),
+      },
+      loose: fr ? "`apps/web/src/page-level.ts` et `next/font/local`" : "`apps/web/src/page-level.ts` and `next/font/local` and `https://x.y/z`",
+      ...(extra ? { more: { id: "json-only", title: fr ? "Seulement en JSON" : "JSON only", body: "`apps/web/src/json-only.ts`" } } : {}),
+    };
+  };
+  return {
+    schema: "n2-guide/1",
+    title: "Demo guide",
+    inline: "guide",
+    langs: ["en", "fr"],
+    revision: {
+      written: { date: { fr: "3 mars 2026", en: "3 March 2026" }, commit: "aaaaaaa" },
+      revised: { date: { fr: "17 mars 2026", en: "17 March 2026" }, commit: revised },
+    },
+    pages: [
+      { key: "guide", component: "guide/Guide", title: { fr: "Technique", en: "Technical" }, sections: [], text: { fr: { title: "Technique" }, en: { title: "Technical" } } },
+      {
+        key: "guide/demo",
+        component: "guide/Demo",
+        verifiedAgainst: "abc1234",
+        title: { fr: "Démo", en: "Demo" },
+        sections: [{ id: "open-file" }, { id: "other" }, ...(extra ? [{ id: "json-only" }] : [])],
+        text: { fr: demo("fr"), en: demo("en") },
+      },
+    ],
+    glossary: ["hydration", "loader", "nitro", "query", "ssr"].map((t) => ({ id: t, text: { fr: term(t, "FR"), en: term(t, "EN") } })),
+  };
+}
+
+describe("guide en JSON (n2-guide/1)", () => {
+  const index = ({ modifiedAt: _, warnings: __, ...g }: ReturnType<typeof parseGuide>) => g;
+
+  it("donne le même index que le HTML du même guide", () => {
+    const fromJson = guideFromJson(readGuideJson(JSON.stringify(fakeGuideJson())));
+    expect(fromJson.warnings).toEqual([]);
+    expect(index(fromJson)).toEqual(index(parseGuide(fakeGuide())));
+  });
+
+  it("refuse un autre format en disant quel champ ne va pas", () => {
+    expect(() => readGuideJson("{")).toThrow(/illisible/);
+    expect(() => readGuideJson(JSON.stringify({ schema: "n2-guide/2" }))).toThrow(/format "n2-guide\/2" inconnu/);
+    const bad = fakeGuideJson();
+    (bad.pages[1] as { verifiedAgainst: string }).verifiedAgainst = "pas un commit";
+    expect(() => readGuideJson(JSON.stringify(bad))).toThrow(/pages\.1\.verifiedAgainst/);
+  });
+
+  it("garde le JSON seulement s'il vient du même guide que le HTML, et le dit sinon", () => {
+    const html = fakeGuide();
+    const used = indexGuide(html, JSON.stringify(fakeGuideJson("bbbbbbb", true)), "t");
+    expect(used.sections.some((s) => s.id === "json-only")).toBe(true);
+    for (const json of [JSON.stringify(fakeGuideJson("ccccccc", true)), "pas du JSON"]) {
+      const fallback = indexGuide(html, json, "t");
+      expect(fallback.sections.some((s) => s.id === "json-only")).toBe(false);
+      expect(fallback.warnings[0]).toMatch(/index lu dans le HTML/);
+    }
+    expect(indexGuide(html, null, "t").warnings).toEqual([]);
+  });
+
+  it("lit le guide.json posé à côté du HTML, et le relit quand il change", async () => {
+    const dir = tempDir();
+    try {
+      const path = join(dir, "index.html");
+      writeFiles(dir, { "index.html": fakeGuide(), "guide.json": JSON.stringify(fakeGuideJson()) });
+      const cfg = { ...makeConfig(dir), guide: { path }, ui: { secret: { unlocked: true } } };
+      expect((await fetchGuide(cfg)).sections.some((s) => s.id === "json-only")).toBe(false);
+      writeFileSync(join(dir, "guide.json"), JSON.stringify(fakeGuideJson("bbbbbbb", true)));
+      // date de modification différente, même si l'écriture tombe dans la même milliseconde
+      utimesSync(join(dir, "guide.json"), new Date(), new Date(Date.now() + 5000));
+      expect((await fetchGuide(cfg)).sections.some((s) => s.id === "json-only")).toBe(true);
+    } finally {
+      remove(dir);
+    }
+  });
+
+  it("le format ne dépend que de zod (pour pouvoir en faire un paquet à part)", () => {
+    const dir = join(import.meta.dirname, "../src/features/guide/format");
+    for (const f of readdirSync(dir)) {
+      const imports = [...readFileSync(join(dir, f), "utf8").matchAll(/^import[^"']*["']([^"']+)["']/gm)].map((m) => m[1]);
+      expect(imports.every((i) => i === "zod"), `${f} : ${imports.join(", ")}`).toBe(true);
+    }
   });
 });
 

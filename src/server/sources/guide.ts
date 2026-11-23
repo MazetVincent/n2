@@ -1,11 +1,14 @@
-// Guide de l'équipe : son fichier HTML (config `guide.path`), son index (sections ↔ fichiers du projet)
+// Guide de l'équipe : son fichier HTML (config `guide.path`), son index (sections ↔ fichiers du projet,
+// tiré du guide.json voisin s'il existe, sinon du HTML)
 // et la fraîcheur des passages de code qu'il cite.
 import { readFile, stat } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import type { Config } from "../config.ts";
 import { expandHome } from "../config.ts";
 import { run, SourceFailure } from "../run.ts";
 import type { DocPassage, GuideFileRef, GuideFreshness, GuideIndex, GuideStaleRef, GuideTabLinks } from "../types.ts";
-import { parseGuide, type ParsedGuide } from "../../features/guide/parse.ts";
+import { guideFromJson, parseGuide, type ParsedGuide } from "../../features/guide/parse.ts";
+import { readGuideJson } from "../../features/guide/format/schema.ts";
 import { isGuideTarget, resolveRefs } from "../../features/guide/logic.ts";
 import { projectRoot } from "./codemap.ts";
 import { deployConfig } from "./deploy.ts";
@@ -20,8 +23,34 @@ export function guidePath(cfg: Config): string {
   return expandHome(p);
 }
 
-// Le fichier fait plusieurs Mo : lu et analysé une fois, relu seulement s'il a changé sur le disque.
-let memo: { path: string; mtimeMs: number; html: string; parsed: ParsedGuide } | null = null;
+/** Contenu du guide en JSON (format n2-guide/1), cherché à côté de son HTML : c'est ainsi que le build du guide les produit */
+export const guideJsonPath = (htmlPath: string) => join(dirname(htmlPath), "guide.json");
+
+/** Commits cités en pied de page du HTML : pour vérifier que le guide.json voisin vient du même guide */
+const footerCommits = (html: string) =>
+  [/Rédigé le [^"]{0,250}?`commit:([0-9a-f]{7,40})`/, /Révisé le [^"]{0,250}?`commit:([0-9a-f]{7,40})`/].map((re) => re.exec(html)?.[1] ?? null);
+
+/**
+ * Index du guide : depuis guide.json s'il est là et correspond au HTML (mêmes commits de rédaction et de révision),
+ * sinon depuis le HTML. Un guide.json écarté est signalé dans `warnings`.
+ */
+export function indexGuide(html: string, json: string | null, modifiedAt: string): ParsedGuide {
+  if (json === null) return parseGuide(html, modifiedAt);
+  let reason: string;
+  try {
+    const doc = readGuideJson(json);
+    const [written, revised] = footerCommits(html);
+    if (written === (doc.revision?.written?.commit ?? null) && revised === (doc.revision?.revised?.commit ?? null)) return guideFromJson(doc, modifiedAt);
+    reason = `guide.json ne correspond pas au HTML (révision ${doc.revision?.revised?.commit ?? "?"} au lieu de ${revised ?? "?"})`;
+  } catch (e) {
+    reason = (e as Error).message;
+  }
+  const parsed = parseGuide(html, modifiedAt);
+  return { ...parsed, warnings: [`${reason} : index lu dans le HTML.`, ...parsed.warnings] };
+}
+
+// Le fichier fait plusieurs Mo : lu et analysé une fois, relu seulement si lui ou son guide.json a changé sur le disque.
+let memo: { path: string; version: string; html: string; parsed: ParsedGuide } | null = null;
 
 async function load(cfg: Config) {
   const path = guidePath(cfg);
@@ -31,9 +60,12 @@ async function load(cfg: Config) {
   } catch {
     throw new SourceFailure({ kind: "config", message: msg("srv_guide_not_found", { path }), hint: msg("srv_hint_check_guide_path") });
   }
-  if (memo && memo.path === path && memo.mtimeMs === info.mtimeMs) return memo;
-  const html = await readFile(path, "utf8");
-  memo = { path, mtimeMs: info.mtimeMs, html, parsed: parseGuide(html, info.mtime.toISOString()) };
+  const jsonPath = guideJsonPath(path);
+  const jsonInfo = await stat(jsonPath).catch(() => null);
+  const version = `${info.mtimeMs}:${jsonInfo?.mtimeMs ?? "-"}`;
+  if (memo && memo.path === path && memo.version === version) return memo;
+  const [html, json] = await Promise.all([readFile(path, "utf8"), jsonInfo ? readFile(jsonPath, "utf8").catch(() => null) : null]);
+  memo = { path, version, html, parsed: indexGuide(html, json, info.mtime.toISOString()) };
   return memo;
 }
 

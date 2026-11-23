@@ -71,7 +71,10 @@ export interface Config {
   };
   /** Guide de l'équipe : son fichier HTML (onglet Guide, liens vers les sections depuis la carte, Sentry, les PR…) */
   guide?: {
-    /** chemin du fichier (ex. « ~/Documents/guide.html ») ; remplacer le fichier suffit à passer à une nouvelle version */
+    /**
+     * chemin du fichier (ex. « ~/Documents/guide.html ») ; remplacer le fichier suffit à passer à une nouvelle version.
+     * Un guide.json (format n2-guide/1) posé dans le même dossier sert à l'index, plus complet que ce que N2 lit dans le HTML.
+     */
     path: string;
     /** nom affiché (onglet, recherche ⌘K) ; défaut « Guide de l'équipe » */
     name?: string;
