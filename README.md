@@ -505,6 +505,7 @@ sh scripts/autostart.sh uninstall
 | `bun run build` | build de production |
 | `bun run start` | build puis serveur de production (utilisé par le démarrage automatique) |
 | `bun run test` | tests (Vitest) : garde-fous, carte, impact, « À faire », agenda, Slack, déploiements, guide, recherche… |
+| `bun run test:e2e` | tests de navigateur (Playwright, N2 en mode démo) : chaque onglet sans erreur, verrou, accessibilité. En local avec le Google Chrome installé ; à lancer depuis une autre copie que celle servie par le démarrage automatique |
 | `bun run typecheck` | vérification TypeScript |
 | `bun run codegen` | régénère les styles Panda (`styled-system/`) |
 | `bun run i18n` | compile `messages/*.json` en fonctions typées (`src/paraglide/`) ; `dev`, `test` et `typecheck` le font déjà |

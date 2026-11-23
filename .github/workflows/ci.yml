@@ -46,3 +46,18 @@ jobs:
       # N2 tourne en production avec le démarrage automatique : le build doit toujours passer
       - name: Build de production
         run: bun run build
+
+      # Tests de navigateur sur N2 en mode démo (données inventées) : chaque onglet, verrou, accessibilité
+      - name: Navigateur pour les tests
+        run: bunx playwright install --with-deps chromium
+
+      - name: Tests de navigateur
+        run: bun run test:e2e
+
+      - name: Rapport des tests de navigateur
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
