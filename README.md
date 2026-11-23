@@ -483,6 +483,7 @@ sh scripts/autostart.sh uninstall
 | `bun run setup` | hooks anti-secrets, `config.local.json`, traductions, styles Panda |
 | `bun run dev` | serveur de développement (rechargement à chaud) |
 | `bun run open` | ouvre N2 dans Chrome et le déverrouille pour ce navigateur ; `--reset` : nouveau jeton, déconnecte tous les navigateurs |
+| `bun run status` | l'état de N2 en une ligne (urgences, CI de la branche principale et de ta branche, sources en échec) ; `--json` : le JSON versionné de `/api/status` (`schemaVersion`), pour une barre de menus ou un script |
 | `bun run build` | build de production |
 | `bun run start` | build puis serveur de production (utilisé par le démarrage automatique) |
 | `bun run test` | tests (Vitest) : garde-fous, carte, impact, « À faire », agenda, Slack, déploiements, guide, recherche… |

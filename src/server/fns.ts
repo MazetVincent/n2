@@ -6,6 +6,7 @@ import { z } from "zod";
 import { loadConfig, ROOT } from "./config.ts";
 import { isAllowedUrl, openInChrome, openInIde } from "./open.ts";
 import { cached, forget, run, sourceStats, STARTED_AT } from "./run.ts";
+import { readAwsSession, readBranch, readCi, readCloudWatch, readDeploy, readLibs, readPullRequests, readSentry, readSprint } from "./sources.ts";
 import type { SourceStatus } from "./types.ts";
 import { isValidBranchName } from "../features/branches/logic.ts";
 import { awsSession } from "./sources/aws-session.ts";
@@ -45,7 +46,7 @@ const refresh = z.object({ force: z.boolean().optional() }).optional();
 // ---------- Sources du tableau de bord ----------
 export const getPullRequests = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("prs", 2 * MIN, data?.force ?? false, () => fetchPullRequests(loadConfig())));
+  .handler(({ data }) => readPullRequests(data?.force ?? false));
 
 // PR ouvertes des dépôts suivis : l'onglet Librairies y cherche les mises à jour en cours
 export const getOpenPrs = createServerFn({ method: "GET" })
@@ -54,11 +55,11 @@ export const getOpenPrs = createServerFn({ method: "GET" })
 
 export const getSprint = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("jira", 2 * MIN, data?.force ?? false, () => fetchSprint(loadConfig())));
+  .handler(({ data }) => readSprint(data?.force ?? false));
 
 export const getLibs = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("libs", 6 * 60 * MIN, data?.force ?? false, () => fetchLibs(loadConfig())));
+  .handler(({ data }) => readLibs(data?.force ?? false));
 
 export const getWorkspaceLibs = createServerFn({ method: "GET" })
   .validator(refresh)
@@ -68,13 +69,11 @@ export const getWorkspaceLibs = createServerFn({ method: "GET" })
 const sentryEnv = z.string().regex(/^[\w.-]{0,64}$/);
 export const getSentry = createServerFn({ method: "GET" })
   .validator(z.object({ force: z.boolean().optional(), env: sentryEnv.optional() }).optional())
-  .handler(({ data }) =>
-    cached(`sentry:${data?.env ?? "(config)"}`, 2 * MIN, data?.force ?? false, () => fetchSentry(loadConfig(), data?.env === undefined ? undefined : data.env || null)),
-  );
+  .handler(({ data }) => readSentry(data?.force ?? false, data?.env === undefined ? undefined : data.env || null));
 
 export const getCloudWatch = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("cloudwatch", 1 * MIN, data?.force ?? false, () => fetchCloudWatch(loadConfig())));
+  .handler(({ data }) => readCloudWatch(data?.force ?? false));
 
 // Logs Insights : requêtes enregistrées par l'équipe (liste gardée 10 min) ; lancement à la demande seulement
 // (POST : jamais relancé tout seul par un rafraîchissement ; un double clic dans la minute réutilise le résultat)
@@ -111,7 +110,7 @@ export const getStats = createServerFn({ method: "GET" })
 
 export const getDeploy = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("deploy", 1 * MIN, data?.force ?? false, () => fetchDeploy(loadConfig())));
+  .handler(({ data }) => readDeploy(data?.force ?? false));
 
 export const getCodeMap = createServerFn({ method: "GET" })
   .validator(refresh)
@@ -125,13 +124,13 @@ export const getCi = createServerFn({ method: "GET" })
   .validator(z.object({ force: z.boolean().optional(), branch: branchName.optional() }).optional())
   .handler(({ data }) => {
     const branch = data?.branch ? githubBranch(data.branch) : undefined;
-    return cached(`ci:${branch ?? ""}`, 2 * MIN, data?.force ?? false, () => fetchCi(loadConfig(), branch));
+    return readCi(data?.force ?? false, branch);
   });
 
 
 export const getBranch = createServerFn({ method: "GET" })
   .validator(z.object({ force: z.boolean().optional(), branch: branchName.optional() }).optional())
-  .handler(({ data }) => cached(`branch:${data?.branch ?? ""}`, 1 * MIN, data?.force ?? false, () => branchChanges(loadConfig(), data?.branch)));
+  .handler(({ data }) => readBranch(data?.force ?? false, data?.branch));
 
 // Branches du projet pour le sélecteur « Ma branche » (refs déjà connues, sans réseau)
 export const getBranches = createServerFn({ method: "GET" })
@@ -176,7 +175,7 @@ export const getDocPassage = createServerFn({ method: "GET" })
     return { ...idx, data: p ? (p.text[data.lang] || p.text.fr) : null };
   });
 
-export const getAwsSession = createServerFn({ method: "GET" }).handler(() => awsSession(loadConfig()));
+export const getAwsSession = createServerFn({ method: "GET" }).handler(() => readAwsSession());
 
 // Liens rapides de ⌘K (config + liens déduits de GitHub, Jira, Sentry, AWS) : rien de secret, la config ne change qu'au redémarrage
 export const getQuickLinks = createServerFn({ method: "GET" }).handler(() => buildQuickLinks(loadConfig()));

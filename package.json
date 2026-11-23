@@ -9,6 +9,7 @@
     "setup": "chmod +x .githooks/pre-commit scripts/*.sh && git config core.hooksPath .githooks && (test -f config.local.json || cp config.example.json config.local.json) && chmod 600 config.local.json && bun run i18n && bunx panda codegen --silent && echo '→ Remplis config.local.json puis lance bun run dev'",
     "dev": "panda codegen --silent && vite dev",
     "open": "bun scripts/open.ts",
+    "status": "bun scripts/status.ts",
     "i18n": "bun scripts/i18n.ts",
     "check:secrets": "sh scripts/check-secrets.sh",
     "typecheck": "bun run i18n && panda codegen --silent && tsc -p .",
