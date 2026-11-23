@@ -436,6 +436,14 @@ Pour ajouter tes propres liens (prod, staging, back-office…) :
 
 **État des sources** (⌘K « État des sources », ou Préférences → Diagnostic) : pour chaque source depuis le démarrage de N2, l'état de la dernière lecture, sa durée, le dernier succès, le nombre de lectures et d'échecs, et la dernière erreur ; une source sans section de config est « non configurée », pas en échec. Le journal de N2 ne note que l'utile : les échecs, les lectures de plus de 5 s et le retour à la normale (`[n2] source=… ms échec=…`).
 
+**Agents IA (MCP)** : une session Claude Code, Codex ou tout client MCP peut demander à N2 ce qui attend (`n2_status` : urgences, CI, sources en échec) et le contexte d'une branche (`n2_branch` : fichiers modifiés, parties touchées, PR, CI, tickets). Lecture seule, par N2 en marche et avec ton jeton de session, comme `bun run status`.
+
+```bash
+claude mcp add n2 -- bun /chemin/vers/n2/scripts/mcp.ts
+```
+
+Pour Codex : la même commande dans la section `mcp_servers` de `~/.codex/config.toml`. Ce que l'agent reçoit vient de tes outils pro (PR, alarmes, erreurs) : branche-le seulement sur un agent à qui tu confies déjà ce projet.
+
 **Raccourcis** : touches **1 à 9** pour les onglets, **⌘K** pour la recherche. Le bouton de rafraîchissement recharge toutes les données et affiche l'heure de la dernière mise à jour.
 
 **Langue** : français par défaut, anglais en option (sélecteur de la barre du haut, gardé dans un cookie). Tous les textes sont dans `messages/fr.json` et `messages/en.json`, voir [Traductions](#traductions).
@@ -484,6 +492,7 @@ sh scripts/autostart.sh uninstall
 | `bun run dev` | serveur de développement (rechargement à chaud) |
 | `bun run open` | ouvre N2 dans Chrome et le déverrouille pour ce navigateur ; `--reset` : nouveau jeton, déconnecte tous les navigateurs |
 | `bun run status` | l'état de N2 en une ligne (urgences, CI de la branche principale et de ta branche, sources en échec) ; `--json` : le JSON versionné de `/api/status` (`schemaVersion`), pour une barre de menus ou un script |
+| `bun run mcp` | serveur MCP de N2 (stdio), à déclarer dans Claude Code ou Codex ; voir [Fonctions transverses](#fonctions-transverses) |
 | `bun run build` | build de production |
 | `bun run start` | build puis serveur de production (utilisé par le démarrage automatique) |
 | `bun run test` | tests (Vitest) : garde-fous, carte, impact, « À faire », agenda, Slack, déploiements, guide, recherche… |

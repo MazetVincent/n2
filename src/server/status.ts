@@ -2,11 +2,11 @@
 // principale et de la branche actuelle, les sources en échec. Format versionné : un changement incompatible
 // incrémente STATUS_SCHEMA_VERSION, et un lecteur doit le vérifier.
 import { computeTodo, type TodoItem } from "../features/todo/logic.ts";
-import { githubBranch } from "../features/branches/logic.ts";
+import { githubBranch, isValidBranchName, prsOfBranch } from "../features/branches/logic.ts";
 import { isNotConfigured } from "../features/sources/logic.ts";
 import { sourceStats, STARTED_AT } from "./run.ts";
 import { readAwsSession, readBranch, readCi, readCloudWatch, readDeploy, readLibs, readPullRequests, readSentry, readSprint } from "./sources.ts";
-import type { CiBranch, SourceResult } from "./types.ts";
+import type { CiBranch, CiWorkflow, SourceResult } from "./types.ts";
 
 export const STATUS_SCHEMA_VERSION = 1;
 
@@ -56,5 +56,48 @@ export async function buildStatus(now = Date.now()): Promise<N2Status> {
       .filter((s) => !s.lastOk && !isNotConfigured(s.lastError))
       .map((s) => s.key)
       .sort(),
+  };
+}
+
+/** Contexte d'une branche (serveur MCP, /api/branch) : fichiers modifiés, parties touchées, PR, CI, tickets */
+export interface N2BranchContext {
+  schemaVersion: typeof STATUS_SCHEMA_VERSION;
+  branch: string;
+  base: string;
+  ahead: number;
+  /** 200 premiers fichiers modifiés depuis la base (commités ou non), avec leur partie du projet */
+  files: { file: string; status: string; part: string | null }[];
+  parts: Record<string, number>;
+  jira: string[];
+  prs: { number: number; title: string; url: string; isDraft: boolean; ci: string | null; review: string | null; mergeable: string | null }[];
+  ci: Pick<CiWorkflow, "name" | "status" | "conclusion" | "url" | "attempt">[];
+}
+
+/** `name` : une branche du projet suivi (locale ou distante) ; absent : la branche actuelle */
+export async function buildBranchContext(name?: string): Promise<N2BranchContext | null> {
+  if (name !== undefined && !isValidBranchName(name)) return null;
+  const b = ok(await readBranch(false, name));
+  if (!b) return null;
+  const onGithub = githubBranch(b.branch);
+  const [prs, ci] = await Promise.all([settle(readPullRequests()), settle(readCi(false, onGithub))]);
+  const p = ok(prs);
+  return {
+    schemaVersion: STATUS_SCHEMA_VERSION,
+    branch: b.branch,
+    base: b.base,
+    ahead: b.ahead,
+    files: b.files.slice(0, 200).map((f) => ({ file: f.file, status: f.status, part: f.node })),
+    parts: b.nodes,
+    jira: b.jira.map((j) => j.key),
+    prs: prsOfBranch(onGithub, p ? [p.mine, p.reviewRequested, p.approved, p.commented] : []).map((x) => ({
+      number: x.number,
+      title: x.title,
+      url: x.url,
+      isDraft: x.isDraft,
+      ci: x.ci,
+      review: x.reviewDecision,
+      mergeable: x.mergeable,
+    })),
+    ci: (ok(ci)?.branch?.workflows ?? []).map(({ name: n, status, conclusion, url, attempt }) => ({ name: n, status, conclusion, url, attempt })),
   };
 }

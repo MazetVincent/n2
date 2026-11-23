@@ -10,6 +10,7 @@
     "dev": "panda codegen --silent && vite dev",
     "open": "bun scripts/open.ts",
     "status": "bun scripts/status.ts",
+    "mcp": "bun scripts/mcp.ts",
     "i18n": "bun scripts/i18n.ts",
     "check:secrets": "sh scripts/check-secrets.sh",
     "typecheck": "bun run i18n && panda codegen --silent && tsc -p .",
