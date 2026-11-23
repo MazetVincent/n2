@@ -4,7 +4,7 @@
 // Les deux premières sections sont ouvertes, les autres fermées ; chaque nouvelle sélection repart de cet état.
 // Chaque vue du panneau est dans panel/ : vue d'ensemble, partie, librairie, couche, impact, passages de doc.
 import type { BranchData, Category, CodeMapData, DocHit } from "~/server/types";
-import { type Selection } from "./model";
+import type { Selection } from "./model";
 import { DocSection } from "./panel/docs";
 import { ImpactSection } from "./panel/impact";
 import { LayerPanel } from "./panel/layer";

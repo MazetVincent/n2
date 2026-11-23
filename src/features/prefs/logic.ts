@@ -197,7 +197,7 @@ function jetbrainsLaunchers(platform: string, home?: string): RegExp[] {
     // macOS : un exécutable dans le paquet .app d'une application (Applications du Mac ou de l'utilisateur)
     return [/^\/(?:Applications|Users\/[^/]+\/Applications)\/[^/]+\.app\/Contents\/MacOS\/[^/]+$/];
   }
-  const homeRe = home && home.startsWith("/") && home !== "/" ? escapeRe(home.replace(/\/+$/, "")) : "/home/[^/]+";
+  const homeRe = home?.startsWith("/") && home !== "/" ? escapeRe(home.replace(/\/+$/, "")) : "/home/[^/]+";
   return [
     // script de JetBrains Toolbox, dans le dossier personnel (« pycharm », « idea-ce »…)
     new RegExp(`^${homeRe}/\\.local/share/JetBrains/Toolbox/scripts/${IDE}(?:-[a-z0-9]+)?$`),

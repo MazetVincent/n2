@@ -96,7 +96,6 @@ describe("Sentry", () => {
 describe("Sentry : environnement de production et « Avant la prod »", () => {
   const root = demoMonorepo();
   afterAll(() => remove(root));
-  beforeEach(() => vi.stubEnv("SENTRY_AUTH_TOKEN", "jeton-de-test"));
   // un projet Sentry différent par test : les environnements et la vue « Avant la prod » sont gardés en mémoire par projet
   let n = 0;
   const cfgWith = (sentry: Record<string, unknown> = {}) => ({ ...makeConfig(root), sentry: { org: "demo", project: `p${++n}`, ...sentry } });
@@ -104,6 +103,7 @@ describe("Sentry : environnement de production et « Avant la prod »", () => {
   /** Fausse API : environnements, erreurs (selon l'environnement demandé), environnements de chaque erreur */
   let release: Record<string, unknown> | null = null;
   beforeEach(() => {
+    vi.stubEnv("SENTRY_AUTH_TOKEN", "jeton-de-test");
     release = null;
   });
   const sentryApi = (seen: Record<string, string[]> = {}) =>

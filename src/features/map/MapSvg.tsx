@@ -29,8 +29,8 @@ export function MapSvg({ data, layoutResult, zoom, sel, tests, allEdges, hovered
   const outNum = new Map<string, number>();
   if (selected) {
     const { inc, out } = interactions(data, selected, visible);
-    inc.forEach((e, i) => inNum.set(e.from, i + 1));
-    out.forEach((e, i) => outNum.set(e.to, i + 1));
+    for (const [i, e] of inc.entries()) inNum.set(e.from, i + 1);
+    for (const [i, e] of out.entries()) outNum.set(e.to, i + 1);
   }
   const connected = new Set(selected ? data.edges.filter((e) => e.from === selected || e.to === selected).flatMap((e) => [e.from, e.to]) : []);
   const matches = (n: MapNode) => (query && n.libs.some((l) => l.name === query && l.files + (tests ? l.testFiles : 0) > 0)) || (layer && n.category === layer);

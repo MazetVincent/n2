@@ -30,6 +30,7 @@ const isExecutable = (p: string) => {
 };
 
 export function savePrefs(input: Preferences): Preferences {
+  if (process.env.N2_DEMO === "1") throw new MessageError(msg("srv_demo_read_only"));
   const p: Preferences = { ...input, projectPath: input.projectPath.trim(), jetbrains: input.jetbrains.trim(), guide: { ...input.guide, path: input.guide.path.trim() } };
   const before = getPrefs();
   if (p.projectPath !== before.projectPath) {
@@ -52,6 +53,8 @@ export function savePrefs(input: Preferences): Preferences {
 
 /** Évènement du secret (code Konami, option du guide cliquée, page Statistiques ouverte) : retenu dans config.local.json */
 export function recordSecret(event: SecretEvent): Preferences {
+  // mode démo : rien n'est retenu (la config de démo n'est pas écrite)
+  if (process.env.N2_DEMO === "1") return getPrefs();
   const before = getPrefs();
   const already = event === "konami" ? before.secret.unlocked : event === "stats" ? before.secret.statsFound : before.secret.guideTouched || !before.secret.unlocked;
   if (!already) {

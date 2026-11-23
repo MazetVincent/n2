@@ -22,7 +22,8 @@ export interface SourceError {
 }
 
 export type SourceResult<T> =
-  | { ok: true; data: T; fetchedAt: string }
+  /** `stale` : la dernière lecture a échoué, ce sont les dernières bonnes données (lues à `fetchedAt`) */
+  | { ok: true; data: T; fetchedAt: string; stale?: { error: SourceError; failedAt: string } }
   | { ok: false; error: SourceError; fetchedAt: string };
 
 /** Ce que N2 sait d'une source depuis son démarrage (en mémoire, page « État des sources ») */

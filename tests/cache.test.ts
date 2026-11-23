@@ -43,6 +43,42 @@ describe("cached", () => {
   });
 });
 
+describe("dernières bonnes données en cas d'échec", () => {
+  const fail = async (): Promise<number> => {
+    throw new SourceFailure({ kind: "unavailable", message: { key: "srv_sentry_responded", params: { status: "503" } } });
+  };
+
+  it("après un succès, un échec resert les dernières données avec l'erreur et l'heure de l'échec", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.parse("2026-11-23T10:00:00Z"));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    await cached("jira", 60_000, true, async () => 42);
+    vi.setSystemTime(Date.parse("2026-11-23T10:05:00Z"));
+    const r = await cached("jira", 60_000, true, fail);
+    expect(r).toMatchObject({ ok: true, data: 42, fetchedAt: "2026-11-23T10:00:00.000Z", stale: { error: { message: { key: "srv_sentry_responded" } }, failedAt: "2026-11-23T10:05:00.000Z" } });
+    // un nouveau succès efface l'alerte
+    expect(await cached("jira", 60_000, true, async () => 43)).toEqual({ ok: true, data: 43, fetchedAt: "2026-11-23T10:05:00.000Z" });
+  });
+
+  it("lecture à la demande (git fetch, branche, requête de logs) : l'échec se voit, pas d'anciennes données", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    for (const key of ["branches", "branch:feat/x", "log-query:q:1h"]) {
+      await cached(key, 60_000, true, async () => 1);
+      expect((await cached(key, 60_000, true, fail)).ok, key).toBe(false);
+    }
+  });
+
+  it("au-delà de 24 h, l'erreur s'affiche seule ; sans succès préalable aussi", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.parse("2026-11-20T10:00:00Z"));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    await cached("slack", 60_000, true, async () => 1);
+    vi.setSystemTime(Date.parse("2026-11-21T10:00:01Z"));
+    expect((await cached("slack", 60_000, true, fail)).ok).toBe(false);
+    expect((await cached("stale:c", 60_000, true, fail)).ok).toBe(false);
+  });
+});
+
 describe("httpFetch", () => {
   it("passe un délai maximal à chaque appel", async () => {
     const spy = vi.fn(async (_url: string, init?: RequestInit) => new Response(init?.signal ? "avec délai" : "sans délai"));

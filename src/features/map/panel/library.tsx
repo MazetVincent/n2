@@ -9,7 +9,7 @@ import { m, msg, trPart } from "~/lib/i18n";
 import { getExamples, getLibDetails } from "~/server/fns";
 import { useEditorName } from "~/features/prefs/useEditorName";
 import type { CodeExample, LibDetails, MapNode } from "~/server/types";
-import { interactions, libCount, libLabel, visibleNodes } from "../model";
+import { libCount, libLabel, visibleNodes } from "../model";
 import type { PanelActions, PanelProps } from "../Panel";
 import { Cols, StickyHead, Title } from "./common";
 import { LibDocs } from "./docs";

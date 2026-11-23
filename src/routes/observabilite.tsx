@@ -4,7 +4,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { css, cx } from "styled-system/css";
 import { z } from "zod";
-import { button, Badge, Card, Empty, ErrorBox, ExtLink, FitScroll, Item, ItemMeta, ItemTitle, List, Segmented, Skeleton, SourceView, Tabs } from "~/components/ds";
+import { button, Badge, Card, Empty, ErrorBox, ExtLink, FitScroll, Item, ItemMeta, ItemTitle, List, Segmented, Skeleton, SourceView, StaleNotice, Tabs } from "~/components/ds";
 import { GuideForFiles, GuideReflexLinks } from "~/features/guide/GuideLinks";
 import { useEditorName } from "~/features/prefs/useEditorName";
 import { openInIde } from "~/lib/actions";
@@ -265,6 +265,7 @@ function CloudWatchCard() {
       {q.isPending && <Skeleton />}
       {/* session AWS expirée ou autre erreur : le message et la marche à suivre */}
       {q.data && !q.data.ok && <ErrorBox error={q.data.error} />}
+      {q.data?.ok && q.data.stale && <StaleNotice fetchedAt={q.data.fetchedAt} stale={q.data.stale} />}
       {d && (
         <>
           <div className={css({ display: "flex", gap: "2", flexWrap: "wrap", alignItems: "center", mt: "2.5" })}>
@@ -324,7 +325,7 @@ function CloudWatchCard() {
 function AlarmSparkline({ chart, start, end }: { chart: AlarmChart | undefined; start: number; end: number }) {
   const W = 160;
   const H = 36;
-  if (!chart || !chart.data.length) return <span className={css({ w: `${W}px`, flex: "none", fontSize: "xs", color: "muted", textAlign: "center" })}>{m.obs_no_curve()}</span>;
+  if (!chart?.data.length) return <span className={css({ w: `${W}px`, flex: "none", fontSize: "xs", color: "muted", textAlign: "center" })}>{m.obs_no_curve()}</span>;
   const values = [...chart.data.map(([, v]) => v), ...(chart.threshold !== null ? [chart.threshold] : []), ...(chart.band ? [...chart.band.low, ...chart.band.high].map(([, v]) => v) : [])];
   const lo = Math.min(...values);
   const hi = Math.max(...values) === lo ? lo + 1 : Math.max(...values);

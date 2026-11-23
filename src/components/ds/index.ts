@@ -11,7 +11,7 @@ export { Badge, badge, Count, count, Dot, TONES, type Tone } from "./badge";
 export { Button, button, IconButton, iconButton, ToggleButton, type ButtonVariants } from "./button";
 export { Card, cardFrame, LIST_MAX_H, Section } from "./card";
 export { Progress, Segmented, Switch, Tabs, Toggle } from "./controls";
-export { ErrorBox, Skeleton, SourceView } from "./feedback";
+export { ErrorBox, Skeleton, SourceView, StaleNotice } from "./feedback";
 export { Icon, ICON_NAMES, type IconName } from "./icon";
 export { Empty, ExtLink, H3, Item, item, ItemMeta, ItemTitle, List } from "./item";
 export { cols2, cols3, input, mono, muted, small } from "./layout";

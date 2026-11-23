@@ -25,7 +25,7 @@ let memo: { path: string; mtimeMs: number; html: string; parsed: ParsedGuide } |
 
 async function load(cfg: Config) {
   const path = guidePath(cfg);
-  let info;
+  let info: Awaited<ReturnType<typeof stat>>;
   try {
     info = await stat(path);
   } catch {

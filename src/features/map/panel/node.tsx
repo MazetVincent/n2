@@ -1,5 +1,5 @@
 import { cx } from "styled-system/css";
-import { badge, button, count, Section } from "~/components/ds";
+import { button, count, Section } from "~/components/ds";
 import { openInIde } from "~/lib/actions";
 import { plural } from "~/lib/format";
 import { m, trPart } from "~/lib/i18n";

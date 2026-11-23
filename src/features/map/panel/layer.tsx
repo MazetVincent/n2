@@ -1,5 +1,5 @@
 import { cx } from "styled-system/css";
-import { badge, button, count, Section } from "~/components/ds";
+import { badge, count, Section } from "~/components/ds";
 import { plural } from "~/lib/format";
 import { m, trPart } from "~/lib/i18n";
 import type { Category } from "~/server/types";

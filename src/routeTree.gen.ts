@@ -23,6 +23,8 @@ import { Route as PullRequestsRouteImport } from './routes/pull-requests'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as SprintRouteImport } from './routes/sprint'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
+import { Route as ApiBranchRouteImport } from './routes/api/branch'
+import { Route as ApiStatusRouteImport } from './routes/api/status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +96,16 @@ const StatistiquesRoute = StatistiquesRouteImport.update({
   path: '/statistiques',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBranchRoute = ApiBranchRouteImport.update({
+  id: '/api/branch',
+  path: '/api/branch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStatusRoute = ApiStatusRouteImport.update({
+  id: '/api/status',
+  path: '/api/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +122,8 @@ export interface FileRoutesByFullPath {
   '/sources': typeof SourcesRoute
   '/sprint': typeof SprintRoute
   '/statistiques': typeof StatistiquesRoute
+  '/api/branch': typeof ApiBranchRoute
+  '/api/status': typeof ApiStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +140,8 @@ export interface FileRoutesByTo {
   '/sources': typeof SourcesRoute
   '/sprint': typeof SprintRoute
   '/statistiques': typeof StatistiquesRoute
+  '/api/branch': typeof ApiBranchRoute
+  '/api/status': typeof ApiStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +159,8 @@ export interface FileRoutesById {
   '/sources': typeof SourcesRoute
   '/sprint': typeof SprintRoute
   '/statistiques': typeof StatistiquesRoute
+  '/api/branch': typeof ApiBranchRoute
+  '/api/status': typeof ApiStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +179,8 @@ export interface FileRouteTypes {
     | '/sources'
     | '/sprint'
     | '/statistiques'
+    | '/api/branch'
+    | '/api/status'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +197,8 @@ export interface FileRouteTypes {
     | '/sources'
     | '/sprint'
     | '/statistiques'
+    | '/api/branch'
+    | '/api/status'
   id:
     | '__root__'
     | '/'
@@ -193,6 +215,8 @@ export interface FileRouteTypes {
     | '/sources'
     | '/sprint'
     | '/statistiques'
+    | '/api/branch'
+    | '/api/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +234,8 @@ export interface RootRouteChildren {
   SourcesRoute: typeof SourcesRoute
   SprintRoute: typeof SprintRoute
   StatistiquesRoute: typeof StatistiquesRoute
+  ApiBranchRoute: typeof ApiBranchRoute
+  ApiStatusRoute: typeof ApiStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -312,6 +338,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatistiquesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/branch': {
+      id: '/api/branch'
+      path: '/api/branch'
+      fullPath: '/api/branch'
+      preLoaderRoute: typeof ApiBranchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/status': {
+      id: '/api/status'
+      path: '/api/status'
+      fullPath: '/api/status'
+      preLoaderRoute: typeof ApiStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +370,8 @@ const rootRouteChildren: RootRouteChildren = {
   SourcesRoute: SourcesRoute,
   SprintRoute: SprintRoute,
   StatistiquesRoute: StatistiquesRoute,
+  ApiBranchRoute: ApiBranchRoute,
+  ApiStatusRoute: ApiStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -54,6 +54,7 @@ const WSL_RUNDLL = "/mnt/c/Windows/System32/rundll32.exe";
 // guillemets… encodés en %xx) et on refuse tout ce qui pourrait encore la couper ou changer ce que reçoit ShellExecute.
 export function wslSafeUrl(url: string): string {
   const href = new URL(url).href;
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: refuser les caractères de contrôle dans une adresse est le but de ce test
   if (/[\s"<>^`|]|[\u0000-\u001f\u007f]/.test(href)) throw new Error("Adresse refusée");
   return href;
 }

@@ -16,5 +16,5 @@
       "styled-system/*": ["./styled-system/*"]
     }
   },
-  "include": ["src", "tests", "scripts", "vite.config.ts", "vitest.config.ts", "panda.config.ts", "paraglide.config.ts"]
+  "include": ["src", "tests", "e2e", "scripts", "playwright.config.ts", "vite.config.ts", "vitest.config.ts", "panda.config.ts", "paraglide.config.ts"]
 }

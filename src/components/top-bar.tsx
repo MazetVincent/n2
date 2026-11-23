@@ -1,7 +1,7 @@
 // Barre du haut : logo, recherche (large, juste à côté du logo) et « Ma branche », rafraîchir (avec l'heure de mise à jour),
 // session AWS, notifications, préférences (boulon) ; les onglets (avec compteurs) en dessous.
 import { Link, useCanGoBack, useHydrated, useNavigate, useRouter, useRouterState, useSearch } from "@tanstack/react-router";
-import { useIsFetching, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useIsFetching, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { css, cva, cx } from "styled-system/css";
 import { button, Icon, iconButton } from "~/components/ds";
@@ -15,7 +15,7 @@ import { ok, useAwsSession, useBranches, usePreferences, useRefreshAll } from "~
 import { remaining, timeFr } from "~/lib/format";
 import { toaster } from "~/lib/actions";
 import { m, msg } from "~/lib/i18n";
-import { reconnectAws } from "~/server/fns";
+import { getAppInfo, reconnectAws } from "~/server/fns";
 
 const TAB_LABELS = {
   "/dashboard": m.tab_dashboard,
@@ -103,9 +103,10 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
       <Link
         to="/dashboard"
         aria-label={m.topbar_n2_home()}
-        className={css({ gridArea: "logo", display: "grid", placeItems: "center", w: "36px", h: "36px", borderRadius: "lg", bg: "accent", color: "white", fontWeight: "800", fontSize: "base", textDecoration: "none", letterSpacing: "-0.02em" })}
+        className={css({ gridArea: "logo", position: "relative", display: "grid", placeItems: "center", w: "36px", h: "36px", borderRadius: "lg", bg: "accent", color: "white", fontWeight: "800", fontSize: "base", textDecoration: "none", letterSpacing: "-0.02em" })}
       >
         N2
+        <DemoBadge />
       </Link>
       <nav
         ref={navRef}
@@ -428,6 +429,20 @@ function AwsBadge() {
   ) : (
     <span title={title} className={className}>
       {content}
+    </span>
+  );
+}
+
+/** Mode démo (bun run demo) : un badge sous le logo, pour ne jamais confondre ces données inventées avec les vraies */
+function DemoBadge() {
+  const info = useQuery({ queryKey: ["app-info"], queryFn: () => getAppInfo(), staleTime: Number.POSITIVE_INFINITY });
+  if (!info.data?.demo) return null;
+  return (
+    <span
+      title={m.topbar_demo_hint()}
+      className={css({ position: "absolute", bottom: "-7px", left: "50%", transform: "translateX(-50%)", px: "1", borderRadius: "sm", bg: "warn", color: "white", fontSize: "2xs", fontWeight: "700", letterSpacing: "0.02em", lineHeight: "1.4" })}
+    >
+      {m.topbar_demo()}
     </span>
   );
 }

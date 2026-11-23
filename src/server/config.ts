@@ -3,7 +3,8 @@ import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { msg } from "./messages.ts";
-import { SourceFailure } from "./run.ts";
+import { MessageError, SourceFailure } from "./run.ts";
+import { demoConfig } from "./demo.ts";
 
 export interface Config {
   /** obsolète : le port se règle avec la variable N2_PORT (4747 par défaut) */
@@ -120,6 +121,8 @@ export const resetConfig = () => {
 
 /** config.local.json tel quel (sans « ~ » développé), pour le modifier */
 export function readRawConfig(): Record<string, unknown> {
+  // mode démo : la config de démo, jamais ta vraie config (préférences affichées, secret)
+  if (process.env.N2_DEMO === "1") return demoConfig(ROOT) as unknown as Record<string, unknown>;
   if (!existsSync(CONFIG_PATH)) throw new SourceFailure({ kind: "config", message: msg("srv_config_missing") });
   return JSON.parse(readFileSync(CONFIG_PATH, "utf8")) as Record<string, unknown>;
 }
@@ -129,6 +132,8 @@ export function readRawConfig(): Record<string, unknown> {
  * Si c'est un lien symbolique, c'est le fichier pointé qui est réécrit (le lien reste un lien).
  */
 export function writeRawConfig(cfg: Record<string, unknown>): void {
+  // mode démo : rien n'est écrit (ni préférences, ni secret)
+  if (process.env.N2_DEMO === "1") throw new MessageError(msg("srv_demo_read_only"));
   const target = realpathSync(CONFIG_PATH);
   const mode = statSync(target).mode & 0o777;
   const tmp = `${target}.${process.pid}.tmp`;
@@ -146,6 +151,8 @@ export function loadConfig(): Config {
 }
 
 function readConfig(): Config {
+  // mode démo : comptes factices, carte du code sur N2 lui-même (src/server/demo.ts)
+  if (process.env.N2_DEMO === "1") return demoConfig(ROOT);
   if (!existsSync(CONFIG_PATH)) {
     throw new SourceFailure({ kind: "config", message: msg("srv_config_missing") });
   }

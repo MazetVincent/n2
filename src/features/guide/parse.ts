@@ -8,7 +8,7 @@
 //  - le glossaire : X={en:A,fr:B}, où B = { terme: { term, short, body } } ;
 //  - le pied de page : « Rédigé le … `commit:1a2b3c4d5`. Révisé le … `commit:9f8e7d6c5` ».
 // Si une partie manque (nouvelle version du guide), l'index est construit avec le reste et `warnings` le dit.
-import type { DocPassage, GuideContent, GuideFileRef, GuideIndex, GuidePage, GuideSection, GuideTerm, GuideText } from "~/server/types";
+import type { DocPassage, GuideContent, GuideFileRef, GuidePage, GuideSection, GuideTerm, GuideText } from "~/server/types";
 import { isObject, isRef, readLiteral, type Literal } from "./literal";
 import { guideTarget } from "./logic";
 

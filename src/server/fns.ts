@@ -6,24 +6,21 @@ import { z } from "zod";
 import { loadConfig, ROOT } from "./config.ts";
 import { isAllowedUrl, openInChrome, openInIde } from "./open.ts";
 import { cached, forget, run, sourceStats, STARTED_AT } from "./run.ts";
+import { readAwsSession, readBranch, readCi, readCloudWatch, readDeploy, readLibs, readPullRequests, readSentry, readSprint } from "./sources.ts";
 import type { SourceStatus } from "./types.ts";
 import { isValidBranchName } from "../features/branches/logic.ts";
-import { awsSession } from "./sources/aws-session.ts";
 import { reconnectAws as runReconnectAws } from "./sources/aws-reconnect.ts";
 import { fetchRemoteBranches, listBranches } from "./sources/branches.ts";
 import { fetchCalendar } from "./sources/calendar.ts";
-import { fetchDeploy } from "./sources/deploy.ts";
-import { fetchCi } from "./sources/ci.ts";
 import { githubBranch } from "../features/branches/logic.ts";
-import { fetchAlarmCharts, fetchCloudWatch } from "./sources/cloudwatch.ts";
+import { fetchAlarmCharts } from "./sources/cloudwatch.ts";
 import { listLogQueries, runLogQuery as runSavedLogQuery } from "./sources/logs.ts";
-import { branchChanges, codeExamples, fetchCodeMap, impactOf, resolveProjectFile } from "./sources/codemap.ts";
+import { codeExamples, fetchCodeMap, impactOf, resolveProjectFile } from "./sources/codemap.ts";
 import { libDetails } from "./sources/lib-details.ts";
-import { fetchOpenPrs, fetchPullRequests } from "./sources/github.ts";
-import { fetchSprint } from "./sources/jira.ts";
-import { fetchLibs, fetchWorkspaceLibs, libOverview } from "./sources/libs.ts";
+import { fetchOpenPrs } from "./sources/github.ts";
+import { fetchWorkspaceLibs, libOverview } from "./sources/libs.ts";
 import { logoutMicrosoft, microsoftLoginState, startMicrosoftLogin as runMicrosoftLogin } from "./sources/microsoft-auth.ts";
-import { fetchSentry, sentryFrames } from "./sources/sentry.ts";
+import { sentryFrames } from "./sources/sentry.ts";
 import { fetchSlack } from "./sources/slack.ts";
 import { fetchGuide, guideFreshness } from "./sources/guide.ts";
 import { docIndex } from "./sources/docs.ts";
@@ -45,7 +42,7 @@ const refresh = z.object({ force: z.boolean().optional() }).optional();
 // ---------- Sources du tableau de bord ----------
 export const getPullRequests = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("prs", 2 * MIN, data?.force ?? false, () => fetchPullRequests(loadConfig())));
+  .handler(({ data }) => readPullRequests(data?.force ?? false));
 
 // PR ouvertes des dépôts suivis : l'onglet Librairies y cherche les mises à jour en cours
 export const getOpenPrs = createServerFn({ method: "GET" })
@@ -54,11 +51,11 @@ export const getOpenPrs = createServerFn({ method: "GET" })
 
 export const getSprint = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("jira", 2 * MIN, data?.force ?? false, () => fetchSprint(loadConfig())));
+  .handler(({ data }) => readSprint(data?.force ?? false));
 
 export const getLibs = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("libs", 6 * 60 * MIN, data?.force ?? false, () => fetchLibs(loadConfig())));
+  .handler(({ data }) => readLibs(data?.force ?? false));
 
 export const getWorkspaceLibs = createServerFn({ method: "GET" })
   .validator(refresh)
@@ -68,13 +65,11 @@ export const getWorkspaceLibs = createServerFn({ method: "GET" })
 const sentryEnv = z.string().regex(/^[\w.-]{0,64}$/);
 export const getSentry = createServerFn({ method: "GET" })
   .validator(z.object({ force: z.boolean().optional(), env: sentryEnv.optional() }).optional())
-  .handler(({ data }) =>
-    cached(`sentry:${data?.env ?? "(config)"}`, 2 * MIN, data?.force ?? false, () => fetchSentry(loadConfig(), data?.env === undefined ? undefined : data.env || null)),
-  );
+  .handler(({ data }) => readSentry(data?.force ?? false, data?.env === undefined ? undefined : data.env || null));
 
 export const getCloudWatch = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("cloudwatch", 1 * MIN, data?.force ?? false, () => fetchCloudWatch(loadConfig())));
+  .handler(({ data }) => readCloudWatch(data?.force ?? false));
 
 // Logs Insights : requêtes enregistrées par l'équipe (liste gardée 10 min) ; lancement à la demande seulement
 // (POST : jamais relancé tout seul par un rafraîchissement ; un double clic dans la minute réutilise le résultat)
@@ -111,7 +106,7 @@ export const getStats = createServerFn({ method: "GET" })
 
 export const getDeploy = createServerFn({ method: "GET" })
   .validator(refresh)
-  .handler(({ data }) => cached("deploy", 1 * MIN, data?.force ?? false, () => fetchDeploy(loadConfig())));
+  .handler(({ data }) => readDeploy(data?.force ?? false));
 
 export const getCodeMap = createServerFn({ method: "GET" })
   .validator(refresh)
@@ -125,13 +120,13 @@ export const getCi = createServerFn({ method: "GET" })
   .validator(z.object({ force: z.boolean().optional(), branch: branchName.optional() }).optional())
   .handler(({ data }) => {
     const branch = data?.branch ? githubBranch(data.branch) : undefined;
-    return cached(`ci:${branch ?? ""}`, 2 * MIN, data?.force ?? false, () => fetchCi(loadConfig(), branch));
+    return readCi(data?.force ?? false, branch);
   });
 
 
 export const getBranch = createServerFn({ method: "GET" })
   .validator(z.object({ force: z.boolean().optional(), branch: branchName.optional() }).optional())
-  .handler(({ data }) => cached(`branch:${data?.branch ?? ""}`, 1 * MIN, data?.force ?? false, () => branchChanges(loadConfig(), data?.branch)));
+  .handler(({ data }) => readBranch(data?.force ?? false, data?.branch));
 
 // Branches du projet pour le sélecteur « Ma branche » (refs déjà connues, sans réseau)
 export const getBranches = createServerFn({ method: "GET" })
@@ -176,7 +171,7 @@ export const getDocPassage = createServerFn({ method: "GET" })
     return { ...idx, data: p ? (p.text[data.lang] || p.text.fr) : null };
   });
 
-export const getAwsSession = createServerFn({ method: "GET" }).handler(() => awsSession(loadConfig()));
+export const getAwsSession = createServerFn({ method: "GET" }).handler(() => readAwsSession());
 
 // Liens rapides de ⌘K (config + liens déduits de GitHub, Jira, Sentry, AWS) : rien de secret, la config ne change qu'au redémarrage
 export const getQuickLinks = createServerFn({ method: "GET" }).handler(() => buildQuickLinks(loadConfig()));
@@ -205,6 +200,9 @@ export const getImpact = createServerFn({ method: "GET" })
 export const getSentryFrames = createServerFn({ method: "GET" })
   .validator(z.object({ issueId: z.string().regex(/^\d{1,20}$/), env: sentryEnv.optional() }))
   .handler(({ data }) => cached(`frames:${data.issueId}:${data.env ?? ""}`, 10 * MIN, false, () => sentryFrames(loadConfig(), data.issueId, data.env || null)));
+
+// Mode de N2 vu par la page : démo (données inventées, N2_DEMO=1) ou non
+export const getAppInfo = createServerFn({ method: "GET" }).handler(async () => ({ demo: process.env.N2_DEMO === "1" }));
 
 // ---------- État des sources (observabilité de N2 lui-même) ----------
 let n2Commit: Promise<string | null> | null = null;

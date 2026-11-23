@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  // Linter seulement : le code garde sa mise en forme actuelle (pas de formateur imposé).
+  // Au commit (.githooks/pre-commit, fichiers indexés) et en CI : une erreur bloque, un avertissement non.
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": { "includes": ["**", "!src/routeTree.gen.ts", "!src/paraglide", "!styled-system", "!messages", "!bun.lock"] },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        // `x!` est utilisé sciemment après une vérification que TypeScript ne voit pas (find après has, etc.)
+        "noNonNullAssertion": "off"
+      },
+      "complexity": {
+        // les styles de la carte (map.css) ordonnent leurs sélecteurs par composant, pas par spécificité
+        "noImportantStyles": "warn"
+      },
+      "correctness": {
+        // À revoir une par une (risque de boucles de rendu si on ajoute une dépendance à l'aveugle)
+        "useExhaustiveDependencies": "warn",
+        // la règle Playwright prend les describe() de Vitest (rappel async autorisé) pour des describe() Playwright
+        "usePlaywrightValidDescribeCallback": "off"
+      },
+      "suspicious": {
+        // listes figées (lignes de tableau, trace) : l'index est une clé stable ; à revoir si elles deviennent triables
+        "noArrayIndexKey": "warn"
+      },
+      "a11y": {
+        // Accessibilité : à corriger dans un chantier dédié (rôles, éléments sémantiques, focus) ; signalé, pas bloquant
+        "useSemanticElements": "warn",
+        "noNoninteractiveElementToInteractiveRole": "warn",
+        "noAutofocus": "warn",
+        "useFocusableInteractive": "warn",
+        "useKeyWithClickEvents": "warn",
+        "noStaticElementInteractions": "warn",
+        "useAriaPropsSupportedByRole": "warn",
+        "noNoninteractiveTabindex": "warn"
+      }
+    }
+  },
+  "css": { "linter": { "enabled": true } },
+  "overrides": [{ "includes": ["**/*.css"], "linter": { "rules": { "style": { "noDescendingSpecificity": "off" } } } }]
+}
