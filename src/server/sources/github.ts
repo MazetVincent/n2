@@ -47,7 +47,7 @@ export async function gh(args: string[]): Promise<string> {
 
 async function search(q: string): Promise<RawPr[]> {
   const out = await gh(["api", "graphql", "-F", `q=${q}`, "-f", `query=${QUERY}`]);
-  return (JSON.parse(out).data.search.nodes as RawPr[]).filter((n) => n && n.number);
+  return (JSON.parse(out).data.search.nodes as RawPr[]).filter((n) => n?.number);
 }
 
 export async function fetchPullRequests(cfg: Config): Promise<PullRequestsData> {
@@ -151,7 +151,7 @@ export async function fetchOpenPrs(cfg: Config): Promise<OpenPr[]> {
   const repos = cfg.github.repos.map((r) => `repo:${r}`).join(" ");
   const out = await gh(["api", "graphql", "-F", `q=is:pr is:open ${repos} sort:updated-desc`, "-f", `query=${OPEN_QUERY}`]);
   const prs = (JSON.parse(out).data.search.nodes as RawOpenPr[])
-    .filter((n) => n && n.number)
+    .filter((n) => n?.number)
     .map((raw): OpenPr => {
       const pr = { author: raw.author?.login ?? "?", branch: raw.headRefName };
       return {

@@ -1,5 +1,4 @@
 // GitHub : pull requests, et PR de mise à jour des librairies (Renovate, Dependabot…).
-import type { m } from "../../paraglide/messages.js";
 
 // ---------- GitHub ----------
 export type CiState = "SUCCESS" | "FAILURE" | "ERROR" | "PENDING" | "EXPECTED" | null;

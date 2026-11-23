@@ -38,7 +38,7 @@ export function setNotifyEnabled(on: boolean) {
   set(ENABLED, on ? "on" : "off");
   // à l'activation, on repart de zéro : ce qui existe déjà sera noté comme vu, sans rafale de notifications
   if (on) writeSeen({ seen: {}, sources: [] });
-  listeners.forEach((l) => l());
+  for (const l of listeners) l();
 }
 
 export function readSeen(): SeenStore {

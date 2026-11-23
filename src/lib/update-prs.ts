@@ -26,7 +26,7 @@ export const isBotPr = (pr: Pick<OpenPr, "author" | "branch">) => BOT.test(pr.au
 
 // Caractères d'un nom de package npm : une occurrence de « react » dans « @sentry/react » ou « react-hook-form » n'en est pas une.
 const NAME_CHAR = /[a-z0-9._@/-]/i;
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // Une version : 19, v19, ^7.0.0, 19.x, 5.0.0-beta.1
 const VERSION = String.raw`[v^~]?(\d+(?:\.(?:\d+|x))*(?:-[0-9a-z.]+)?)`;
 const cleanVersion = (v: string | undefined | null) => (v ? v.replace(/^[v^~=]+/, "").replace(/\.$/, "") || null : null);
@@ -81,19 +81,19 @@ function branchVersion(branch: string, name: string): string | null | undefined 
   const n = name.toLowerCase();
   // Dependabot : dependabot/npm_and_yarn/[dossier/]zod-3.23.8, le @ du scope est retiré (tanstack/react-query-5.1.0)
   if (b.startsWith("dependabot/")) {
-    const m = b.match(new RegExp(String.raw`(?:^|/)${escape(n.replace(/^@/, ""))}-${VERSION}$`));
+    const m = b.match(new RegExp(String.raw`(?:^|/)${escapeRe(n.replace(/^@/, ""))}-${VERSION}$`));
     return m ? cleanVersion(m[1]) : undefined;
   }
   // Renovate : renovate/react-19.x, renovate/major-react-monorepo, renovate/tanstack-react-query-5.x
   if (b.startsWith("renovate/")) {
     const slug = n.replace(/^@/, "").replace(/\//g, "-");
-    const m = b.slice(9).match(new RegExp(String.raw`^(?:(?:major|minor|patch)-)?${escape(slug)}(?:-monorepo)?(?:-${VERSION})?$`));
+    const m = b.slice(9).match(new RegExp(String.raw`^(?:(?:major|minor|patch)-)?${escapeRe(slug)}(?:-monorepo)?(?:-${VERSION})?$`));
     return m ? (cleanVersion(m[1]) ?? "") : undefined;
   }
   // PR faite à la main : feat/maj-react-19, chore/upgrade-zod-v4, fix/bump-react-hook-form
   if (!/(^|[/_-])(maj|update|upgrade|bump|migrat\w*|montee|mise-a-jour)([/_-]|$)/.test(b)) return undefined;
   const local = n.replace(/^@/, "").replace(/\//g, "-");
-  const m = b.match(new RegExp(String.raw`(?:^|[/_-])${escape(local)}(?:-${VERSION})?(?:$|/)`));
+  const m = b.match(new RegExp(String.raw`(?:^|[/_-])${escapeRe(local)}(?:-${VERSION})?(?:$|/)`));
   return m ? (cleanVersion(m[1]) ?? "") : undefined;
 }
 

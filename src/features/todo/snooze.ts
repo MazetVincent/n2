@@ -77,7 +77,7 @@ function write(next: Snoozes) {
   } catch {
     /* stockage indisponible (navigation privée…) : le report ne tient que jusqu'au rechargement */
   }
-  listeners.forEach((l) => l());
+  for (const l of listeners) l();
 }
 
 function subscribe(listener: () => void) {

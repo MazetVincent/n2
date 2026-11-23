@@ -45,7 +45,7 @@ async function githubThreads(cfg: Config, since: string): Promise<{ me: string; 
   const me = (await gh(["api", "user", "--jq", ".login"])).trim();
   const repos = cfg.github.repos.map((r) => `repo:${r}`).join(" ");
   const out = await gh(["api", "graphql", "-F", `q=${repos} involves:@me updated:>=${since} sort:updated-desc`, "-f", `query=${QUERY}`]);
-  const nodes = (JSON.parse(out).data.search.nodes as RawGithubThread[]).filter((n) => n && n.number);
+  const nodes = (JSON.parse(out).data.search.nodes as RawGithubThread[]).filter((n) => n?.number);
   return { me, threads: nodes.map((n) => githubThread(n, me)) };
 }
 
@@ -56,7 +56,10 @@ async function jiraAccountId(): Promise<string> {
   for (const field of ["assignee", "reporter"] as const) {
     const out = await acli(["workitem", "search", "--jql", `${field} = currentUser() ORDER BY updated DESC`, "--fields", `key,${field}`, "--limit", "1", "--json"]);
     const id = (JSON.parse(out) as RawJiraIssue[] | null)?.[0]?.fields[field]?.accountId;
-    if (id) return (jiraMe = id);
+    if (id) {
+      jiraMe = id;
+      return id;
+    }
   }
   throw new SourceFailure({ kind: "config", message: msg("srv_jira_account_not_found"), hint: msg("srv_hint_jira_account") });
 }

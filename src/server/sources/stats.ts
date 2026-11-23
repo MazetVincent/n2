@@ -49,7 +49,7 @@ async function searchAll(q: string): Promise<RawStatsPr[]> {
     const args = ["api", "graphql", "-F", `q=${q}`, "-f", `query=${QUERY}`];
     if (after) args.push("-f", `after=${after}`);
     const search = JSON.parse(await gh(args)).data.search as { pageInfo: { hasNextPage: boolean; endCursor: string }; nodes: RawStatsPr[] };
-    out.push(...search.nodes.filter((n) => n && n.number));
+    out.push(...search.nodes.filter((n) => n?.number));
     if (!search.pageInfo.hasNextPage) break;
     after = search.pageInfo.endCursor;
   }

@@ -508,6 +508,7 @@ sh scripts/autostart.sh uninstall
 | `bun run typecheck` | vérification TypeScript |
 | `bun run codegen` | régénère les styles Panda (`styled-system/`) |
 | `bun run i18n` | compile `messages/*.json` en fonctions typées (`src/paraglide/`) ; `dev`, `test` et `typecheck` le font déjà |
+| `bun run lint` | linter Biome (règles dans `biome.jsonc`) ; aussi au commit sur les fichiers indexés, et en CI |
 | `bun run check:secrets` | analyse de tous les fichiers suivis par git |
 | `bun run check:server` | vérifie les protections du serveur en cours d'exécution (développement ou production) |
 | `bun run autostart` | raccourci vers `scripts/autostart.sh` |

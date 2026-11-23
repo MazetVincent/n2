@@ -325,7 +325,7 @@ function CloudWatchCard() {
 function AlarmSparkline({ chart, start, end }: { chart: AlarmChart | undefined; start: number; end: number }) {
   const W = 160;
   const H = 36;
-  if (!chart || !chart.data.length) return <span className={css({ w: `${W}px`, flex: "none", fontSize: "xs", color: "muted", textAlign: "center" })}>{m.obs_no_curve()}</span>;
+  if (!chart?.data.length) return <span className={css({ w: `${W}px`, flex: "none", fontSize: "xs", color: "muted", textAlign: "center" })}>{m.obs_no_curve()}</span>;
   const values = [...chart.data.map(([, v]) => v), ...(chart.threshold !== null ? [chart.threshold] : []), ...(chart.band ? [...chart.band.low, ...chart.band.high].map(([, v]) => v) : [])];
   const lo = Math.min(...values);
   const hi = Math.max(...values) === lo ? lo + 1 : Math.max(...values);

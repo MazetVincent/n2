@@ -1,5 +1,4 @@
 // GitHub · Jira : mentions, commentaires, réponses.
-import type { m } from "../../paraglide/messages.js";
 import type { Message } from "./common.ts";
 
 // ---------- Activité GitHub et Jira (mentions, commentaires, réponses) ----------

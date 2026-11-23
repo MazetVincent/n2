@@ -14,3 +14,11 @@ if command -v gitleaks >/dev/null 2>&1; then
 else
   echo "ℹ gitleaks n'est pas installé (brew install gitleaks) : seul le script maison a vérifié ce commit."
 fi
+
+# 3. Biome (linter, règles dans biome.jsonc) sur les fichiers indexés : une erreur bloque, un avertissement non
+if [ -x node_modules/.bin/biome ]; then
+  node_modules/.bin/biome lint --staged --no-errors-on-unmatched --diagnostic-level=error || {
+    echo "→ Commit refusé par Biome (bun run lint pour le détail)."
+    exit 1
+  }
+fi

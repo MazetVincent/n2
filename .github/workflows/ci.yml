@@ -34,6 +34,9 @@ jobs:
           # noms du projet pro et de l'entreprise : une regex par ligne, gardée hors du dépôt (secret du dépôt GitHub)
           N2_FORBIDDEN_WORDS: ${{ secrets.N2_FORBIDDEN_WORDS }}
 
+      - name: Lint (Biome)
+        run: bunx biome ci .
+
       - name: Typecheck
         run: bun run typecheck
 

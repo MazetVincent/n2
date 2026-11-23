@@ -114,7 +114,7 @@ export function searchDocs(docs: PreparedDocs, query: string, lang: Lang, limit 
     });
 }
 
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Passages qui citent une librairie par son nom exact (« zod », « @tanstack/react-query ») :
@@ -123,7 +123,7 @@ const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  */
 export function libMentions(docs: PreparedDocs, lib: string, lang: Lang, limit = 12): DocHit[] {
   if (!lib || lib === "node:*") return [];
-  const re = new RegExp(`(^|[^\\w@/.-])${escape(lib)}(?![\\w/-])`, "gi");
+  const re = new RegExp(`(^|[^\\w@/.-])${escapeRe(lib)}(?![\\w/-])`, "gi");
   const at = (t: string) => {
     re.lastIndex = 0;
     const m = re.exec(t);
