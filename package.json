@@ -26,14 +26,14 @@
     "autostart": "sh scripts/autostart.sh"
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.11.0",
+    "@axe-core/playwright": "4.14.0",
     "@biomejs/biome": "2.6.8",
     "@inlang/paraglide-js": "3.1.0",
     "@inlang/plugin-message-format": "4.5.0",
     "@pandacss/dev": "^2.4.0",
     "@pandacss/preset-base": "^2.4.0",
     "@pandacss/preset-panda": "^2.4.0",
-    "@playwright/test": "1.56.1",
+    "@playwright/test": "1.65.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
