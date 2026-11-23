@@ -1,0 +1,16 @@
+#!/bin/sh
+# Activé par `bun run setup` (git config core.hooksPath .githooks)
+# Deux garde-fous complémentaires ; le commit est refusé si l'un des deux trouve quelque chose.
+
+# 1. Script maison : fichiers sensibles, tokens, email pro
+sh scripts/check-secrets.sh --staged || exit 1
+
+# 2. gitleaks (plus de 150 règles de détection), s'il est installé : brew install gitleaks
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --pre-commit --staged --no-banner --redact . || {
+    echo "→ Commit refusé par gitleaks."
+    exit 1
+  }
+else
+  echo "ℹ gitleaks n'est pas installé (brew install gitleaks) : seul le script maison a vérifié ce commit."
+fi

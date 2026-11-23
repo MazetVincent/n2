@@ -1,0 +1,64 @@
+{
+  "port": 4747,
+  "github": {
+    "repos": ["mon-org/mon-depot"],
+    "recentDays": 14
+  },
+  "jira": {
+    "site": "mon-entreprise.atlassian.net",
+    "projectKey": "ABC",
+    "boardId": 1,
+    "onlyMine": true
+  },
+  "libs": {
+    "projectPath": "~/chemin/vers/le/projet",
+    "packages": ["react", "zod"]
+  },
+  "sentry": {
+    "org": "mon-org",
+    "project": "mon-projet",
+    "environment": "production",
+    "preprodEnvironments": ["staging"]
+  },
+  "aws": {
+    "profile": "mon-profil",
+    "region": "eu-west-1",
+    "alarmPrefix": "",
+    "hideAutoscaling": true,
+    "reconnectHint": "Reconnecte-toi à AWS puis rafraîchis",
+    "reconnect": { "projectPath": "~/chemin/vers/le/projet", "script": "aws:login" }
+  },
+  "deploy": {
+    "pipelinePrefix": "monprojet-",
+    "mainBranch": "main",
+    "envUrl": "https://preview-{slug}.site.example/"
+  },
+  "links": [
+    { "label": "Site en prod", "url": "https://www.site.example/", "group": "Prod" },
+    { "label": "Back-office", "url": "https://bo.site.example/", "group": "Prod", "keywords": "admin bo" },
+    { "label": "Staging", "url": "https://staging.site.example/", "group": "Staging" }
+  ],
+  "slack": {
+    "channels": ["dev-front", "releases"],
+    "messages": 5
+  },
+  "calendar": {
+    "icsUrl": "",
+    "graph": { "tenantId": "mon-entreprise.onmicrosoft.com", "clientId": "00000000-0000-0000-0000-000000000000" }
+  },
+  "guide": {
+    "path": "~/Documents/guide.html",
+    "name": "Guide Monprojet",
+    "links": { "deploy": [], "observability": [], "prs": [] },
+    "enabled": true
+  },
+  "ui": {
+    "editor": "jetbrains"
+  },
+  "codemap": {
+    "projectPath": "~/chemin/vers/le/projet",
+    "ide": "/Applications/PhpStorm.app/Contents/MacOS/phpstorm",
+    "splitThreshold": 400,
+    "categories": {}
+  }
+}

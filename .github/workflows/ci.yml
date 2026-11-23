@@ -1,0 +1,45 @@
+# CI de N2 : typecheck, tests et recherche de secrets à chaque push.
+# Les tests tournent sur un faux monorepo créé à la volée : aucun accès au projet pro ni aux CLI connectées.
+# Sur Linux : vérifie aussi au passage que N2 et ses scripts marchent ailleurs que sur macOS.
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Dépendances
+        run: bun install --frozen-lockfile
+
+      - name: Secrets
+        run: bun run check:secrets
+        env:
+          # noms du projet pro et de l'entreprise : une regex par ligne, gardée hors du dépôt (secret du dépôt GitHub)
+          N2_FORBIDDEN_WORDS: ${{ secrets.N2_FORBIDDEN_WORDS }}
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Tests
+        run: bun run test
+
+      # N2 tourne en production avec le démarrage automatique : le build doit toujours passer
+      - name: Build de production
+        run: bun run build

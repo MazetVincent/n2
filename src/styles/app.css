@@ -1,0 +1,14 @@
+/* Panda CSS remplace cette ligne par les styles générés (voir vite.config.ts) */
+@layer reset, base, tokens, recipes, utilities;
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

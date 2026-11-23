@@ -1,0 +1,23 @@
+# App Slack de N2 : lecture seule, token utilisateur (xoxp-), installée dans ton espace de travail uniquement.
+# api.slack.com/apps → Create New App → From a manifest → choisir l'espace → coller ce fichier.
+display_information:
+  name: N2
+  description: Tableau de bord local, en lecture seule (mentions, messages directs, salons suivis)
+  background_color: "#e5007d"
+oauth_config:
+  scopes:
+    user:
+      - channels:history
+      - channels:read
+      - groups:history
+      - groups:read
+      - im:history
+      - im:read
+      - mpim:history
+      - mpim:read
+      - search:read
+      - users:read
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

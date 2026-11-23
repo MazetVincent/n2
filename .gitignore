@@ -1,0 +1,37 @@
+# --- Configuration et secrets : JAMAIS dans git ---
+# Toute la config propre au compte pro (Jira, Sentry, AWS, dépôts, librairies)
+config.local.json
+*.local.json
+*.local.*
+.env
+.env.*
+.sentryclirc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials
+credentials.*
+*.bundle
+
+# Données récupérées (N2 n'écrit rien sur disque, mais au cas où)
+.cache/
+cache/
+*.dump.json
+
+# Outils
+node_modules/
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Généré
+styled-system/
+src/paraglide/
+project.inlang/cache/
+dist/
+.tanstack/
+.output/
+.vinxi/
+.nitro/
