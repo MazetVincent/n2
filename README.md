@@ -582,6 +582,8 @@ sh scripts/autostart.sh uninstall
 
 ## Architecture
 
+Les grands choix (et leurs raisons) sont dans [`docs/adr/`](docs/adr/README.md).
+
 ```
 src/
   server/                    code serveur uniquement (jamais envoyé au navigateur)
