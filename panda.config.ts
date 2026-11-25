@@ -119,7 +119,8 @@ export default defineConfig({
       },
       // La lumière du logo (enseigne) descend dans la page, derrière les cartes : on la voit autour d'elles, sur tous
       // les onglets. Fixe (la barre du haut, et donc le logo, reste en place au défilement), au rythme des battements du
-      // logo (même animation, src/styles/app.css). Centre : celui du logo (marge de la barre + 18px).
+      // logo (même animation, src/styles/app.css). Centre : celui du logo (marge de la barre + 18px). Même géométrie
+      // que la couche de lumière du jeton « card », pour que la lumière se raccorde au bord des cartes.
       "body::before": {
         content: '""',
         position: "fixed",
@@ -129,9 +130,6 @@ export default defineConfig({
         background: "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 16%), rgb(255 61 119 / 6%) 45%, transparent 75%)",
         animation: "neon-flicker 9s linear infinite",
       },
-    },
-    "@media (prefers-color-scheme: dark) and (max-width: 767.98px)": {
-      "body::before": { backgroundImage: "radial-gradient(700px 520px at 32px 0, rgb(255 61 119 / 16%), rgb(255 61 119 / 6%) 45%, transparent 75%)" },
     },
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },
