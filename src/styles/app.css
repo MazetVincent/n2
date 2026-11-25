@@ -12,3 +12,32 @@
     transform: rotate(360deg);
   }
 }
+
+/*
+ * Enseigne au néon (logo N2 en thème sombre) : allumée presque tout le temps, quelques battements toutes les 9 s.
+ * Le halo que le logo projette sur la barre du haut suit la même animation (même durée, lancées ensemble).
+ * Animation coupée si le système demande moins de mouvement (règle globale de panda.config.ts) : reste allumée.
+ */
+@keyframes neon-flicker {
+  0%,
+  63%,
+  65%,
+  67.5%,
+  70%,
+  71.5%,
+  100% {
+    opacity: 1;
+  }
+  64% {
+    opacity: 0.4;
+  }
+  66% {
+    opacity: 0.25;
+  }
+  69% {
+    opacity: 0.55;
+  }
+  70.7% {
+    opacity: 0.2;
+  }
+}

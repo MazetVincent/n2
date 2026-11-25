@@ -97,15 +97,39 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         position: "sticky",
         top: 0,
         zIndex: 10,
-        mdDown: { px: "4" },
+        mdDown: { px: "4", "--logo-x": "34px" },
+        // Thème sombre : le logo, une enseigne au néon, irradie sa couleur sur la barre (halo autour du logo et lueur
+        // qui court sur le bord du bas), au rythme de ses battements. --logo-x : centre du logo (marge + 18px).
+        "--logo-x": "calc(max(24px, (100% - 1392px) / 2) + 18px)",
+        "@media (prefers-color-scheme: dark)": {
+          "&::before, &::after": { content: '""', position: "absolute", pointerEvents: "none", zIndex: -1, animation: "neon-flicker 9s linear infinite" },
+          _before: { inset: 0, bgImage: "radial-gradient(720px 170px at var(--logo-x) 26px, rgb(255 61 119 / 30%), rgb(255 61 119 / 10%) 45%, transparent 78%)" },
+          _after: { left: 0, right: 0, bottom: "-1px", h: "1px", bgImage: "linear-gradient(90deg, transparent, rgb(255 61 119 / 85%) var(--logo-x), rgb(255 61 119 / 25%) calc(var(--logo-x) + 360px), transparent calc(var(--logo-x) + 720px))" },
+        },
       })}
     >
       <Link
         to="/dashboard"
         aria-label={m.topbar_n2_home()}
-        className={css({ gridArea: "logo", position: "relative", display: "grid", placeItems: "center", w: "36px", h: "36px", borderRadius: "lg", bg: "accent", color: "white", fontWeight: "800", fontSize: "base", textDecoration: "none", letterSpacing: "-0.02em" })}
+        // clair : carré rose ; sombre : enseigne au néon, sans fond, qui bat de temps en temps
+        className={css({
+          gridArea: "logo",
+          position: "relative",
+          display: "grid",
+          placeItems: "center",
+          w: "36px",
+          h: "36px",
+          borderRadius: "lg",
+          bg: { base: "accent", _osDark: "transparent" },
+          color: { base: "white", _osDark: "neon" },
+          fontWeight: "800",
+          fontSize: { base: "base", _osDark: "18px" },
+          fontStyle: { _osDark: "italic" },
+          textDecoration: "none",
+          letterSpacing: "-0.02em",
+        })}
       >
-        N2
+        <span className={css({ textShadow: "neonSign", animation: { _osDark: "neon-flicker 9s linear infinite" } })}>N2</span>
         <DemoBadge />
       </Link>
       <nav
@@ -141,6 +165,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
               data-ghost={ghost || undefined}
               title={ghost ? undefined : `${t.label} (${m.topbar_key()} ${keyOf(t.to)})`}
               className={css({
+                position: "relative",
                 flex: "none",
                 display: "inline-flex",
                 alignItems: "center",
@@ -156,7 +181,12 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
                 transition: "color 0.12s, border-color 0.12s",
                 _hover: { color: "text", borderBottomColor: "border" },
                 _focusVisible: { outlineOffset: "-4px", borderRadius: "lg" },
-                "&[data-status=active]": { color: "text", borderBottomColor: "accent" },
+                "&[data-status=active]": { color: "text", borderBottomColor: "accent", textShadow: "neonText" },
+                "&[data-status=active] > span": { textShadow: "none" },
+                // sombre : le trait de l'onglet actif devient un tube de néon
+                "@media (prefers-color-scheme: dark)": {
+                  "&[data-status=active]::after": { content: '""', position: "absolute", left: 0, right: 0, bottom: "-2px", h: "2px", borderRadius: "full", bg: "neon", boxShadow: "neonTube" },
+                },
                 "&[data-group-start]": { ml: "6", mdDown: { ml: "3" } },
                 // fantôme : poussé à droite, invisible en toutes circonstances (survol, clavier, onglet actif, pas de main au survol), mais cliquable
                 "&[data-ghost], &[data-ghost]:hover, &[data-ghost]:focus-visible, &[data-ghost][data-status=active]": { ml: "auto", opacity: 0, outline: "none", cursor: "default" },

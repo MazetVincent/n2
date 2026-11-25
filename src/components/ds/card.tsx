@@ -53,7 +53,22 @@ export function Card({
         })}
       >
         <div className={css({ display: "flex", alignItems: "center", gap: "4", flexWrap: "wrap", minW: 0 })}>
-          <h2 className={css({ textStyle: "heading", display: "flex", alignItems: "center", gap: "3", flexWrap: "wrap" })}>{title}</h2>
+          {/* sombre : titre en tube de néon rose (pas les pastilles ni les liens qu'il contient) */}
+          <h2
+            className={css({
+              textStyle: "heading",
+              display: "flex",
+              alignItems: "center",
+              gap: "3",
+              flexWrap: "wrap",
+              color: "neon",
+              textShadow: "neonText",
+              fontStyle: { _osDark: "italic" },
+              "& *": { textShadow: "none", fontStyle: "normal" },
+            })}
+          >
+            {title}
+          </h2>
           {open && controls}
         </div>
         {(meta || collapse) && (

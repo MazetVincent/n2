@@ -36,6 +36,7 @@ export default defineConfig({
           surface: { DEFAULT: c("surface"), alt: c("surface.alt") },
           border: c("border"),
           text: c("text"),
+          neon: c("neon"),
           muted: c("muted"),
           accent: { DEFAULT: c("accent"), soft: c("accent.soft"), light: c("accent.light") },
           ok: { DEFAULT: c("ok"), soft: c("ok.soft") },
@@ -57,6 +58,13 @@ export default defineConfig({
           popover: { value: "0 12px 32px rgb(0 0 0 / 22%)" },
           // fenêtres (Dialog)
           dialog: { value: "0 24px 70px rgb(0 0 0 / 35%)" },
+          // Néon (thème sombre seulement, rien en clair) : en `textShadow` pour le texte, en `boxShadow` pour les traits.
+          //   neonSign : enseigne (logo) · neonText : titre de carte, onglet actif · neonTube : trait lumineux (onglet actif)
+          //   neonButton : halo du bouton principal
+          neonSign: pair("none", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
+          neonText: pair("none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
+          neonTube: pair("none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
+          neonButton: pair("none", "0 0 14px rgb(255 61 119 / 45%)"),
           // anneau de focus doux (éléments cliquables encadrés)
           ring: { value: "0 0 0 2px token(colors.accent.soft)" },
         },
