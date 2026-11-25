@@ -30,7 +30,7 @@ export const button = cva({
   },
   variants: {
     variant: {
-      solid: { bg: "accent", borderColor: "accent", color: "white", fontWeight: "semibold", _hover: { _enabled: { filter: "brightness(1.08)" } } },
+      solid: { bg: "accent", borderColor: "accent", color: "white", fontWeight: "semibold", boxShadow: "neonButton", _hover: { _enabled: { filter: "brightness(1.08)" } } },
       outline: {
         bg: "surface",
         borderColor: "border",

@@ -1,26 +1,37 @@
 // Couleurs de N2 : [clair, sombre]. Une seule source pour les jetons Panda (panda.config.ts, « semantic tokens »)
 // et pour le guide de l'équipe, qui les reçoit dans sa propre page (src/features/guide/embed.ts).
+// Thème sombre « Néon Magenta », sur la charte graphique de l'entreprise : magenta #FF3D77, noir teinté de rose, et les couleurs
+// d'extension pour les états. Le rose ne signale jamais une erreur : échec et alarme sont en orange (#FF8241),
+// l'attente en jaune (#FFC846), le succès en vert (#00C882), l'info en cyan (#33D1FF).
+// Le clair garde un magenta plus foncé : #FF3D77 sur fond blanc n'est pas assez contrasté pour du texte.
 export type ColorPair = readonly [light: string, dark: string];
 
 export const COLORS = {
-  bg: ["#f4f5f8", "#0f1117"],
-  surface: ["#ffffff", "#171a23"],
-  "surface.alt": ["#f8f9fb", "#1d212c"],
-  border: ["#e3e6ec", "#2a2f3c"],
-  text: ["#1c2130", "#e8eaf0"],
-  muted: ["#6b7385", "#8e95a6"],
-  accent: ["#e5007d", "#ff3d9e"],
-  "accent.soft": ["#fde6f2", "#3a1328"],
+  bg: ["#f4f5f8", "#0d0a10"],
+  surface: ["#ffffff", "#16111a"],
+  "surface.alt": ["#f8f9fb", "#1c1621"],
+  border: ["#e3e6ec", "#2b2231"],
+  text: ["#1c2130", "#f2edf4"],
+  muted: ["#6b7385", "#9a8fa3"],
+  accent: ["#e5007d", "#ff3d77"],
+  // cœur d'un tube de néon (logo, titres de cartes en sombre) ; en clair, simple couleur du texte
+  neon: ["#1c2130", "#ffe3ec"],
+  // texte posé sur une couleur vive (pastilles pleines : warn, info, ok, accent) : blanc en clair, noir en sombre,
+  // où ces couleurs sont trop claires pour du blanc
+  contrast: ["#ffffff", "#0d0a10"],
+  "accent.soft": ["#fde6f2", "#40192b"],
   // un rose plus clair, pour un groupe (couche) au-dessus de ses éléments roses
-  "accent.light": ["#f06bb0", "#ffa3d1"],
-  ok: ["#138a4b", "#4cc786"],
-  "ok.soft": ["#e3f5eb", "#12301f"],
-  warn: ["#a86400", "#f0b04a"],
-  "warn.soft": ["#fff1d6", "#33270f"],
-  bad: ["#c62a2a", "#ff6b6b"],
-  "bad.soft": ["#fde7e7", "#3a1717"],
-  info: ["#2f5fd0", "#7da2ff"],
-  "info.soft": ["#e6edfd", "#18223d"],
+  "accent.light": ["#f06bb0", "#ff9dbb"],
+  ok: ["#138a4b", "#00c882"],
+  "ok.soft": ["#e3f5eb", "#132d2a"],
+  warn: ["#a86400", "#ffc846"],
+  "warn.soft": ["#fff1d6", "#392d21"],
+  bad: ["#c62a2a", "#ff8241"],
+  "bad.soft": ["#fde7e7", "#392220"],
+  // calque « points chauds » de la carte : en sombre, le rose (l'orange de bad s'y confondrait avec la couche Back)
+  heat: ["#c62a2a", "#ff3d77"],
+  info: ["#2f5fd0", "#33d1ff"],
+  "info.soft": ["#e6edfd", "#1a2e3c"],
   "cat.front": ["#2f6fd6", "#6c9cff"],
   "cat.api": ["#7c4ddb", "#a78bfa"],
   "cat.back": ["#d9682b", "#f59a5b"],
