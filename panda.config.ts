@@ -78,10 +78,12 @@ export default defineConfig({
           ring: { value: "0 0 0 2px {colors.accent.soft}" },
         },
         // Dégradés (thème sombre seulement, « none » en clair), utilisés avec bgGradient :
-        //   card : volume de la carte · cardHead : reflet de l'en-tête · rim : arête claire en haut à gauche qui vire
+        //   card : lumière du logo + volume de la carte · cardHead : reflet de l'en-tête · rim : arête claire en haut à gauche qui vire
         //   au rose en bas à droite · tabGlow : la lumière du logo diffusée dans l'onglet actif · button : bouton principal
         gradients: {
-          card: pair("none", "linear-gradient(180deg, #1e1823 0%, #151019 100%)"),
+          // 1re couche : la lumière du logo, fixée sur la fenêtre (background-attachment: fixed dans cardFrame), donc chaque
+          // carte en reçoit selon sa distance au logo ; 2e couche : le volume de la carte
+          card: pair("none", "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 13%), rgb(255 61 119 / 4%) 45%, transparent 75%), linear-gradient(180deg, #1e1823 0%, #151019 100%)"),
           cardHead: pair("none", "linear-gradient(180deg, rgb(255 255 255 / 3%), transparent)"),
           rim: pair("none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
           tabGlow: pair("none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
@@ -115,6 +117,21 @@ export default defineConfig({
           "linear-gradient(rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, radial-gradient(120% 60% at 50% -10%, #1e1424, transparent 60%), token(colors.bg)",
         backgroundAttachment: "fixed",
       },
+      // La lumière du logo (enseigne) descend dans la page, derrière les cartes : on la voit autour d'elles, sur tous
+      // les onglets. Fixe (la barre du haut, et donc le logo, reste en place au défilement), au rythme des battements du
+      // logo (même animation, src/styles/app.css). Centre : celui du logo (marge de la barre + 18px).
+      "body::before": {
+        content: '""',
+        position: "fixed",
+        inset: 0,
+        zIndex: -1,
+        pointerEvents: "none",
+        background: "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 16%), rgb(255 61 119 / 6%) 45%, transparent 75%)",
+        animation: "neon-flicker 9s linear infinite",
+      },
+    },
+    "@media (prefers-color-scheme: dark) and (max-width: 767.98px)": {
+      "body::before": { backgroundImage: "radial-gradient(700px 520px at 32px 0, rgb(255 61 119 / 16%), rgb(255 61 119 / 6%) 45%, transparent 75%)" },
     },
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },
