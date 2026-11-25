@@ -269,7 +269,7 @@ button.cat-badge:hover { filter: brightness(1.12); box-shadow: 0 0 0 2px var(--c
 /* Numéros d'interaction */
 .num {
   display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 99px;
-  font-size: var(--font-sizes-xs); font-weight: 700; color: #fff; margin-right: 6px; font-variant-numeric: tabular-nums;
+  font-size: var(--font-sizes-xs); font-weight: 700; color: var(--colors-contrast); margin-right: 6px; font-variant-numeric: tabular-nums;
 }
 .chip .num { margin-left: -6px; }
 .num-in { background: var(--colors-info); }
@@ -278,7 +278,7 @@ button.cat-badge:hover { filter: brightness(1.12); box-shadow: 0 0 0 2px var(--c
 .num-badge.num-in circle { fill: var(--colors-info); }
 .num-badge.num-out circle { fill: var(--colors-accent); }
 /* chiffres dans des cercles SVG de taille fixe : hors échelle, pour tenir à 3 chiffres */
-.num-badge text { fill: #fff; font-size: 10.5px; font-weight: 700; pointer-events: none; }
+.num-badge text { fill: var(--colors-contrast); font-size: 10.5px; font-weight: 700; pointer-events: none; }
 .num-badges { pointer-events: none; }
 .node.hover-target rect:first-of-type { stroke: var(--colors-accent); stroke-width: 3.5; }
 .has-selection .node.hover-target { opacity: 1; }
@@ -297,13 +297,13 @@ button.cat-badge:hover { filter: brightness(1.12); box-shadow: 0 0 0 2px var(--c
 
 /* Calque « points chauds » : intensité = modifications des 30 derniers jours */
 .heat { pointer-events: none; }
-.heat rect { fill: var(--colors-bad); }
+.heat rect { fill: var(--colors-heat); }
 
 /* Calques « ma branche » et « impact » : pastille avec le nombre de fichiers concernés */
 .overlay-badge circle { stroke: var(--colors-surface); stroke-width: 2; }
 .overlay-badge.branch circle { fill: var(--colors-ok); }
 .overlay-badge.impact circle { fill: var(--colors-warn); }
-.overlay-badge text { fill: #fff; font-size: 10.5px; font-weight: 700; pointer-events: none; }
+.overlay-badge text { fill: var(--colors-contrast); font-size: 10.5px; font-weight: 700; pointer-events: none; }
 .has-overlay .node:not(.overlay-hit):not(.selected) { opacity: 0.25; }
 .has-overlay .node.overlay-hit rect:first-of-type { stroke-width: 3; }
 

@@ -214,7 +214,7 @@ export function lockedPage(lang: "fr" | "en"): string {
   const t = lockedTexts(lang);
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>N2</title>
 <style>:root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:14px/1.5 system-ui,-apple-system,sans-serif;background:#f4f5f8;color:#1c2130}
-@media (prefers-color-scheme:dark){body{background:#0f1117;color:#e8eaf0}main{background:#171a23!important;border-color:#2a2f3c!important}code{background:#1d212c!important}}
+@media (prefers-color-scheme:dark){body{background:#0d0a10;color:#f2edf4}main{background:#16111a!important;border-color:#2b2231!important}code{background:#1c1621!important}}
 main{max-width:440px;margin:16px;padding:24px;background:#fff;border:1px solid #e3e6ec;border-radius:12px}h1{font-size:18px;margin:0 0 8px}
 code{display:inline-block;margin:8px 0;padding:4px 8px;border-radius:6px;background:#f8f9fb;font:13px ui-monospace,Menlo,monospace}p{margin:0}.muted{opacity:.7;margin-top:8px}</style></head>
 <body><main><h1>${escapeHtml(t.title)}</h1><p>${escapeHtml(t.body)}</p><code>bun run open</code><p class="muted">${escapeHtml(t.foot)}</p></main></body></html>`;

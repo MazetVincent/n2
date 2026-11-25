@@ -37,6 +37,8 @@ export default defineConfig({
           border: c("border"),
           text: c("text"),
           neon: c("neon"),
+          contrast: c("contrast"),
+          heat: c("heat"),
           muted: c("muted"),
           accent: { DEFAULT: c("accent"), soft: c("accent.soft"), light: c("accent.light") },
           ok: { DEFAULT: c("ok"), soft: c("ok.soft") },

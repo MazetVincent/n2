@@ -16,6 +16,9 @@ export const COLORS = {
   accent: ["#e5007d", "#ff3d77"],
   // cœur d'un tube de néon (logo, titres de cartes en sombre) ; en clair, simple couleur du texte
   neon: ["#1c2130", "#ffe3ec"],
+  // texte posé sur une couleur vive (pastilles pleines : warn, info, ok, accent) : blanc en clair, noir en sombre,
+  // où ces couleurs sont trop claires pour du blanc
+  contrast: ["#ffffff", "#0d0a10"],
   "accent.soft": ["#fde6f2", "#40192b"],
   // un rose plus clair, pour un groupe (couche) au-dessus de ses éléments roses
   "accent.light": ["#f06bb0", "#ff9dbb"],
@@ -25,6 +28,8 @@ export const COLORS = {
   "warn.soft": ["#fff1d6", "#392d21"],
   bad: ["#c62a2a", "#ff8241"],
   "bad.soft": ["#fde7e7", "#392220"],
+  // calque « points chauds » de la carte : en sombre, le rose (l'orange de bad s'y confondrait avec la couche Back)
+  heat: ["#c62a2a", "#ff3d77"],
   info: ["#2f5fd0", "#33d1ff"],
   "info.soft": ["#e6edfd", "#1a2e3c"],
   "cat.front": ["#2f6fd6", "#6c9cff"],

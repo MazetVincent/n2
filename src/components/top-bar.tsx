@@ -97,7 +97,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         position: "sticky",
         top: 0,
         zIndex: 10,
-        mdDown: { px: "4", "--logo-x": "34px" },
+        mdDown: { px: "4", "--logo-x": "32px" },
         // Thème sombre : le logo, une enseigne au néon, irradie sa couleur sur la barre (halo autour du logo et lueur
         // qui court sur le bord du bas), au rythme de ses battements. --logo-x : centre du logo (marge + 18px).
         "--logo-x": "calc(max(24px, (100% - 1392px) / 2) + 18px)",
@@ -470,7 +470,7 @@ function DemoBadge() {
   return (
     <span
       title={m.topbar_demo_hint()}
-      className={css({ position: "absolute", bottom: "-7px", left: "50%", transform: "translateX(-50%)", px: "1", borderRadius: "sm", bg: "warn", color: "white", fontSize: "2xs", fontWeight: "700", letterSpacing: "0.02em", lineHeight: "1.4" })}
+      className={css({ position: "absolute", bottom: "-7px", left: "50%", transform: "translateX(-50%)", px: "1", borderRadius: "sm", bg: "warn", color: "contrast", fontSize: "2xs", fontStyle: "normal", fontWeight: "700", letterSpacing: "0.02em", lineHeight: "1.4" })}
     >
       {m.topbar_demo()}
     </span>
