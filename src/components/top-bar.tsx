@@ -7,6 +7,7 @@ import { css, cva, cx } from "styled-system/css";
 import { button, Icon, iconButton } from "~/components/ds";
 import { useTabBadges, type BadgeTone } from "~/features/badges";
 import { BranchDialog } from "~/features/branches/BranchPicker";
+import { useMorseSos } from "~/features/secret/morse-sos";
 import { setBranchFilter, useBranchFilter } from "~/features/branches/filter";
 import { NotifyToggle } from "~/features/notify/NotifyToggle";
 import { PreferencesButton } from "~/features/prefs/PreferencesDialog";
@@ -77,10 +78,15 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navRef = useRef<HTMLElement>(null);
   const fade = useScrollFade(navRef, pathname);
+  // de temps en temps, l'enseigne (le logo) appelle à l'aide en morse : S.O.S (src/features/secret/morse-sos.ts)
+  const headerRef = useRef<HTMLElement>(null);
+  const logoRef = useRef<HTMLSpanElement>(null);
+  useMorseSos(headerRef, logoRef);
 
 
   return (
     <header
+      ref={headerRef}
       className={css({
         // 1re ligne : logo, recherche, actions ; 2e ligne : onglets sur toute la largeur (défilables s'ils ne tiennent pas)
         display: "grid",
@@ -130,7 +136,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
           letterSpacing: "-0.02em",
         })}
       >
-        <span className={css({ textShadow: "neonSign", animation: { _osDark: "neon-flicker 9s linear infinite" } })}>N2</span>
+        <span ref={logoRef} className={css({ textShadow: "neonSign", animation: { _osDark: "neon-flicker 9s linear infinite" } })}>N2</span>
         <DemoBadge />
       </Link>
       <nav
