@@ -68,9 +68,8 @@
 .node.cat-tooling rect:first-of-type { stroke: var(--colors-cat-tooling); }
 .node:hover rect:first-of-type, .node:focus-visible rect:first-of-type { stroke-width: 2.5; }
 .node.selected rect:first-of-type { stroke: var(--colors-accent); stroke-width: 3; }
-/* Relief (sombre) : blocs posés avec une ombre, sélection et flux qui luisent */
+/* Sombre : la sélection et ses flux luisent (pas d'ombre sur tous les blocs : le flux animé les ferait redessiner) */
 @media (prefers-color-scheme: dark) {
-  .node { filter: drop-shadow(0 6px 8px rgb(0 0 0 / 70%)); }
   .node.selected { filter: drop-shadow(0 0 8px rgb(255 61 119 / 70%)); }
   .has-selection .edge.out { filter: drop-shadow(0 0 3px rgb(255 61 119 / 90%)); }
   .has-selection .edge.in { filter: drop-shadow(0 0 3px rgb(51 209 255 / 80%)); }

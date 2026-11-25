@@ -33,7 +33,7 @@ export default defineConfig({
         // valeurs dans src/styles/colors.ts (partagées avec le guide de l'équipe)
         colors: {
           bg: c("bg"),
-          surface: { DEFAULT: c("surface"), alt: c("surface.alt") },
+          surface: { DEFAULT: c("surface"), alt: c("surface.alt"), lift: c("surface.lift") },
           border: c("border"),
           text: c("text"),
           neon: c("neon"),
@@ -74,6 +74,8 @@ export default defineConfig({
           neonText: pair("none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
           neonTube: pair("none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
           neonButton: pair("none", "inset 0 1px 0 rgb(255 255 255 / 30%), 0 0 16px rgb(255 61 119 / 45%)"),
+          // anneau de focus doux (éléments cliquables encadrés)
+          ring: { value: "0 0 0 2px {colors.accent.soft}" },
         },
         // Dégradés (thème sombre seulement, « none » en clair), utilisés avec bgGradient :
         //   card : volume de la carte · cardHead : reflet de l'en-tête · rim : arête claire en haut à gauche qui vire
@@ -84,8 +86,6 @@ export default defineConfig({
           rim: pair("none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
           tabGlow: pair("none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
           button: pair("none", "linear-gradient(180deg, #ff5d8d, #e5336a)"),
-          // anneau de focus doux (éléments cliquables encadrés)
-          ring: { value: "0 0 0 2px token(colors.accent.soft)" },
         },
       },
       /*
@@ -106,9 +106,11 @@ export default defineConfig({
   globalCss: {
     ":root": { colorScheme: "light dark" },
     "html, body": { bg: "bg", color: "text", fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", fontSize: "base", lineHeight: "1.45" },
-    // Relief (sombre) : une trame fine et une lueur en haut de page, sous les cartes
+    // Relief (sombre) : une trame fine et une lueur en haut de page, sous les cartes. Sur html (toute la fenêtre,
+    // même quand la page est plus courte), body transparent par-dessus.
     "@media (prefers-color-scheme: dark)": {
-      body: {
+      body: { background: "transparent" },
+      html: {
         background:
           "linear-gradient(rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, radial-gradient(120% 60% at 50% -10%, #1e1424, transparent 60%), token(colors.bg)",
         backgroundAttachment: "fixed",

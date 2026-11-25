@@ -46,6 +46,7 @@ const COLORS = [
   ["bg", "bg"],
   ["surface", "surface"],
   ["surface.alt", "surface-alt"],
+  ["surface.lift", "surface-lift"],
   ["border", "border"],
   ["text", "text"],
   ["muted", "muted"],

@@ -31,7 +31,7 @@ export const item = cva({
       accent: { borderLeft: "3px solid token(colors.accent)", pl: "8px" },
       neutral: {},
     },
-    flush: { true: { border: "none", bg: "transparent", borderRadius: "lg", _hover: { bg: "surface" } } },
+    flush: { true: { border: "none", bg: "transparent", boxShadow: "none", borderRadius: "lg", _hover: { bg: "surface" } } },
   },
   defaultVariants: { tone: "none" },
 });

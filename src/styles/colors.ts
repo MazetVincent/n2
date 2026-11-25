@@ -11,6 +11,8 @@ export const COLORS = {
   bg: ["#f4f5f8", "#0d0a10"],
   surface: ["#ffffff", "#16111a"],
   "surface.alt": ["#f8f9fb", "#110d14"],
+  // fond un peu au-dessus des cartes (les anciennes valeurs de surface.alt) : blocs et code du guide de l'équipe
+  "surface.lift": ["#f8f9fb", "#1c1621"],
   border: ["#e3e6ec", "#2b2231"],
   text: ["#1c2130", "#f2edf4"],
   muted: ["#6b7385", "#9a8fa3"],
