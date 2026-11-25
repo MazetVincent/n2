@@ -6,7 +6,10 @@
 // puis les laisse reprendre. Rien si le système demande moins de mouvement, ni quand l'onglet est caché.
 import { useEffect, type RefObject } from "react";
 
-/** Durée d'un point (ms) ; un trait vaut 3 points, l'espace entre deux signes 1, entre deux lettres 3 */
+/**
+ * Durée d'un point (ms) ; un trait vaut 3 points, l'espace entre deux signes 1, entre deux lettres 3.
+ * Accessibilité : rester au-dessus de 167 ms, sinon les points dépassent 3 éclairs par seconde (WCAG 2.3.1).
+ */
 export const SOS_UNIT_MS = 180;
 /** Montée et descente de la lumière à chaque changement (ms) : un tube de néon ne s'allume pas d'un coup */
 export const SOS_RAMP_MS = 30;
@@ -49,16 +52,20 @@ export function sosKeyframes(unit = SOS_UNIT_MS, ramp = SOS_RAMP_MS): { frames: 
   return { frames, duration };
 }
 
+const SOS_ID = "n2-sos";
+
 /** Joue S.O.S sur le logo et ses lumières (header : la barre du haut, logo : les lettres) */
 function playSos(header: HTMLElement | null, logo: HTMLElement | null) {
   const { frames, duration } = sosKeyframes();
-  const targets: [Element | null, string | undefined][] = [
-    [logo, undefined],
-    [header, "::before"],
-    [header, "::after"],
-    [document.body, "::before"],
-  ];
-  for (const [el, pseudoElement] of targets) el?.animate(frames, { duration, pseudoElement, id: "n2-sos" });
+  const targets: [Element | null, string | undefined][] = [[logo, undefined]];
+  // un navigateur qui ignore pseudoElement animerait la barre et la page entières : on lui laisse les lettres seules
+  if ("pseudoElement" in KeyframeEffect.prototype) targets.push([header, "::before"], [header, "::after"], [document.body, "::before"]);
+  for (const [el, pseudoElement] of targets) el?.animate(frames, { duration, pseudoElement, id: SOS_ID });
+}
+
+/** Arrête un message en cours (barre du haut démontée) */
+function stopSos() {
+  for (const a of document.getAnimations()) if (a.id === SOS_ID) a.cancel();
 }
 
 /** Lance les appels à l'aide de l'enseigne, à intervalles aléatoires, tant que la barre du haut est affichée */
@@ -74,6 +81,9 @@ export function useMorseSos(header: RefObject<HTMLElement | null>, logo: RefObje
       }, delay);
     };
     schedule();
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      stopSos();
+    };
   }, [header, logo]);
 }
