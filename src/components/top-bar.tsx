@@ -94,6 +94,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         borderBottom: "1px solid token(colors.border)",
         bg: "color-mix(in srgb, token(colors.bg) 88%, transparent)",
         backdropFilter: "saturate(1.4) blur(10px)",
+        boxShadow: "bar",
         position: "sticky",
         top: 0,
         zIndex: 10,
@@ -181,7 +182,8 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
                 transition: "color 0.12s, border-color 0.12s",
                 _hover: { color: "text", borderBottomColor: "border" },
                 _focusVisible: { outlineOffset: "-4px", borderRadius: "lg" },
-                "&[data-status=active]": { color: "text", borderBottomColor: "accent", textShadow: "neonText" },
+                // sombre : la lumière du logo se diffuse dans l'onglet actif, depuis son trait
+                "&[data-status=active]": { color: "text", borderBottomColor: "accent", textShadow: "neonText", bgGradient: "tabGlow", borderTopRadius: "lg" },
                 "&[data-status=active] > span": { textShadow: "none" },
                 // sombre : le trait de l'onglet actif devient un tube de néon
                 "@media (prefers-color-scheme: dark)": {

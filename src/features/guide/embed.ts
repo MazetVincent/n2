@@ -36,7 +36,7 @@ export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "g
 const GUIDE_COLORS: Record<string, ColorName> = {
   canvas: "bg",
   surface: "surface",
-  "surface-muted": "surface.alt",
+  "surface-muted": "surface.lift",
   ink: "text",
   muted: "muted",
   line: "border",
@@ -46,7 +46,7 @@ const GUIDE_COLORS: Record<string, ColorName> = {
   "warn-soft": "warn.soft",
   old: "info",
   "old-soft": "info.soft",
-  "code-bg": "surface.alt",
+  "code-bg": "surface.lift",
   "diff-add-sign": "accent",
   "diff-del-sign": "info",
 };

@@ -47,11 +47,14 @@
 .col-head.cat-back { fill: var(--colors-cat-back); } .col-head.cat-shared { fill: var(--colors-cat-shared); }
 .col-head.cat-infra { fill: var(--colors-cat-infra); } .col-head.cat-tooling { fill: var(--colors-cat-tooling); }
 
-.edge { fill: none; stroke: var(--colors-muted); opacity: 0.22; transition: opacity 0.15s; }
+/* Liens en pointillés ; ceux de la partie sélectionnée défilent dans le sens de la dépendance, comme un flux */
+.edge { fill: none; stroke: var(--colors-muted); opacity: 0.22; transition: opacity 0.15s; stroke-dasharray: 4 5; }
 .marker { fill: var(--colors-muted); }
 .has-selection .edge, .has-query .edge { opacity: 0.06; }
 .has-selection .edge.out { opacity: 0.9; stroke: var(--colors-accent); }
 .has-selection .edge.in { opacity: 0.9; stroke: var(--colors-info); }
+.has-selection .edge.out, .has-selection .edge.in { stroke-dasharray: 7 6; animation: edge-flow 1.2s linear infinite; }
+@keyframes edge-flow { to { stroke-dashoffset: -26; } }
 .marker.arrow-out { fill: var(--colors-accent); }
 .marker.arrow-in { fill: var(--colors-info); }
 
@@ -65,6 +68,12 @@
 .node.cat-tooling rect:first-of-type { stroke: var(--colors-cat-tooling); }
 .node:hover rect:first-of-type, .node:focus-visible rect:first-of-type { stroke-width: 2.5; }
 .node.selected rect:first-of-type { stroke: var(--colors-accent); stroke-width: 3; }
+/* Sombre : la sélection et ses flux luisent (pas d'ombre sur tous les blocs : le flux animé les ferait redessiner) */
+@media (prefers-color-scheme: dark) {
+  .node.selected { filter: drop-shadow(0 0 8px rgb(255 61 119 / 70%)); }
+  .has-selection .edge.out { filter: drop-shadow(0 0 3px rgb(255 61 119 / 90%)); }
+  .has-selection .edge.in { filter: drop-shadow(0 0 3px rgb(51 209 255 / 80%)); }
+}
 .has-selection .node:not(.selected):not(.connected), .has-query .node:not(.match) { opacity: 0.3; }
 .node.match rect:first-of-type { stroke-width: 3; }
 .node-label { font-size: var(--font-sizes-md); font-weight: 650; fill: var(--colors-text); pointer-events: none; }
