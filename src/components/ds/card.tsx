@@ -13,12 +13,13 @@ import { Icon } from "./icon";
 /** Hauteur maximale des cartes qui listent (À faire, Slack, GitHub · Jira…) avant de défiler */
 export const LIST_MAX_H = 460;
 
-// Sombre (Relief) : carte en volume (dégradé, reflet, ombre portée), arête claire en haut à gauche qui vire au rose en bas
+// Sombre (Relief) : carte éclairée par la lumière du logo (couche fixée sur la fenêtre) et en volume (dégradé, reflet, ombre portée), arête claire en haut à gauche qui vire au rose en bas
 // à droite (::before, cadre en dégradé découpé par un masque), halo rose au survol. Les jetons valent « none » en clair.
 export const cardFrame = css({
   position: "relative",
   bg: "surface",
   bgGradient: "card",
+  backgroundAttachment: { _osDark: "fixed, scroll" },
   border: "1px solid token(colors.border)",
   borderRadius: "xl",
   boxShadow: "card",
