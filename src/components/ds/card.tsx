@@ -13,7 +13,31 @@ import { Icon } from "./icon";
 /** Hauteur maximale des cartes qui listent (À faire, Slack, GitHub · Jira…) avant de défiler */
 export const LIST_MAX_H = 460;
 
-export const cardFrame = css({ bg: "surface", border: "1px solid token(colors.border)", borderRadius: "xl", boxShadow: "card", minW: 0 });
+// Sombre (Relief) : carte en volume (dégradé, reflet, ombre portée), arête claire en haut à gauche qui vire au rose en bas
+// à droite (::before, cadre en dégradé découpé par un masque), halo rose au survol. Les jetons valent « none » en clair.
+export const cardFrame = css({
+  position: "relative",
+  bg: "surface",
+  bgGradient: "card",
+  border: "1px solid token(colors.border)",
+  borderRadius: "xl",
+  boxShadow: "card",
+  minW: 0,
+  transition: "box-shadow 0.2s, border-color 0.2s",
+  _hover: { boxShadow: "cardHover", borderColor: { _osDark: "rgb(255 61 119 / 45%)" } },
+  _before: {
+    content: '""',
+    position: "absolute",
+    inset: "-1px",
+    borderRadius: "inherit",
+    p: "1px",
+    pointerEvents: "none",
+    bgGradient: "rim",
+    WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    WebkitMaskComposite: "xor",
+    mask: "linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)",
+  },
+});
 
 export function Card({
   title,
@@ -49,6 +73,8 @@ export function Card({
           px: "4",
           py: controls ? "2.5" : "3.5",
           borderBottom: "1px solid token(colors.border)",
+          borderTopRadius: "xl",
+          bgGradient: "cardHead",
           "[data-open=false] > &": { borderBottom: "none", alignItems: "center", py: "2.5" },
         })}
       >

@@ -55,7 +55,14 @@ export default defineConfig({
           },
         },
         shadows: {
-          card: pair("0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "none"),
+          // Relief (sombre) : carte posée sur la trame (reflet sur le bord haut, ombre portée profonde) ;
+          // au survol, un halo rose. En clair, l'ombre douce d'avant, sans changement au survol.
+          card: pair("0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "inset 0 1px 0 rgb(255 255 255 / 7%), 0 1px 0 rgb(0 0 0 / 60%), 0 20px 40px -20px rgb(0 0 0 / 95%)"),
+          cardHover: pair("0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "inset 0 1px 0 rgb(255 255 255 / 9%), 0 1px 0 rgb(0 0 0 / 60%), 0 20px 40px -20px rgb(0 0 0 / 95%), 0 0 26px -6px rgb(255 61 119 / 40%)"),
+          // élément en creux dans une carte (ligne de liste, champ, contrôle de la barre)
+          inset: pair("none", "inset 0 1px 3px rgb(0 0 0 / 65%)"),
+          // barre du haut détachée du contenu qui défile dessous
+          bar: pair("none", "0 12px 30px -12px rgb(0 0 0 / 90%)"),
           // menus et listes déroulantes (Popover)
           popover: { value: "0 12px 32px rgb(0 0 0 / 22%)" },
           // fenêtres (Dialog)
@@ -66,7 +73,17 @@ export default defineConfig({
           neonSign: pair("none", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
           neonText: pair("none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
           neonTube: pair("none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
-          neonButton: pair("none", "0 0 14px rgb(255 61 119 / 45%)"),
+          neonButton: pair("none", "inset 0 1px 0 rgb(255 255 255 / 30%), 0 0 16px rgb(255 61 119 / 45%)"),
+        },
+        // Dégradés (thème sombre seulement, « none » en clair), utilisés avec bgGradient :
+        //   card : volume de la carte · cardHead : reflet de l'en-tête · rim : arête claire en haut à gauche qui vire
+        //   au rose en bas à droite · tabGlow : la lumière du logo diffusée dans l'onglet actif · button : bouton principal
+        gradients: {
+          card: pair("none", "linear-gradient(180deg, #1e1823 0%, #151019 100%)"),
+          cardHead: pair("none", "linear-gradient(180deg, rgb(255 255 255 / 3%), transparent)"),
+          rim: pair("none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
+          tabGlow: pair("none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
+          button: pair("none", "linear-gradient(180deg, #ff5d8d, #e5336a)"),
           // anneau de focus doux (éléments cliquables encadrés)
           ring: { value: "0 0 0 2px token(colors.accent.soft)" },
         },
@@ -89,6 +106,14 @@ export default defineConfig({
   globalCss: {
     ":root": { colorScheme: "light dark" },
     "html, body": { bg: "bg", color: "text", fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", fontSize: "base", lineHeight: "1.45" },
+    // Relief (sombre) : une trame fine et une lueur en haut de page, sous les cartes
+    "@media (prefers-color-scheme: dark)": {
+      body: {
+        background:
+          "linear-gradient(rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, radial-gradient(120% 60% at 50% -10%, #1e1424, transparent 60%), token(colors.bg)",
+        backgroundAttachment: "fixed",
+      },
+    },
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },
     "button, input": { font: "inherit", color: "inherit" },

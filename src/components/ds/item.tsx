@@ -14,6 +14,8 @@ export const item = cva({
     border: "1px solid token(colors.border)",
     borderRadius: "lg",
     bg: "surface.alt",
+    // sombre : en creux dans la carte
+    boxShadow: "inset",
     cursor: "pointer",
     transition: "border-color 0.12s, background 0.12s",
     _hover: { borderColor: "accent" },

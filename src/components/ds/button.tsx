@@ -30,7 +30,7 @@ export const button = cva({
   },
   variants: {
     variant: {
-      solid: { bg: "accent", borderColor: "accent", color: "white", fontWeight: "semibold", boxShadow: "neonButton", _hover: { _enabled: { filter: "brightness(1.08)" } } },
+      solid: { bg: "accent", bgGradient: "button", borderColor: "accent", color: "white", fontWeight: "semibold", boxShadow: "neonButton", _hover: { _enabled: { filter: "brightness(1.08)" } } },
       outline: {
         bg: "surface",
         borderColor: "border",
@@ -48,6 +48,7 @@ export const button = cva({
         borderColor: "border",
         color: "muted",
         borderRadius: "lg",
+        boxShadow: "inset",
         _hover: { _enabled: { bg: "surface.alt", color: "text" } },
         "&[aria-pressed=true]": selected,
         "&[aria-pressed=true]:hover:enabled": { ...selected, boxShadow: "ring" },

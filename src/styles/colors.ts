@@ -3,13 +3,14 @@
 // Thème sombre « Néon Magenta », sur la charte graphique de l'entreprise : magenta #FF3D77, noir teinté de rose, et les couleurs
 // d'extension pour les états. Le rose ne signale jamais une erreur : échec et alarme sont en orange (#FF8241),
 // l'attente en jaune (#FFC846), le succès en vert (#00C882), l'info en cyan (#33D1FF).
+// Relief (sombre) : « surface.alt » est plus sombre que les cartes, pour que les lignes et les champs soient en creux.
 // Le clair garde un magenta plus foncé : #FF3D77 sur fond blanc n'est pas assez contrasté pour du texte.
 export type ColorPair = readonly [light: string, dark: string];
 
 export const COLORS = {
   bg: ["#f4f5f8", "#0d0a10"],
   surface: ["#ffffff", "#16111a"],
-  "surface.alt": ["#f8f9fb", "#1c1621"],
+  "surface.alt": ["#f8f9fb", "#110d14"],
   border: ["#e3e6ec", "#2b2231"],
   text: ["#1c2130", "#f2edf4"],
   muted: ["#6b7385", "#9a8fa3"],
