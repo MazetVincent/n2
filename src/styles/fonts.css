@@ -1,0 +1,14 @@
+/*
+ * Polices de N2 (direction « Enseigne »), servies en local par Fontsource : aucune requête vers un service externe.
+ *   Tilt Neon    : l'enseigne (logo, grands titres), dessinée comme un tube de néon — jeton fonts.sign
+ *   Chakra Petch : titres de cartes, onglets, rubriques — jeton fonts.display
+ *   Kode Mono    : chiffres, versions, heures, code — jeton fonts.mono
+ * Le texte courant reste en police système (lisible toute la journée).
+ * Sous-ensemble latin seulement (le français y est entier).
+ */
+@import "@fontsource/tilt-neon/latin-400.css";
+@import "@fontsource/chakra-petch/latin-500.css";
+@import "@fontsource/chakra-petch/latin-600.css";
+@import "@fontsource/chakra-petch/latin-700.css";
+@import "@fontsource/kode-mono/latin-400.css";
+@import "@fontsource/kode-mono/latin-600.css";

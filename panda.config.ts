@@ -28,6 +28,13 @@ export default defineConfig({
         radii: { sm: { value: "4px" }, md: { value: "6px" }, lg: { value: "8px" }, xl: { value: "12px" } },
         // échelle de texte en px (la page est à 14px) : pas de taille intermédiaire (12.5px, 11.5px…)
         fontSizes: { xs: { value: "11px" }, sm: { value: "12px" }, md: { value: "13px" }, base: { value: "14px" }, lg: { value: "15px" }, xl: { value: "20px" } },
+        // polices servies en local (src/styles/fonts.css) ; le texte courant reste en police système
+        fonts: {
+          body: { value: "system-ui, -apple-system, 'Segoe UI', sans-serif" }, // texte courant
+          sign: { value: "'Tilt Neon', system-ui, sans-serif" }, // enseigne : logo, titres de cartes et de page
+          display: { value: "'Chakra Petch', system-ui, sans-serif" }, // onglets, rubriques
+          mono: { value: "'Kode Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }, // chiffres, versions, code
+        },
       },
       semanticTokens: {
         // valeurs dans src/styles/colors.ts (partagées avec le guide de l'équipe)
@@ -37,6 +44,8 @@ export default defineConfig({
           border: c("border"),
           text: c("text"),
           neon: c("neon"),
+          tube: { DEFAULT: c("tube"), off: c("tube.off") },
+          screw: c("screw"),
           contrast: c("contrast"),
           heat: c("heat"),
           muted: c("muted"),
@@ -69,17 +78,22 @@ export default defineConfig({
           dialog: { value: "0 24px 70px rgb(0 0 0 / 35%)" },
           // Néon (thème sombre seulement, rien en clair) : en `textShadow` pour le texte, en `boxShadow` pour les traits.
           //   neonSign : enseigne (logo) · neonText : titre de carte, onglet actif · neonTube : trait lumineux (onglet actif)
-          //   neonButton : halo du bouton principal
+          //   neonButton / neonButtonHover : tube du bouton principal (et d'un bouton encadré qui s'allume au survol)
+          //   neonGas : gaz allumé de l'interrupteur · neonFrame : tube autour du segment choisi · neonField : champ actif
           neonSign: pair("none", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
           neonText: pair("none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
           neonTube: pair("none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
-          neonButton: pair("none", "inset 0 1px 0 rgb(255 255 255 / 30%), 0 0 16px rgb(255 61 119 / 45%)"),
+          neonButton: pair("none", "0 0 4px #ff3d77, 0 0 12px rgb(255 61 119 / 65%), inset 0 0 6px rgb(255 61 119 / 55%)"),
+          neonButtonHover: pair("0 0 0 3px {colors.accent.soft}", "0 0 6px #ff3d77, 0 0 20px rgb(255 61 119 / 75%), 0 0 40px rgb(255 61 119 / 30%), inset 0 0 10px rgb(255 61 119 / 60%)"),
+          neonGas: pair("none", "0 0 4px #ff3d77, 0 0 10px #ff3d77, 0 0 22px rgb(255 61 119 / 55%)"),
+          neonFrame: pair("0 0 0 1px {colors.accent}", "0 0 0 1.5px #ffd3df, 0 0 6px #ff3d77, 0 0 14px rgb(255 61 119 / 50%), inset 0 0 6px rgb(255 61 119 / 35%)"),
+          neonField: pair("none", "inset 0 2px 6px rgb(0 0 0 / 70%), 0 0 4px #ff3d77, 0 0 14px rgb(255 61 119 / 50%)"),
           // anneau de focus doux (éléments cliquables encadrés)
           ring: { value: "0 0 0 2px {colors.accent.soft}" },
         },
         // Dégradés (thème sombre seulement, « none » en clair), utilisés avec bgGradient :
         //   card : lumière du logo + volume de la carte · cardHead : reflet de l'en-tête · rim : arête claire en haut à gauche qui vire
-        //   au rose en bas à droite · tabGlow : la lumière du logo diffusée dans l'onglet actif · button : bouton principal
+        //   au rose en bas à droite · tabGlow : la lumière du logo diffusée dans l'onglet actif
         gradients: {
           // 1re couche : la lumière du logo, fixée sur la fenêtre (background-attachment: fixed dans cardFrame), donc chaque
           // carte en reçoit selon sa distance au logo ; 2e couche : le volume de la carte
@@ -87,7 +101,6 @@ export default defineConfig({
           cardHead: pair("none", "linear-gradient(180deg, rgb(255 255 255 / 3%), transparent)"),
           rim: pair("none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
           tabGlow: pair("none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
-          button: pair("none", "linear-gradient(180deg, #ff5d8d, #e5336a)"),
         },
       },
       /*
@@ -99,15 +112,16 @@ export default defineConfig({
         label: { value: { fontSize: "xs", fontWeight: "semibold" } }, // pastilles, compteurs
         caption: { value: { fontSize: "sm" } }, // métadonnées, boutons compacts
         body: { value: { fontSize: "md" } }, // listes, menus, champs
-        heading: { value: { fontSize: "lg", fontWeight: "bold" } }, // titre de carte
-        title: { value: { fontSize: "xl", fontWeight: "bold", lineHeight: "1.25" } }, // titre de page
-        overline: { value: { fontSize: "sm", textTransform: "uppercase", letterSpacing: "0.04em" } }, // rubriques
+        // titres en police d'enseigne (Tilt Neon n'a qu'une graisse : pas de gras, il serait simulé)
+        heading: { value: { fontFamily: "sign", fontSize: "lg", fontWeight: "normal" } }, // titre de carte
+        title: { value: { fontFamily: "sign", fontSize: "xl", fontWeight: "normal", lineHeight: "1.25" } }, // titre de page
+        overline: { value: { fontFamily: "display", fontSize: "sm", textTransform: "uppercase", letterSpacing: "0.06em" } }, // rubriques
       },
     },
   },
   globalCss: {
     ":root": { colorScheme: "light dark" },
-    "html, body": { bg: "bg", color: "text", fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", fontSize: "base", lineHeight: "1.45" },
+    "html, body": { bg: "bg", color: "text", fontFamily: "body", fontSize: "base", lineHeight: "1.45" },
     // Relief (sombre) : une trame fine et une lueur en haut de page, sous les cartes. Sur html (toute la fenêtre,
     // même quand la page est plus courte), body transparent par-dessus.
     "@media (prefers-color-scheme: dark)": {

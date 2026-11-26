@@ -118,7 +118,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
       <Link
         to="/dashboard"
         aria-label={m.topbar_n2_home()}
-        // clair : carré rose ; sombre : enseigne au néon, sans fond, qui bat de temps en temps
+        // police d'enseigne (Tilt Neon) ; clair : carré rose ; sombre : enseigne au néon, sans fond, qui bat de temps en temps
         className={css({
           gridArea: "logo",
           position: "relative",
@@ -129,11 +129,10 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
           borderRadius: "lg",
           bg: { base: "accent", _osDark: "transparent" },
           color: { base: "white", _osDark: "neon" },
-          fontWeight: "800",
-          fontSize: { base: "base", _osDark: "18px" },
-          fontStyle: { _osDark: "italic" },
+          fontFamily: "sign",
+          fontWeight: "normal",
+          fontSize: { base: "17px", _osDark: "24px" },
           textDecoration: "none",
-          letterSpacing: "-0.02em",
         })}
       >
         <span ref={logoRef} className={css({ textShadow: "neonSign", animation: { _osDark: "neon-flicker 9s linear infinite" } })}>N2</span>
@@ -182,6 +181,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
                 pt: "10px",
                 pb: "10px",
                 color: "muted",
+                fontFamily: "display",
                 fontWeight: "semibold",
                 textDecoration: "none",
                 borderBottom: "2px solid transparent",
