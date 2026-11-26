@@ -17,4 +17,4 @@ export { Empty, ExtLink, H3, Item, item, ItemMeta, ItemTitle, List } from "./ite
 export { cols2, cols3, input, mono, muted, small } from "./layout";
 export { overlay } from "./overlay";
 export { FitScroll } from "./scroll";
-export { selected, ToggleChip, toggleChip } from "./toggle-chip";
+export { selected, selectedHover, ToggleChip, toggleChip } from "./toggle-chip";
