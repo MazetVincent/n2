@@ -13,6 +13,7 @@ import { BranchPicker } from "~/features/branches/BranchPicker";
 import { CalendarCard } from "~/features/calendar/CalendarCard";
 import { SlackCard } from "~/features/slack/SlackCard";
 import { ActivityCard } from "~/features/activity/ActivityCard";
+import { RemindCard } from "~/features/remind/RemindCard";
 import { prsByJiraKey, type TodoItem, type Urgency } from "~/features/todo/logic";
 import { HiddenTodos, SnoozeMenu } from "~/features/todo/SnoozeMenu";
 import { useTodo } from "~/features/todo/useTodo";
@@ -22,7 +23,7 @@ import { ago, plural } from "~/lib/format";
 import { m, trPart } from "~/lib/i18n";
 
 // Dashboard, grille en deux colonnes égales : « Ma branche » sur toute la largeur,
-// puis « À faire » | GitHub · Jira, puis Agenda | Slack. Chaque carte se replie (retenu dans le navigateur) ;
+// puis « À faire » | Remind me, puis GitHub · Jira | Agenda, puis Slack. Chaque carte se replie (retenu dans le navigateur) ;
 // les listes ont une hauteur maximale et défilent dans leur carte.
 // ?vue=surveiller : onglet « À surveiller » (« À traiter maintenant » par défaut)
 // ?agenda=semaine : agenda de la semaine (la journée par défaut)
@@ -106,6 +107,7 @@ function TodoPage() {
         })}
         <HiddenTodos hidden={hidden} />
       </Card>
+      <RemindCard />
       <Activity />
       <Calendar />
       <Slack />

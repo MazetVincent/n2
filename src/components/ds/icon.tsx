@@ -18,6 +18,8 @@ const ICONS = {
   // cadenas : réglage figé (ex. un onglet toujours affiché)
   lock: "M7 11V8a5 5 0 0 1 10 0v3M6 11h12v10H6Z",
   close: "M6 6l12 12M18 6 6 18",
+  // crayon : modifier un texte (le .md de « Remind me »)
+  edit: "M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16v4ZM13.5 6.5l4 4",
   bellOff: "M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7M10.3 21a1.94 1.94 0 0 0 3.4 0M2 2l20 20",
 } as const;
 export type IconName = keyof typeof ICONS;

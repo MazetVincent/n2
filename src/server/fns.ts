@@ -256,13 +256,11 @@ export const savePreferences = createServerFn({ method: "POST" })
       projectPath: path.refine((p) => p.trim().length > 0),
       // lecture du guide : absente d'une page ouverte avant son ajout, elle reste désactivée
       guide: z.object({ enabled: z.boolean(), path, references: z.boolean().default(false), terms: z.boolean().default(false) }),
-      // absent d'une page ouverte avant son ajout : le chemin reste celui de la config
-      remindPath: path.optional(),
     }),
   )
   .handler(({ data }) => {
     try {
-      return { ok: true as const, data: savePrefs({ ...data, remindPath: data.remindPath ?? getPrefs().remindPath } as Parameters<typeof savePrefs>[0]) };
+      return { ok: true as const, data: savePrefs({ ...data, remindPath: getPrefs().remindPath } as Parameters<typeof savePrefs>[0]) };
     } catch (e) {
       return { ok: false as const, error: e instanceof MessageError ? e.msg : msg("srv_raw", { text: redact(e instanceof Error ? e.message : String(e)) || "?" }) };
     }
@@ -294,9 +292,9 @@ export const changeRemind = createServerFn({ method: "POST" })
   .validator(
     z.discriminatedUnion("op", [
       z.object({ op: z.literal("add"), text: z.string().trim().min(1).max(REMIND_TEXT_MAX) }),
-      z.object({ op: z.literal("toggle"), ...remindLine }),
+      z.object({ op: z.literal("toggle"), ...remindLine, done: z.boolean() }),
       z.object({ op: z.literal("remove"), ...remindLine }),
-      z.object({ op: z.literal("clearDone") }),
+      z.object({ op: z.literal("clearDone"), version: z.string().max(64) }),
       z.object({ op: z.literal("replace"), content: z.string().max(REMIND_MAX_BYTES), version: z.string().max(64) }),
     ]),
   )
