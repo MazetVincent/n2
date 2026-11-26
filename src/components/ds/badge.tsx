@@ -5,6 +5,16 @@ import { css, cva, cx } from "styled-system/css";
 export type Tone = "ok" | "warn" | "bad" | "info" | "accent" | "neutral";
 export const TONES: readonly Tone[] = ["ok", "warn", "bad", "info", "accent", "neutral"];
 
+// Enseigne, sombre : la pastille devient un petit tube de sa couleur (cadre, lueur, fond vide) ; en clair, fond pâle.
+const tube = {
+  _osDark: {
+    bg: "transparent",
+    borderColor: "currentColor",
+    boxShadow: "0 0 6px color-mix(in srgb, currentColor 45%, transparent), inset 0 0 4px color-mix(in srgb, currentColor 30%, transparent)",
+    textShadow: "0 0 6px color-mix(in srgb, currentColor 55%, transparent)",
+  },
+} as const;
+
 export const badge = cva({
   base: {
     display: "inline-flex",
@@ -19,11 +29,11 @@ export const badge = cva({
   },
   variants: {
     tone: {
-      ok: { bg: "ok.soft", color: "ok" },
-      warn: { bg: "warn.soft", color: "warn" },
-      bad: { bg: "bad.soft", color: "bad" },
-      info: { bg: "info.soft", color: "info" },
-      accent: { bg: "accent.soft", color: "accent" },
+      ok: { bg: "ok.soft", color: "ok", ...tube },
+      warn: { bg: "warn.soft", color: "warn", ...tube },
+      bad: { bg: "bad.soft", color: "bad", ...tube },
+      info: { bg: "info.soft", color: "info", ...tube },
+      accent: { bg: "accent.soft", color: "accent", ...tube },
       neutral: { bg: "transparent", color: "muted", borderColor: "border" },
     },
     // pastille cliquable (bouton ou lien) : au survol, un contour léger de la couleur du texte

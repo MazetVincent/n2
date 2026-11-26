@@ -13,6 +13,7 @@ import { Icon } from "./icon";
 /** Hauteur maximale des cartes qui listent (À faire, Slack, GitHub · Jira…) avant de défiler */
 export const LIST_MAX_H = 460;
 
+// Enseigne : la carte est un caisson vissé (une vis à chaque coin, ::after, en clair comme en sombre).
 // Sombre (Relief) : carte éclairée par la lumière du logo (couche fixée sur la fenêtre) et en volume (dégradé, reflet, ombre portée), arête claire en haut à gauche qui vire au rose en bas
 // à droite (::before, cadre en dégradé découpé par un masque), halo rose au survol. Les jetons valent « none » en clair.
 export const cardFrame = css({
@@ -21,7 +22,16 @@ export const cardFrame = css({
   bgGradient: "card",
   backgroundAttachment: { _osDark: "fixed, scroll" },
   border: "1px solid token(colors.border)",
-  borderRadius: "xl",
+  borderRadius: "md",
+  _after: {
+    content: '""',
+    position: "absolute",
+    inset: "6px",
+    pointerEvents: "none",
+    // une vis par coin (tête claire, bague sombre) ; écrit en entier : Panda lit les styles sans exécuter le code
+    background:
+      "radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 0 0 / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 100% 0 / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 0 100% / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 100% 100% / 6px 6px no-repeat",
+  },
   boxShadow: "card",
   minW: 0,
   transition: "box-shadow 0.2s, border-color 0.2s",
@@ -74,13 +84,14 @@ export function Card({
           px: "4",
           py: controls ? "2.5" : "3.5",
           borderBottom: "1px solid token(colors.border)",
-          borderTopRadius: "xl",
+          borderTopRadius: "md",
           bgGradient: "cardHead",
           "[data-open=false] > &": { borderBottom: "none", alignItems: "center", py: "2.5" },
         })}
       >
         <div className={css({ display: "flex", alignItems: "center", gap: "4", flexWrap: "wrap", minW: 0 })}>
-          {/* sombre : titre en tube de néon rose (pas les pastilles ni les liens qu'il contient) */}
+          {/* titre en police d'enseigne ; sombre : tube de néon rose (pas les pastilles ni les liens qu'il contient, qui
+              gardent la police du texte) */}
           <h2
             className={css({
               textStyle: "heading",
@@ -90,8 +101,7 @@ export function Card({
               flexWrap: "wrap",
               color: "neon",
               textShadow: "neonText",
-              fontStyle: { _osDark: "italic" },
-              "& *": { textShadow: "none", fontStyle: "normal" },
+              "& *": { textShadow: "none", fontFamily: "body" },
             })}
           >
             {title}

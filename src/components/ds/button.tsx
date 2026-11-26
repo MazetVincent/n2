@@ -25,16 +25,31 @@ export const button = cva({
     cursor: "pointer",
     whiteSpace: "nowrap",
     textDecoration: "none",
-    transition: "border-color 0.12s, color 0.12s, background 0.12s",
+    transition: "border-color 0.12s, color 0.12s, background 0.12s, box-shadow 0.15s",
     _disabled: { opacity: 0.55, cursor: "default" },
   },
   variants: {
     variant: {
-      solid: { bg: "accent", bgGradient: "button", borderColor: "accent", color: "white", fontWeight: "semibold", boxShadow: "neonButton", _hover: { _enabled: { filter: "brightness(1.08)" } } },
+      // Enseigne. Sombre : un tube de néon allumé (cadre clair, lueur rose, fond vide), qui vacille quand on le presse.
+      // Clair (enseigne éteinte de jour) : la pilule magenta pleine.
+      solid: {
+        bg: { base: "accent", _osDark: "transparent" },
+        borderColor: "tube",
+        borderWidth: { _osDark: "2px" },
+        borderRadius: "full",
+        color: { base: "white", _osDark: "neon" },
+        fontWeight: "semibold",
+        textShadow: "neonText",
+        boxShadow: "neonButton",
+        _hover: { _enabled: { filter: { base: "brightness(1.08)", _osDark: "none" }, bg: { _osDark: "rgb(255 61 119 / 8%)" }, boxShadow: "neonButtonHover" } },
+        _active: { _enabled: { animation: { _osDark: "neon-flick 0.3s steps(1)" } } },
+      },
+      // tube éteint, qui s'allume au survol (sombre)
       outline: {
         bg: "surface",
-        borderColor: "border",
-        _hover: { _enabled: { bg: "surface.alt" } },
+        borderColor: { base: "border", _osDark: "tube.off" },
+        borderRadius: "full",
+        _hover: { _enabled: { bg: "surface.alt", borderColor: { _osDark: "tube" }, boxShadow: { _osDark: "neonButton" } } },
         // bouton à bascule (aria-pressed) : même apparence « sélectionné » que les pastilles activables (ds/toggle-chip.tsx) ;
         // le survol ne change pas l'état affiché
         "&[aria-pressed=true]": selected,
@@ -57,7 +72,7 @@ export const button = cva({
     size: {
       xs: { textStyle: "caption", px: "2", py: "1px" },
       sm: { textStyle: "caption", px: "2.5", h: "26px" },
-      md: { textStyle: "body", px: "3", h: "32px", borderRadius: "lg" },
+      md: { textStyle: "body", px: "3", h: "32px" },
       bar: { px: "3", h: "34px", gap: "2" },
     },
   },

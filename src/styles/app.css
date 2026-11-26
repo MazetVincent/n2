@@ -14,6 +14,47 @@
 }
 
 /*
+ * Tube qui s'amorce (interrupteur qu'on allume, segment choisi) : quelques ratés du gaz puis allumé.
+ * Tube qui vacille (bouton principal pressé). En pas francs (steps(1)), comme un vrai néon.
+ */
+@keyframes neon-ignite {
+  0% {
+    opacity: 0.15;
+  }
+  12% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 0.2;
+  }
+  38% {
+    opacity: 1;
+  }
+  48% {
+    opacity: 0.45;
+  }
+  62%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes neon-flick {
+  0%,
+  30%,
+  60%,
+  100% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 0.6;
+  }
+}
+
+/*
  * Enseigne au néon (logo N2 en thème sombre) : allumée presque tout le temps, quelques battements toutes les 9 s.
  * Le halo que le logo projette sur la barre du haut suit la même animation (même durée, lancées ensemble).
  * Animation coupée si le système demande moins de mouvement (règle globale de panda.config.ts) : reste allumée.

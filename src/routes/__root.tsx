@@ -13,6 +13,7 @@ import { TopBar, useTabShortcuts } from "~/components/top-bar";
 import { toaster } from "~/lib/actions";
 import { getLang } from "~/lib/i18n";
 import appCss from "~/styles/app.css?url";
+import fontsCss from "~/styles/fonts.css?url";
 import mapCss from "~/styles/map.css?url";
 
 const FAVICON =
@@ -27,6 +28,7 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [{ charSet: "utf-8" }, { name: "viewport", content: "width=device-width, initial-scale=1" }, { title: "N2" }],
     links: [
+      { rel: "stylesheet", href: fontsCss },
       { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: mapCss },
       { rel: "icon", href: FAVICON },

@@ -59,33 +59,33 @@ export function Switch({
       )}
     >
       <span className={css({ minW: 0 })}>{label}</span>
+      {/* Enseigne : un tube de verre entre deux électrodes ; allumé, le gaz s'amorce (quelques ratés) puis brille.
+          À mi-course (mixed), seule la moitié gauche du tube est allumée. */}
       <span
         aria-hidden
         className={css({
           position: "relative",
           flex: "none",
-          w: "26px",
-          h: "14px",
+          w: "34px",
+          h: "12px",
+          mx: "5px",
           borderRadius: "full",
           border: "1px solid token(colors.border)",
-          bg: "surface",
-          transition: "background 0.15s",
-          "[data-state=on] > &": { bg: "accent", borderColor: "accent" },
-          "[data-state=mixed] > &": { bg: "accent.soft", borderColor: "accent" },
+          bg: "surface.alt",
+          "&::before, &::after": { content: '""', position: "absolute", top: "1px", w: "5px", h: "8px", borderRadius: "1px", bg: "screw" },
+          _before: { left: "-6px" },
+          _after: { right: "-6px" },
         })}
       >
         <span
           className={css({
             position: "absolute",
-            top: "1px",
-            left: "1px",
-            w: "10px",
-            h: "10px",
+            inset: "2px",
             borderRadius: "full",
-            bg: "muted",
-            transition: "transform 0.15s",
-            "[data-state=on] > * > &": { transform: "translateX(12px)", bg: "white" },
-            "[data-state=mixed] > * > &": { transform: "translateX(6px)", bg: "accent" },
+            bg: "tube.off",
+            transition: "background 0.1s",
+            "[data-state=on] > * > &": { bg: "tube", boxShadow: "neonGas", animation: "neon-ignite 0.55s steps(1)" },
+            "[data-state=mixed] > * > &": { right: "50%", bg: "tube", boxShadow: "neonGas" },
           })}
         />
       </span>
@@ -116,12 +116,22 @@ export function Segmented<V extends string>({
       onValueChange={(e) => e.value && onChange(e.value as V)}
       aria-label={label}
       className={cx(
-        css({ display: "inline-flex", gap: "2px", p: "3px", bg: "surface.alt", border: "1px solid token(colors.border)", borderRadius: "lg", position: "relative", flexWrap: "wrap" }),
+        css({ display: "inline-flex", gap: "2px", p: "3px", bg: "surface.alt", border: "1px solid token(colors.border)", borderRadius: "full", position: "relative", flexWrap: "wrap" }),
         className,
       )}
     >
+      {/* Enseigne, sombre : le segment choisi est entouré d'un tube allumé (fond vide, texte en néon) */}
       <SegmentGroup.Indicator
-        className={css({ bg: "accent.soft", borderRadius: "md", boxShadow: "0 0 0 1px token(colors.accent)", w: "var(--width)", h: "var(--height)", top: "var(--top)", left: "var(--left)", transition: "all 0.15s" })}
+        className={css({
+          bg: { base: "accent.soft", _osDark: "transparent" },
+          borderRadius: "full",
+          boxShadow: "neonFrame",
+          w: "var(--width)",
+          h: "var(--height)",
+          top: "var(--top)",
+          left: "var(--left)",
+          transition: "all 0.15s",
+        })}
       />
       {items.map((it) => (
         <SegmentGroup.Item
@@ -135,14 +145,14 @@ export function Segmented<V extends string>({
             gap: "1.5",
             px: "3",
             py: "1",
-            borderRadius: "md",
+            borderRadius: "full",
             textStyle: "body",
             fontWeight: "semibold",
             color: "muted",
             cursor: "pointer",
             whiteSpace: "nowrap",
             _hover: { color: "text" },
-            _checked: { color: "text" },
+            _checked: { color: "text", textShadow: "neonText" },
             _focusVisible: { outline: "2px solid token(colors.accent)", outlineOffset: "1px" },
           })}
         >
@@ -194,11 +204,12 @@ export function Tabs<V extends string>({
                 bg: "transparent",
                 border: "none",
                 borderBottom: "2px solid transparent",
+                fontFamily: "display",
                 fontWeight: "semibold",
                 color: "muted",
                 cursor: "pointer",
                 _hover: { color: "text" },
-                _selected: { color: "text", borderBottomColor: "accent" },
+                _selected: { color: "text", borderBottomColor: "accent", textShadow: "neonText" },
                 _focusVisible: { outline: "2px solid token(colors.accent)", outlineOffset: "-2px", borderTopRadius: "md" },
               })}
             >
