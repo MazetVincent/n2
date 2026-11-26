@@ -1,7 +1,7 @@
 // « Remind me » : des points à revoir plus tard, dans un fichier Markdown à toi (remind.path, ~/.config/n2/remind.md par défaut).
 // Le fichier reste lisible et modifiable ailleurs (éditeur, Obsidian) : N2 n'en réécrit que les lignes touchées.
 // Un rappel est un élément de liste au premier niveau (« - [ ] texte », « - [x] fait », ou « - texte » sans case) ;
-// les titres (« ## Projet ») le rangent dans une section ; le reste (paragraphes, sous-listes, blocs de code) est gardé tel quel.
+// les titres (« ## Projet ») le rangent dans une section (« # Titre » est le titre du document, pas une section) ; le reste (paragraphes, sous-listes, blocs de code) est gardé tel quel.
 // Fonctions pures, partagées par le serveur (écriture) et la page (affichage).
 
 /** Emplacement du fichier quand la config n'en donne pas */
@@ -41,7 +41,7 @@ export type RemindChange =
 
 // élément de liste au premier niveau, avec ou sans case à cocher
 const ITEM = /^([-*+])[ \t]+(?:\[([ xX])\][ \t]+)?(.*\S)[ \t]*$/;
-const HEADING = /^#{1,6}[ \t]+(.*?)[ \t#]*$/;
+const HEADING = /^(#{1,6})[ \t]+(.*?)[ \t#]*$/;
 const FENCE = /^[ \t]{0,3}(```|~~~)/;
 
 const linesOf = (md: string) => md.split(/\r?\n/);
@@ -65,13 +65,28 @@ export function parseRemind(md: string): RemindItem[] {
     }
     const h = HEADING.exec(line);
     if (h) {
-      section = h[1] || null;
+      // « # Titre » : le titre du document (déjà celui de la carte), pas une section
+      section = h[1] === "#" ? null : h[2] || null;
       return;
     }
     const it = ITEM.exec(line);
     if (it) items.push({ line: i, text: it[3], done: it[2] === "x" || it[2] === "X", section });
   });
   return items;
+}
+
+/** Ligne du premier titre de section (« ## … » ou plus, hors bloc de code), -1 s'il n'y en a pas */
+function firstSectionLine(md: string): number {
+  let fence: string | null = null;
+  const lines = linesOf(md);
+  for (let i = 0; i < lines.length; i++) {
+    const f = FENCE.exec(lines[i])?.[1];
+    if (fence) {
+      if (f === fence) fence = null;
+    } else if (f) fence = f;
+    else if ((HEADING.exec(lines[i])?.[1].length ?? 0) > 1) return i;
+  }
+  return -1;
 }
 
 /** Texte saisi dans N2 → une seule ligne, sans espaces autour */
@@ -100,10 +115,24 @@ export function applyRemindChange(md: string, change: RemindChange, hash: (s: st
   const eol = eolOf(md);
   switch (change.op) {
     case "add": {
+      // dans la première section (avant le premier « ## »), après son dernier rappel ;
+      // sans rappel là, juste avant le premier « ## » ; sans section, à la fin
       const text = cleanText(change.text);
       if (!text) return md;
+      const line = `- [ ] ${text}`;
+      const lines = linesOf(md);
+      const first = firstSectionLine(md);
+      const top = parseRemind(md).filter((it) => first < 0 || it.line < first);
+      if (top.length) {
+        lines.splice(blockEnd(lines, top[top.length - 1].line), 0, line);
+        return lines.join(eol);
+      }
+      if (first >= 0) {
+        lines.splice(first, 0, line, "");
+        return lines.join(eol);
+      }
       const head = md.trim() ? md.replace(/(\r?\n)*$/, eol) : `# Remind me${eol}${eol}`;
-      return `${head}- [ ] ${text}${eol}`;
+      return `${head}${line}${eol}`;
     }
     case "toggle": {
       const it = itemAt(md, change.line, change.text);
@@ -141,4 +170,25 @@ export function groupRemind(items: RemindItem[]): { open: { section: string | nu
     else open.push({ section: it.section, items: [it] });
   }
   return { open, done: items.filter((i) => i.done) };
+}
+
+export type InlinePart = { kind: "text" | "code" | "bold"; text: string } | { kind: "link"; text: string; href: string };
+
+// `code`, **gras**, [texte](https://…) et adresses https://… nues ; le reste est du texte
+const INLINE = /`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>()]*[^\s<>().,;:!?'"])/g;
+
+/** Le Markdown en ligne d'un rappel, découpé pour l'affichage (seuls les liens http(s) deviennent des liens) */
+export function inlineParts(text: string): InlinePart[] {
+  const parts: InlinePart[] = [];
+  let last = 0;
+  for (const mt of text.matchAll(INLINE)) {
+    if (mt.index > last) parts.push({ kind: "text", text: text.slice(last, mt.index) });
+    if (mt[1] !== undefined) parts.push({ kind: "code", text: mt[1] });
+    else if (mt[2] !== undefined) parts.push({ kind: "bold", text: mt[2] });
+    else if (mt[3] !== undefined) parts.push({ kind: "link", text: mt[3], href: mt[4] });
+    else parts.push({ kind: "link", text: mt[5], href: mt[5] });
+    last = mt.index + mt[0].length;
+  }
+  if (last < text.length) parts.push({ kind: "text", text: text.slice(last) });
+  return parts;
 }

@@ -26,6 +26,7 @@ import {
   getQuickLinks,
   getGuide,
   getGuideFreshness,
+  getRemind,
 } from "~/server/fns";
 import type { QuickLink } from "~/features/links/logic";
 import type {
@@ -52,6 +53,7 @@ import type {
   WorkspaceLibs,
 } from "~/server/types";
 import type { BranchList } from "~/features/branches/logic";
+import type { RemindData } from "~/features/remind/logic";
 
 export const AUTO_REFRESH_MS = 5 * 60_000;
 
@@ -149,6 +151,10 @@ export const useQuickLinks = (enabled = true) => useQuery<QuickLink[]>({ queryKe
 
 /** Préférences de N2 (config.local.json) : onglets affichés, éditeur, chemins du projet et du guide */
 export const usePreferences = () => useHydrationSafe(useQuery({ queryKey: ["prefs"], queryFn: () => getPreferences(), staleTime: Infinity }));
+
+/** « Remind me » : le fichier des rappels, relu toutes les 30 s et au retour sur la page (il peut changer dans ton éditeur) */
+export const useRemind = () =>
+  useHydrationSafe(useQuery<SourceResult<RemindData>>({ queryKey: ["remind"], queryFn: () => getRemind(), refetchInterval: 30_000, refetchOnWindowFocus: true }));
 
 export function useRefreshAll() {
   const qc = useQueryClient();

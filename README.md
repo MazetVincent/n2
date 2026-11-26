@@ -28,7 +28,7 @@ Les onglets sont rangés en trois groupes. Les touches **1 à 9** suivent cet or
 
 | Touche | Onglet | Contenu | Branché sur |
 |---|---|---|---|
-| 1 | **Dashboard** | **À faire** : ce qui demande une action (revues demandées, PR bloquées ou prêtes à fusionner, tickets en revue sans PR, alarmes, nouvelles erreurs, failles, pipeline en échec, session AWS qui expire). **Agenda** du jour ou de la semaine, avec « Rejoindre ». **Slack** : messages directs, mentions, salons suivis. **GitHub · Jira** : mentions et réponses. **Ma branche** : fichiers modifiés, parties touchées, passages du guide à relire. | tout ce qui est configuré |
+| 1 | **Dashboard** | **À faire** : ce qui demande une action (revues demandées, PR bloquées ou prêtes à fusionner, tickets en revue sans PR, alarmes, nouvelles erreurs, failles, pipeline en échec, session AWS qui expire). **Remind me** : les points à revoir plus tard, dans ton fichier Markdown (`remind.path`) ; ajouter, cocher, supprimer ou modifier tout le texte depuis N2. **Agenda** du jour ou de la semaine, avec « Rejoindre ». **Slack** : messages directs, mentions, salons suivis. **GitHub · Jira** : mentions et réponses. **Ma branche** : fichiers modifiés, parties touchées, passages du guide à relire. | tout ce qui est configuré |
 | 2 | **Pull requests** | Revues demandées, mes PR, approuvées, commentées. Pour chaque PR : CI, revue, conflits, tickets Jira liés, et si elle est en prod ou attend la prod. | `gh`, `acli`, `aws` |
 | 3 | **Sprint Jira** | Tickets du sprint actif en 3 colonnes, avec les PR qui les citent. | `acli`, `gh` |
 

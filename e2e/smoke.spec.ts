@@ -64,3 +64,19 @@ test("accessibilité du Dashboard : aucune violation critique", async ({ page })
   const critical = violations.filter((v) => v.impact === "critical");
   expect(critical.map((v) => `${v.id} : ${v.help} (${v.nodes.length})`)).toEqual([]);
 });
+
+test("Remind me : ajouter puis cocher un rappel (fichier en mémoire en mode démo)", async ({ page }) => {
+  const errors = watchErrors(page);
+  await unlock(page);
+  const card = page.locator("section").filter({ has: page.getByRole("heading", { name: /^Remind me/ }) });
+  await expect(card).toContainText("Relire la doc du cache");
+  await card.getByRole("textbox").fill("Point ajouté par le test e2e");
+  await card.getByRole("textbox").press("Enter");
+  const added = card.getByRole("checkbox", { name: "Point ajouté par le test e2e" });
+  await expect(added).toBeVisible();
+  // coché, il passe dans « Faits », replié : sa case disparaît de la liste
+  await added.click();
+  await expect(added).toBeHidden();
+  await expect(card.getByRole("button", { name: /^(Faits|Done) \(2\)$/ })).toBeVisible();
+  expect(errors).toEqual([]);
+});

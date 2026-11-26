@@ -1,5 +1,5 @@
 // Préférences (icône boulon, à droite de la cloche) : langue, onglets affichés, éditeur où ouvrir le code,
-// chemin du projet, guide (fichier et lecture). La langue est un cookie du navigateur (la page se recharge) ; le reste est écrit dans
+// chemin du projet, fichier de « Remind me », guide (fichier et lecture). La langue est un cookie du navigateur (la page se recharge) ; le reste est écrit dans
 // config.local.json par le serveur, qui vérifie les chemins avant d'enregistrer.
 import { Dialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
@@ -98,7 +98,7 @@ function Body({ onDone }: { onDone: () => void }) {
   const saved = q.data?.ok ? q.data.data : undefined;
   // après un changement de langue : le brouillon d'avant le rechargement (le secret, lui, vient toujours du serveur)
   const [kept] = useState(readDraft);
-  const fromSaved = (p: Preferences): Preferences => (kept ? { ...kept, secret: p.secret } : p);
+  const fromSaved = (p: Preferences): Preferences => (kept ? { ...p, ...kept, secret: p.secret } : p);
   const [draft, setDraft] = useState<Preferences | undefined>(saved && fromSaved(saved));
   useEffect(() => {
     if (kept) dropDraft();
@@ -194,6 +194,10 @@ function Body({ onDone }: { onDone: () => void }) {
 
         <Field title={m.prefs_project()} hint={m.prefs_project_hint()}>
           <PathInput label={m.prefs_project()} value={draft.projectPath} onChange={(projectPath) => set({ projectPath })} />
+        </Field>
+
+        <Field title={m.prefs_remind_path()} hint={m.prefs_remind_hint()}>
+          <PathInput label={m.prefs_remind_path()} value={draft.remindPath} onChange={(remindPath) => set({ remindPath })} />
         </Field>
 
         {/* l'option du guide n'existe qu'une fois le secret débloqué (src/features/secret/Konami.tsx) */}

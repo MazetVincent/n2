@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { applyRemindChange, groupRemind, parseRemind, RemindConflict } from "../src/features/remind/logic.ts";
+import { applyRemindChange, groupRemind, inlineParts, parseRemind, RemindConflict } from "../src/features/remind/logic.ts";
 import { readPreferences, applyPreferences } from "../src/features/prefs/logic.ts";
 import { remove, tempDir } from "./helpers.ts";
 
@@ -30,9 +30,9 @@ Un paragraphe.
 describe("parseRemind", () => {
   it("lit les rappels au premier niveau, avec leur section et leur état", () => {
     expect(parseRemind(md)).toEqual([
-      { line: 2, text: "Relire le cache", done: false, section: "Remind me" },
-      { line: 4, text: "Mettre à jour Biome", done: true, section: "Remind me" },
-      { line: 5, text: "Point sans case", done: false, section: "Remind me" },
+      { line: 2, text: "Relire le cache", done: false, section: null },
+      { line: 4, text: "Mettre à jour Biome", done: true, section: null },
+      { line: 5, text: "Point sans case", done: false, section: null },
       { line: 9, text: "Essayer bun test", done: true, section: "Plus tard" },
       { line: 10, text: "Demander à l'équipe", done: false, section: "Plus tard" },
     ]);
@@ -44,9 +44,17 @@ describe("parseRemind", () => {
 });
 
 describe("applyRemindChange", () => {
-  it("ajoute à la fin, sur une seule ligne", () => {
-    expect(applyRemindChange("- [ ] a", { op: "add", text: "  b\n  c " }, hash)).toBe("- [ ] a\n- [ ] b c\n");
-    expect(applyRemindChange("- [ ] a\n\n\n", { op: "add", text: "b" }, hash)).toBe("- [ ] a\n- [ ] b\n");
+  it("ajoute après le dernier rappel, sur une seule ligne, sans toucher au texte qui suit", () => {
+    expect(applyRemindChange("- [ ] a", { op: "add", text: "  b\n  c " }, hash)).toBe("- [ ] a\n- [ ] b c");
+    expect(applyRemindChange("- [ ] a\n\nUn paragraphe.\n", { op: "add", text: "b" }, hash)).toBe("- [ ] a\n- [ ] b\n\nUn paragraphe.\n");
+    expect(applyRemindChange("# Titre\n\nNotes.\n", { op: "add", text: "b" }, hash)).toBe("# Titre\n\nNotes.\n- [ ] b\n");
+  });
+
+  it("ajoute dans la première section : après ses rappels (et leurs sous-points), sinon avant le premier « ## »", () => {
+    const out = applyRemindChange(md, { op: "add", text: "nouveau" }, hash);
+    expect(out.split("\n").slice(2, 7)).toEqual(["- [ ] Relire le cache", "  - sous-point gardé avec son rappel", "- [x] Mettre à jour Biome", "- Point sans case", "- [ ] nouveau"]);
+    expect(parseRemind(out).find((i) => i.text === "nouveau")?.section).toBeNull();
+    expect(applyRemindChange("# Remind me\n\n## Plus tard\n\n- [ ] x\n", { op: "add", text: "nouveau" }, hash)).toBe("# Remind me\n\n- [ ] nouveau\n\n## Plus tard\n\n- [ ] x\n");
   });
 
   it("un fichier vide reçoit un titre", () => {
@@ -96,10 +104,30 @@ describe("groupRemind", () => {
   it("à revoir par section (ordre du fichier), faits à part", () => {
     const { open, done } = groupRemind(parseRemind(md));
     expect(open.map((g) => [g.section, g.items.map((i) => i.text)])).toEqual([
-      ["Remind me", ["Relire le cache", "Point sans case"]],
+      [null, ["Relire le cache", "Point sans case"]],
       ["Plus tard", ["Demander à l'équipe"]],
     ]);
     expect(done.map((i) => i.text)).toEqual(["Mettre à jour Biome", "Essayer bun test"]);
+  });
+});
+
+describe("inlineParts", () => {
+  it("code, gras, liens Markdown et adresses nues ; le reste en texte", () => {
+    expect(inlineParts("voir `cache.ts` et **vite** sur [la PR](https://github.com/a/b/pull/1), ou https://exemple.test/x.")).toEqual([
+      { kind: "text", text: "voir " },
+      { kind: "code", text: "cache.ts" },
+      { kind: "text", text: " et " },
+      { kind: "bold", text: "vite" },
+      { kind: "text", text: " sur " },
+      { kind: "link", text: "la PR", href: "https://github.com/a/b/pull/1" },
+      { kind: "text", text: ", ou " },
+      { kind: "link", text: "https://exemple.test/x", href: "https://exemple.test/x" },
+      { kind: "text", text: "." },
+    ]);
+  });
+
+  it("un lien qui n'est pas http(s) reste du texte", () => {
+    expect(inlineParts("[clic](javascript:alert(1))")).toEqual([{ kind: "text", text: "[clic](javascript:alert(1))" }]);
   });
 });
 
