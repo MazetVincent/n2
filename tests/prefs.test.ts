@@ -18,6 +18,7 @@ describe("préférences", () => {
       jetbrains: "/Applications/PhpStorm.app/Contents/MacOS/phpstorm",
       projectPath: "~/Projet",
       guide: { enabled: true, path: "~/guide.html", references: true, terms: true },
+      remindPath: "~/.config/n2/remind.md",
       secret: { unlocked: false, guideTouched: false, statsFound: false },
     });
     expect(readPreferences({}).guide.enabled).toBe(false);

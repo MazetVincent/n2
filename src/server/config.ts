@@ -69,6 +69,11 @@ export interface Config {
     /** app Entra ID (Azure AD) avec la permission déléguée Calendars.Read et les « flux clients publics » activés */
     graph?: { tenantId: string; clientId: string };
   };
+  /** « Remind me » du Dashboard : fichier Markdown des points à revoir plus tard, modifiable depuis N2 (src/features/remind/logic.ts) */
+  remind?: {
+    /** chemin du fichier .md ; défaut « ~/.config/n2/remind.md » (créé au premier ajout) */
+    path?: string;
+  };
   /** Guide de l'équipe : son fichier HTML (onglet Guide, liens vers les sections depuis la carte, Sentry, les PR…) */
   guide?: {
     /**

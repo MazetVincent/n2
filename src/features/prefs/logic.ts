@@ -1,6 +1,7 @@
 // Préférences de N2 (fenêtre « Préférences », icône boulon) : onglets affichés, éditeur où ouvrir le code,
 // chemin du projet et du guide. Elles sont écrites dans config.local.json (la langue, elle, reste un cookie du navigateur).
 // Fonctions pures, partagées par le serveur (lecture, écriture) et la page (barre d'onglets).
+import { DEFAULT_REMIND_PATH } from "../remind/logic.ts";
 
 /** Tous les onglets, dans l'ordre de la barre (trois groupes : le travail du jour, le code, la prod) */
 export const TAB_GROUPS = [
@@ -33,6 +34,8 @@ export interface Preferences {
   /** dossier du projet suivi (tel qu'écrit dans la config, « ~/… » accepté) */
   projectPath: string;
   guide: GuidePrefs;
+  /** fichier Markdown de « Remind me » (tel qu'écrit dans la config, « ~/… » accepté) */
+  remindPath: string;
   /** le secret (code Konami) : lu ici, écrit seulement par recordSecret */
   secret: Secret;
 }
@@ -88,6 +91,7 @@ export function readPreferences(raw: unknown, defaultIde = DEFAULT_JETBRAINS): P
     jetbrains: str(codemap.ide, defaultIde),
     projectPath: str(codemap.projectPath) || str(obj(cfg.libs).projectPath),
     guide: { enabled: Boolean(str(guide.path)) && guide.enabled !== false, path: str(guide.path), references: guide.references !== false, terms: guide.terms !== false },
+    remindPath: str(obj(cfg.remind).path).trim() || DEFAULT_REMIND_PATH,
     secret: readSecret(cfg),
   };
 }
@@ -141,6 +145,15 @@ export function applyPreferences(raw: unknown, p: Preferences, defaultIde = DEFA
     // le chemin affiché est celui de la carte s'il existe, sinon celui des librairies : c'est lui qui change
     if (str(codemap.projectPath)) cfg.codemap = { ...codemap, projectPath: p.projectPath };
     else cfg.libs = { ...obj(cfg.libs), projectPath: p.projectPath };
+  }
+  const remindPath = p.remindPath.trim();
+  if (remindPath !== before.remindPath) {
+    // le chemin par défaut n'est pas écrit : la config reste courte
+    const remind = { ...obj(cfg.remind) };
+    if (remindPath && remindPath !== DEFAULT_REMIND_PATH) remind.path = remindPath;
+    else delete remind.path;
+    if (Object.keys(remind).length) cfg.remind = remind;
+    else delete cfg.remind;
   }
   const guidePath = p.guide.path.trim();
   const reading = { references: p.guide.references, terms: p.guide.terms };
