@@ -1,25 +1,36 @@
 // « Remind me » : lecture et écriture du fichier Markdown des rappels (remind.path, ~/.config/n2/remind.md par défaut).
 // C'est le seul fichier, hors de sa config, que N2 écrit (docs/adr/0010-fichier-de-rappels.md) ; garde-fous :
-//  - un chemin absolu vers un fichier .md (pas un dossier), 256 Ko au plus ;
+//  - le chemin vient de config.local.json, réglé à la main : la page ne peut pas le changer (sinon elle pourrait viser un autre .md) ;
+//  - un chemin absolu vers un fichier .md (pas un dossier ; un lien symbolique doit mener à un fichier .md qui existe), 256 Ko au plus ;
 //  - le dossier doit exister (seul celui du chemin par défaut est créé, en 700) ;
 //  - réécriture d'un coup (fichier voisin puis renommage), droits gardés (600 pour un nouveau fichier) ;
-//  - modification d'un rappel refusée s'il n'est plus à sa ligne, réécriture complète refusée si le fichier a changé depuis.
+//  - modification d'un rappel refusée s'il n'est plus à sa ligne, modification d'ensemble refusée si le fichier a changé depuis.
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute } from "node:path";
 import { expandHome, loadConfig } from "../config.ts";
 import { msg } from "../messages.ts";
 import { MessageError } from "../run.ts";
-import { applyRemindChange, DEFAULT_REMIND_PATH, parseRemind, REMIND_MAX_BYTES, RemindConflict, type RemindChange, type RemindData } from "../../features/remind/logic.ts";
+import { applyRemindChange, DEFAULT_REMIND_PATH, parseRemind, REMIND_MAX_BYTES, RemindConflict, RemindUnsafe, type RemindChange, type RemindData } from "../../features/remind/logic.ts";
 
 export const remindHash = (content: string) => createHash("sha256").update(content).digest("hex").slice(0, 16);
 
 /** Chemin réglé (tel qu'écrit dans la config) */
 export const remindSetting = (): string => loadConfig().remind?.path?.trim() || DEFAULT_REMIND_PATH;
 
+const isLink = (p: string) => {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+};
+
 /** Le chemin (« ~ » développé) peut-il servir de fichier de rappels ? Sinon, la clé du message d'erreur */
 export function checkRemindPath(abs: string): "srv_remind_path_invalid" | "srv_remind_dir_missing" | null {
   if (!isAbsolute(abs) || !/\.md$/i.test(abs) || abs.includes("\0")) return "srv_remind_path_invalid";
+  // lien symbolique : il doit mener à un fichier .md qui existe (un lien cassé serait remplacé par un fichier)
+  if (isLink(abs) && (!existsSync(abs) || !/\.md$/i.test(realpathSync(abs)))) return "srv_remind_path_invalid";
   if (existsSync(abs) && !statSync(abs).isFile()) return "srv_remind_path_invalid";
   const dir = dirname(abs);
   if (!(existsSync(dir) && statSync(dir).isDirectory()) && abs !== expandHome(DEFAULT_REMIND_PATH)) return "srv_remind_dir_missing";
@@ -86,6 +97,7 @@ export function changeRemind(change: RemindChange): RemindData {
     next = applyRemindChange(content, change, remindHash);
   } catch (e) {
     if (e instanceof RemindConflict) throw new MessageError(msg("srv_remind_changed"));
+    if (e instanceof RemindUnsafe) throw new MessageError(msg("srv_remind_unclosed_code"));
     throw e;
   }
   if (next === content) return dataOf(setting, content, exists);

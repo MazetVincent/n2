@@ -4,7 +4,7 @@
 //  - lanceur JetBrains : exécutable d'un paquet …/Applications/<IDE>.app/Contents/MacOS/ sous macOS,
 //    script de JetBrains Toolbox ou /opt/<IDE>/bin/<ide>.sh sous Linux (N2 le lance, voir isJetbrainsLauncher) ;
 //  - guide : fichier .html (N2 le sert à la page) ;
-//  - « Remind me » : fichier .md dans un dossier qui existe (N2 l'écrit, src/server/sources/remind.ts).
+// Le fichier de « Remind me » n'est PAS réglable ici : N2 l'écrit, la page ne doit pas pouvoir viser un autre fichier (ADR 0010).
 // Ces garde-fous limitent ce qu'une page compromise pourrait faire de cette fonction (lancer un programme, lire un fichier).
 import { accessSync, constants, existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
@@ -14,7 +14,6 @@ import { msg } from "../messages.ts";
 import { forgetAll, MessageError } from "../run.ts";
 import { applyPreferences, applySecret, defaultJetbrains, isJetbrainsLauncher, readPreferences, type Preferences, type SecretEvent } from "../../features/prefs/logic.ts";
 import { currentPlatform } from "../platform.ts";
-import { checkRemindPath } from "./remind.ts";
 
 // lanceur JetBrains affiché quand la config n'en donne pas (dépend du système)
 const defaultIde = () => defaultJetbrains(currentPlatform());
@@ -33,7 +32,7 @@ const isExecutable = (p: string) => {
 
 export function savePrefs(input: Preferences): Preferences {
   if (process.env.N2_DEMO === "1") throw new MessageError(msg("srv_demo_read_only"));
-  const p: Preferences = { ...input, projectPath: input.projectPath.trim(), jetbrains: input.jetbrains.trim(), guide: { ...input.guide, path: input.guide.path.trim() }, remindPath: input.remindPath.trim() };
+  const p: Preferences = { ...input, projectPath: input.projectPath.trim(), jetbrains: input.jetbrains.trim(), guide: { ...input.guide, path: input.guide.path.trim() } };
   const before = getPrefs();
   if (p.projectPath !== before.projectPath) {
     const project = expandHome(p.projectPath);
@@ -46,10 +45,6 @@ export function savePrefs(input: Preferences): Preferences {
   if (p.guide.enabled && (p.guide.path !== before.guide.path || !before.guide.enabled)) {
     const guide = expandHome(p.guide.path);
     if (!isAbsolute(guide) || !/\.html?$/i.test(guide) || !isFile(guide)) throw new MessageError(msg("srv_prefs_guide_not_found", { path: p.guide.path }));
-  }
-  if (p.remindPath !== before.remindPath && p.remindPath) {
-    const error = checkRemindPath(expandHome(p.remindPath));
-    if (error) throw new MessageError(msg(error, { path: p.remindPath }));
   }
   writeRawConfig(applyPreferences(readRawConfig(), p, defaultIde()));
   // projet, guide… ont pu changer : toutes les sources repartent de zéro

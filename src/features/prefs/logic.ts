@@ -34,7 +34,7 @@ export interface Preferences {
   /** dossier du projet suivi (tel qu'écrit dans la config, « ~/… » accepté) */
   projectPath: string;
   guide: GuidePrefs;
-  /** fichier Markdown de « Remind me » (tel qu'écrit dans la config, « ~/… » accepté) */
+  /** fichier Markdown de « Remind me » (tel qu'écrit dans la config) : affiché seulement, réglé à la main (ADR 0010) */
   remindPath: string;
   /** le secret (code Konami) : lu ici, écrit seulement par recordSecret */
   secret: Secret;
@@ -145,15 +145,6 @@ export function applyPreferences(raw: unknown, p: Preferences, defaultIde = DEFA
     // le chemin affiché est celui de la carte s'il existe, sinon celui des librairies : c'est lui qui change
     if (str(codemap.projectPath)) cfg.codemap = { ...codemap, projectPath: p.projectPath };
     else cfg.libs = { ...obj(cfg.libs), projectPath: p.projectPath };
-  }
-  const remindPath = p.remindPath.trim();
-  if (remindPath !== before.remindPath) {
-    // le chemin par défaut n'est pas écrit : la config reste courte
-    const remind = { ...obj(cfg.remind) };
-    if (remindPath && remindPath !== DEFAULT_REMIND_PATH) remind.path = remindPath;
-    else delete remind.path;
-    if (Object.keys(remind).length) cfg.remind = remind;
-    else delete cfg.remind;
   }
   const guidePath = p.guide.path.trim();
   const reading = { references: p.guide.references, terms: p.guide.terms };

@@ -3,7 +3,7 @@
 // « Modifier le .md » ouvre tout le texte ; il n'est enregistré que si le fichier n'a pas changé ailleurs entre-temps.
 // Les rappels faits restent dans le fichier (« - [x] »), repliés en bas, avec un bouton pour les vider.
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { css, cx } from "styled-system/css";
 import { Button, Card, Count, Empty, ExtLink, H3, Icon, iconButton, input, LIST_MAX_H, SourceView } from "~/components/ds";
 import { toaster } from "~/lib/actions";
@@ -23,7 +23,7 @@ function useChangeRemind() {
       // une relecture en cours ne doit pas défaire la case cochée
       await qc.cancelQueries({ queryKey: ["remind"] });
       qc.setQueryData<SourceResult<RemindData>>(["remind"], (prev) =>
-        prev?.ok ? { ...prev, data: { ...prev.data, items: prev.data.items.map((i) => (i.line === change.line && i.text === change.text ? { ...i, done: !i.done } : i)) } } : prev,
+        prev?.ok ? { ...prev, data: { ...prev.data, items: prev.data.items.map((i) => (i.line === change.line && i.text === change.text ? { ...i, done: change.done } : i)) } } : prev,
       );
     },
     onSuccess: (r) => {
@@ -49,6 +49,9 @@ export function RemindCard() {
   const data = q.data?.ok ? q.data.data : undefined;
   const open = data?.items.filter((i) => !i.done).length ?? 0;
   const [editing, setEditing] = useState(false);
+  // dernière lecture réussie : une relecture qui échoue pendant l'édition ne doit pas effacer le texte en cours
+  const lastOk = useRef<RemindData | undefined>(undefined);
+  if (data) lastOk.current = data;
   return (
     <Card
       collapse="remind"
@@ -63,9 +66,13 @@ export function RemindCard() {
         )
       }
     >
-      <SourceView query={q} skeletons={1}>
-        {(d) => (editing ? <RawEditor data={d} onDone={() => setEditing(false)} /> : <RemindList data={d} />)}
-      </SourceView>
+      {editing && lastOk.current ? (
+        <RawEditor data={lastOk.current} onDone={() => setEditing(false)} />
+      ) : (
+        <SourceView query={q} skeletons={1}>
+          {(d) => <RemindList data={d} />}
+        </SourceView>
+      )}
     </Card>
   );
 }
@@ -121,7 +128,7 @@ function RemindList({ data }: { data: RemindData }) {
               {m.remind_done()} ({done.length})
             </Button>
             {showDone && (
-              <Button variant="accentLink" className={css({ ml: "auto", fontSize: "sm" })} disabled={change.isPending} onClick={() => change.mutate({ op: "clearDone" })}>
+              <Button variant="accentLink" className={css({ ml: "auto", fontSize: "sm" })} disabled={change.isPending} onClick={() => change.mutate({ op: "clearDone", version: data.version })}>
                 {m.remind_clear_done()}
               </Button>
             )}
@@ -167,7 +174,7 @@ function Row({ item, onChange, busy }: { item: RemindItem; onChange: (c: RemindC
         type="checkbox"
         checked={item.done}
         disabled={busy}
-        onChange={() => onChange({ op: "toggle", line: item.line, text: item.text })}
+        onChange={() => onChange({ op: "toggle", line: item.line, text: item.text, done: !item.done })}
         className={css({ mt: "3px", w: "15px", h: "15px", flex: "none", accentColor: "accent", cursor: "pointer" })}
       />
       <label htmlFor={id} className={css({ flex: 1, minW: 0, cursor: "pointer", overflowWrap: "anywhere" }, item.done && { color: "muted", textDecoration: "line-through" })}>
