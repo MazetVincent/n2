@@ -10,7 +10,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { css, cva, cx, type RecipeVariantProps } from "styled-system/css";
 import { Icon } from "./icon";
-import { selected } from "./toggle-chip";
+import { selected, selectedHover } from "./toggle-chip";
 
 export const button = cva({
   base: {
@@ -50,10 +50,11 @@ export const button = cva({
         borderColor: { base: "border", _osDark: "tube.off" },
         borderRadius: "full",
         _hover: { _enabled: { bg: "surface.alt", borderColor: { _osDark: "tube" }, boxShadow: { _osDark: "neonButton" } } },
-        // bouton à bascule (aria-pressed) : même apparence « sélectionné » que les pastilles activables (ds/toggle-chip.tsx) ;
-        // le survol ne change pas l'état affiché
+        // bouton à bascule (aria-pressed) : même apparence « sélectionné » (tube allumé) que les pastilles activables
+        // (ds/toggle-chip.tsx) ; le survol ne change pas l'état affiché : éteint, le tube ne s'allume pas
+        "&[aria-pressed=false]:hover:enabled": { borderColor: { base: "border", _osDark: "tube.off" }, boxShadow: "none" },
         "&[aria-pressed=true]": selected,
-        "&[aria-pressed=true]:hover:enabled": { ...selected, boxShadow: "ring" },
+        "&[aria-pressed=true]:hover:enabled": selectedHover,
       },
       ghost: { color: "muted", _hover: { _enabled: { color: "text", bg: "surface.alt" } }, _pressed: { color: "accent" } },
       link: { color: "muted", p: "0 !important", h: "auto !important", borderRadius: "sm", _hover: { _enabled: { color: "text" } } },
@@ -66,7 +67,7 @@ export const button = cva({
         boxShadow: "inset",
         _hover: { _enabled: { bg: "surface.alt", color: "text" } },
         "&[aria-pressed=true]": selected,
-        "&[aria-pressed=true]:hover:enabled": { ...selected, boxShadow: "ring" },
+        "&[aria-pressed=true]:hover:enabled": selectedHover,
       },
     },
     size: {
@@ -111,7 +112,7 @@ export const iconButton = cva({
         borderColor: "border",
         _hover: { bg: "surface.alt" },
         // même clé que _pressed de la base : cva fusionne, la couleur « sélectionné » remplace le rose de l'icône
-        _pressed: { ...selected, _hover: { ...selected, boxShadow: "ring" } },
+        _pressed: { ...selected, _hover: selectedHover },
       },
     },
   },
