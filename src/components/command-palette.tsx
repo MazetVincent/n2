@@ -7,7 +7,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { css } from "styled-system/css";
 import { buildIndex, searchIndex, type SearchItem } from "~/features/search";
-import { openInChrome } from "~/lib/actions";
+import { openLink, useLinkTarget } from "~/lib/actions";
 import { ok, useCodeMap, useDeploy, useGuide, usePreferences, usePullRequests, useQuickLinks, useSentry, useSprint } from "~/lib/data";
 import { m } from "~/lib/i18n";
 import { guideVisible } from "~/features/prefs/logic";
@@ -24,6 +24,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   const deploy = ok(useDeploy());
   const guide = ok(useGuide(open));
   const prefs = usePreferences().data;
+  const linkTarget = useLinkTarget();
   const guideOn = guideVisible(prefs?.ok ? prefs.data : undefined);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -42,7 +43,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     if (!item) return;
     onOpenChange(false);
     setQuery("");
-    if (item.action.kind === "url") openInChrome(item.action.url);
+    if (item.action.kind === "url") openLink(item.action.url, linkTarget);
     else navigate({ to: item.action.to, search: item.action.search as never });
   };
 
@@ -88,10 +89,10 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                       className={css({ display: "flex", alignItems: "center", gap: "2", px: "2.5", py: "1.5", borderRadius: "lg", cursor: "pointer", "&[aria-selected=true]": { bg: "accent.soft" } })}
                     >
                       <span className={css({ flex: 1, minW: 0, display: "flex", flexDirection: "column" })}>
-                        <span className={css({ fontSize: "md", fontWeight: "550", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" })}>{item.label}</span>
+                        <span className={css({ fontSize: "md", fontWeight: "semibold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" })}>{item.label}</span>
                         {item.hint && <span className={css({ fontSize: "xs", color: "muted", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" })}>{item.hint}</span>}
                       </span>
-                      {/* s'ouvre dans Chrome, hors de N2 */}
+                      {/* s'ouvre hors de N2 (nouvel onglet, ou Chrome selon ui.links) */}
                       {item.action.kind === "url" && <Icon name="external" size={13} className={css({ color: "muted" })} />}
                     </div>
                   </li>

@@ -33,10 +33,10 @@ const sessionGuard = createMiddleware().server(async ({ request, next }) => {
   const { lockedLang, lockedPage, sessionGate } = await import("./server/session");
   const url = new URL(request.url);
   const cookie = request.headers.get("cookie");
-  const gate = sessionGate(`${url.pathname}${url.search}`, cookie);
+  const gate = sessionGate(`${url.pathname}${url.search}`, cookie, request.headers.get("sec-fetch-site"), request.headers.get("sec-fetch-dest"));
   if (gate.kind === "pass") return next();
   if (gate.kind === "login") return new Response(null, { status: 303, headers: { Location: gate.location, "Set-Cookie": gate.setCookie, "Cache-Control": "no-store" } });
-  return new Response(lockedPage(lockedLang(cookie)), { status: 401, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+  return new Response(lockedPage(lockedLang(cookie), gate.kind === "retry"), { status: 401, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
 });
 
 const csrf = createCsrfMiddleware({

@@ -175,13 +175,20 @@ export function hasValidSession(cookieHeader: string | null | undefined): boolea
 export type Gate =
   | { kind: "pass" }
   | { kind: "login"; location: string; setCookie: string }
+  | { kind: "retry" }
   | { kind: "deny" };
 
 /**
  * Décision pour une requête : laisser passer (bon cookie), connecter (bon code ?login=…) ou refuser.
- * `url` : chemin et paramètres de la requête (ex. « /dashboard?login=… »).
+ * `url` : chemin et paramètres de la requête (ex. « /dashboard?login=… ») ; `fetchSite`, `fetchDest` : en-têtes Sec-Fetch-Site et Sec-Fetch-Dest.
+ *
+ * « retry » : Firefox n'envoie pas un cookie SameSite=Strict sur une navigation arrivée par une redirection depuis
+ * un autre site (favori sur 127.0.0.1 renvoyé vers n2.localhost, puis la redirection qui suit la connexion par code),
+ * et la marque « Sec-Fetch-Site: none » comme une adresse tapée. Une navigation sans cookie qui ne vient pas de N2
+ * (none, cross-site) recharge donc la page une fois : ce rechargement part de n2.localhost et porte le cookie.
+ * Il arrive en « same-origin » : pas de boucle, sans cookie c'est la page verrouillée (en-tête absent : pas de rechargement).
  */
-export function sessionGate(url: string, cookieHeader: string | null | undefined): Gate {
+export function sessionGate(url: string, cookieHeader: string | null | undefined, fetchSite?: string | null, fetchDest?: string | null): Gate {
   if (hasValidSession(cookieHeader)) return { kind: "pass" };
   const token = sessionToken();
 
@@ -193,6 +200,7 @@ export function sessionGate(url: string, cookieHeader: string | null | undefined
     const location = `/${u.pathname.replace(/^[/\\]+/, "")}${u.search}`;
     return { kind: "login", location, setCookie: `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${COOKIE_MAX_AGE}` };
   }
+  if (fetchDest === "document" && (fetchSite === "none" || fetchSite === "cross-site")) return { kind: "retry" };
   return { kind: "deny" };
 }
 
@@ -209,10 +217,10 @@ function lockedTexts(lang: "fr" | "en"): { title: string; body: string; foot: st
 
 const escapeHtml = (t: string) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-/** Page affichée sans cookie valide (aucune donnée, aucun script) */
-export function lockedPage(lang: "fr" | "en"): string {
+/** Page affichée sans cookie valide (aucune donnée, aucun script) ; `retry` : elle se recharge une fois (voir sessionGate) */
+export function lockedPage(lang: "fr" | "en", retry = false): string {
   const t = lockedTexts(lang);
-  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>N2</title>
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${retry ? '<meta http-equiv="refresh" content="0">' : ""}<title>N2</title>
 <style>:root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:14px/1.5 system-ui,-apple-system,sans-serif;background:#f4f5f8;color:#1c2130}
 @media (prefers-color-scheme:dark){body{background:#0d0a10;color:#f2edf4}main{background:#16111a!important;border-color:#2b2231!important}code{background:#1c1621!important}}
 main{max-width:440px;margin:16px;padding:24px;background:#fff;border:1px solid #e3e6ec;border-radius:12px}h1{font-size:18px;margin:0 0 8px}

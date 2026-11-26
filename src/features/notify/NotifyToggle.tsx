@@ -1,4 +1,4 @@
-// Bouton cloche de la barre du haut : active ou coupe les notifications (demande la permission à Chrome la première fois).
+// Bouton cloche de la barre du haut : active ou coupe les notifications (demande la permission au navigateur la première fois).
 import { useHydrated } from "@tanstack/react-router";
 import { Icon } from "~/components/ds";
 import { toaster } from "~/lib/actions";

@@ -1,9 +1,9 @@
 // Prévient sans qu'on regarde N2 : nombre d'urgences dans le titre de l'onglet, et notifications macOS
-// (via Chrome) pour les nouvelles urgences, les réunions dans 5 minutes, les messages Slack et les mentions
+// (via le navigateur) pour les nouvelles urgences, les réunions dans 5 minutes, les messages Slack et les mentions
 // ou réponses sur GitHub et Jira.
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { openInChrome } from "~/lib/actions";
+import { useEffect, useRef } from "react";
+import { openLink, useLinkTarget } from "~/lib/actions";
 import { useActivity, useCalendar, useSlack } from "~/lib/data";
 import { useNow } from "~/lib/now";
 import { useTodo } from "../todo/useTodo";
@@ -20,6 +20,10 @@ export function Notifier() {
   const now = useNow(30_000);
   const enabled = useNotifyEnabled();
   const navigate = useNavigate();
+  // lue au clic sur la notification (la préférence a pu changer depuis son envoi)
+  const target = useLinkTarget();
+  const linkTarget = useRef(target);
+  linkTarget.current = target;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // titre de l'onglet : « (3) N2 » tant qu'il reste des urgences (réappliqué après chaque navigation)
@@ -58,7 +62,7 @@ export function Notifier() {
       n.onclick = () => {
         window.focus();
         n.close();
-        if (c.url) openInChrome(c.url);
+        if (c.url) openLink(c.url, linkTarget.current);
         else if (c.to) navigate({ to: c.to });
       };
     }

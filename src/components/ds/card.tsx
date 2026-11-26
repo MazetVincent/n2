@@ -44,9 +44,9 @@ export const cardFrame = css({
     p: "1px",
     pointerEvents: "none",
     bgGradient: "rim",
-    WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-    WebkitMaskComposite: "xor",
-    mask: "linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)",
+    // Pas de -webkit-mask : Firefox le traite comme un alias de `mask`, qui repasse alors en `add` et le liseré couvre toute la carte
+    mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    maskComposite: "exclude",
   },
 });
 

@@ -1,6 +1,7 @@
 // Ouvre N2 dans Chrome, déverrouillé pour ce navigateur (voir src/server/session.ts).
 //   bun run open            (port 4747, ou N2_PORT)
 //   bun run open --reset    nouveau jeton : tous les navigateurs déjà déverrouillés sont déconnectés
+//   bun run open --print    affiche seulement l'adresse, à coller dans un autre navigateur (Firefox, Safari…)
 //
 // Écrit un code à usage unique dans ~/.config/n2/login (600, valable 2 minutes), puis ouvre
 // http://n2.localhost:<port>/?login=<code> (N2_HOST pour un autre nom). N2 vérifie le code, le supprime et pose le cookie de session.
@@ -26,13 +27,15 @@ const url = `${base}/?login=${createLoginCode()}`;
 
 const done = (browser: string) => console.log(`✓ N2 s'ouvre dans ${browser} (${base}). Si la page ne répond pas, lance d'abord bun run dev.`);
 const printUrl = (why: string, code: number) => {
-  console.error(`${code ? "✗" : "→"} ${why} Ouvre cette adresse dans ton navigateur (valable 2 minutes, une seule fois) :`);
+  console.error(`${code ? "✗" : "→"} ${why ? `${why} ` : ""}Ouvre cette adresse dans ton navigateur (valable 2 minutes, une seule fois) :`);
   console.log(url);
   process.exit(code);
 };
 
 const platform = currentPlatform();
-if (platform === "linux" && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY) {
+if (process.argv.includes("--print")) {
+  printUrl("", 0);
+} else if (platform === "linux" && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY) {
   // Linux sans écran (serveur, SSH) : rien à ouvrir ici
   printUrl("Pas d'écran graphique.", 0);
 } else if (platform === "mac") {

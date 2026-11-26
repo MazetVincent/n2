@@ -27,7 +27,7 @@ import { docIndex } from "./sources/docs.ts";
 import { getPrefs, recordSecret, savePrefs } from "./sources/prefs.ts";
 import { changeRemind as runChangeRemind, readRemind } from "./sources/remind.ts";
 import { REMIND_MAX_BYTES, REMIND_TEXT_MAX, type RemindData } from "../features/remind/logic.ts";
-import { CHOOSABLE_TABS, EDITORS, editorName } from "../features/prefs/logic.ts";
+import { CHOOSABLE_TABS, EDITORS, editorName, LINK_TARGETS } from "../features/prefs/logic.ts";
 import { libMentions, searchDocs as findDocs } from "../features/docs/logic.ts";
 import { fetchActivity } from "./sources/activity.ts";
 import { fetchStats } from "./sources/stats.ts";
@@ -252,6 +252,8 @@ export const savePreferences = createServerFn({ method: "POST" })
     z.object({
       tabs: z.array(z.enum(CHOOSABLE_TABS as [string, ...string[]])).max(CHOOSABLE_TABS.length),
       editor: z.enum(EDITORS),
+      // absent d'une page ouverte avant son ajout : navigateur courant
+      links: z.enum(LINK_TARGETS).default("browser"),
       jetbrains: path,
       projectPath: path.refine((p) => p.trim().length > 0),
       // lecture du guide : absente d'une page ouverte avant son ajout, elle reste désactivée

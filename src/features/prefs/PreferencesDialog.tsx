@@ -14,7 +14,7 @@ import { getLang, m, msg, setLang } from "~/lib/i18n";
 import { savePreferences } from "~/server/fns";
 import type { Message } from "~/server/types";
 import { useGuideTouched } from "~/features/secret/Konami";
-import { CHOOSABLE_TABS, EDITOR_LABEL, EDITORS, HOME_TAB, TAB_GROUPS, type Preferences, type TabPath } from "./logic";
+import { CHOOSABLE_TABS, EDITOR_LABEL, EDITORS, HOME_TAB, LINK_TARGETS, TAB_GROUPS, type LinkTarget, type Preferences, type TabPath } from "./logic";
 
 const TAB_LABEL: Record<string, () => string> = {
   "/pull-requests": m.tab_pull_requests,
@@ -92,6 +92,8 @@ function PreferencesDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     </Dialog.Root>
   );
 }
+
+const LINK_LABEL: Record<LinkTarget, () => string> = { browser: m.prefs_links_browser, chrome: m.prefs_links_chrome };
 
 function Body({ onDone }: { onDone: () => void }) {
   const q = usePreferences();
@@ -190,6 +192,10 @@ function Body({ onDone }: { onDone: () => void }) {
         <Field title={m.prefs_editor()} hint={draft.editor === "github" ? m.prefs_github_hint() : undefined}>
           <Segmented label={m.prefs_editor()} value={draft.editor} onChange={(editor) => set({ editor })} items={EDITORS.map((e) => ({ value: e, label: EDITOR_LABEL[e] }))} />
           {draft.editor === "jetbrains" && <PathInput label={m.prefs_jetbrains_path()} value={draft.jetbrains} onChange={(jetbrains) => set({ jetbrains })} />}
+        </Field>
+
+        <Field title={m.prefs_links()} hint={draft.links === "chrome" ? m.prefs_links_chrome_hint() : undefined}>
+          <Segmented label={m.prefs_links()} value={draft.links} onChange={(links) => set({ links })} items={LINK_TARGETS.map((t) => ({ value: t, label: LINK_LABEL[t]() }))} />
         </Field>
 
         <Field title={m.prefs_project()} hint={m.prefs_project_hint()}>

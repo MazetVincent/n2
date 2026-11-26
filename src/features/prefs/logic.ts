@@ -25,10 +25,23 @@ export const EDITORS = ["jetbrains", "vscode", "cursor", "github"] as const;
 export type Editor = (typeof EDITORS)[number];
 export const EDITOR_LABEL: Record<Editor, string> = { jetbrains: "JetBrains", vscode: "VS Code", cursor: "Cursor", github: "GitHub" };
 
+/** Où s'ouvrent les liens externes : le navigateur où N2 est affiché (lien normal), ou un onglet Google Chrome lancé par le serveur */
+export const LINK_TARGETS = ["browser", "chrome"] as const;
+export type LinkTarget = (typeof LINK_TARGETS)[number];
+
+/**
+ * Faut-il remplacer le clic sur un lien par une ouverture dans Chrome ? Seulement en mode « chrome » et pour un clic
+ * gauche simple : ⌘/Ctrl-clic, Maj-clic, clic molette et menu contextuel gardent le comportement normal du navigateur.
+ */
+export const opensInChrome = (target: LinkTarget, e: { button: number; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }) =>
+  target === "chrome" && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+
 export interface Preferences {
   /** catégories cochées (parmi CHOOSABLE_TABS) */
   tabs: TabPath[];
   editor: Editor;
+  /** où s'ouvrent les liens externes (navigateur courant par défaut) */
+  links: LinkTarget;
   /** lanceur de l'IDE JetBrains (PhpStorm, WebStorm…), appelé avec `--line N fichier` */
   jetbrains: string;
   /** dossier du projet suivi (tel qu'écrit dans la config, « ~/… » accepté) */
@@ -73,6 +86,7 @@ export const defaultJetbrains = (platform: string) => (platform === "linux" || p
 
 const isTab = (t: unknown): t is TabPath => typeof t === "string" && (ALL_TABS as readonly string[]).includes(t);
 const isEditor = (e: unknown): e is Editor => typeof e === "string" && (EDITORS as readonly string[]).includes(e);
+const isLinkTarget = (t: unknown): t is LinkTarget => typeof t === "string" && (LINK_TARGETS as readonly string[]).includes(t);
 
 type Raw = Record<string, unknown>;
 const obj = (v: unknown): Raw => (v && typeof v === "object" && !Array.isArray(v) ? (v as Raw) : {});
@@ -88,6 +102,7 @@ export function readPreferences(raw: unknown, defaultIde = DEFAULT_JETBRAINS): P
   return {
     tabs: CHOOSABLE_TABS.filter((t) => tabs.includes(t)),
     editor: isEditor(ui.editor) ? ui.editor : "jetbrains",
+    links: isLinkTarget(ui.links) ? ui.links : "browser",
     jetbrains: str(codemap.ide, defaultIde),
     projectPath: str(codemap.projectPath) || str(obj(cfg.libs).projectPath),
     guide: { enabled: Boolean(str(guide.path)) && guide.enabled !== false, path: str(guide.path), references: guide.references !== false, terms: guide.terms !== false },
@@ -132,7 +147,7 @@ export function applyPreferences(raw: unknown, p: Preferences, defaultIde = DEFA
   const cfg = structuredClone(obj(raw));
   const before = readPreferences(cfg, defaultIde);
   const tabs = CHOOSABLE_TABS.filter((t) => p.tabs.includes(t));
-  cfg.ui = { ...obj(cfg.ui), tabs, editor: p.editor };
+  cfg.ui = { ...obj(cfg.ui), tabs, editor: p.editor, links: p.links };
   // seuls les chemins modifiés sont réécrits (codemap.projectPath et libs.projectPath peuvent différer)
   const codemap = obj(cfg.codemap);
   if (p.jetbrains.trim() !== before.jetbrains) {

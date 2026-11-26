@@ -75,10 +75,10 @@ function sessionGuard(): Plugin {
     if (!isAllowedHost(req.headers.host, port)) return send(403, { "Content-Type": "text/plain" }, "Forbidden");
     const moved = canonicalRedirect(req.headers.host, req.url ?? "/", port, req.headers["sec-fetch-dest"] as string | undefined);
     if (moved) return send(307, { Location: moved.location, "Set-Cookie": moved.setCookie });
-    const gate = sessionGate(req.url ?? "/", req.headers.cookie);
+    const gate = sessionGate(req.url ?? "/", req.headers.cookie, req.headers["sec-fetch-site"] as string | undefined, req.headers["sec-fetch-dest"] as string | undefined);
     if (gate.kind === "pass") return next();
     if (gate.kind === "login") return send(303, { Location: gate.location, "Set-Cookie": gate.setCookie });
-    send(401, { "Content-Type": "text/html; charset=utf-8" }, lockedPage(lockedLang(req.headers.cookie)));
+    send(401, { "Content-Type": "text/html; charset=utf-8" }, lockedPage(lockedLang(req.headers.cookie), gate.kind === "retry"));
   };
   return {
     name: "n2-session",

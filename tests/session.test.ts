@@ -55,6 +55,20 @@ describe("sessionToken : le secret de la session", () => {
     expect(sessionGate("/", cookieOf(fresh))).toEqual({ kind: "pass" });
   });
 
+  it("navigation sans cookie qui ne vient pas de N2 (Firefox, SameSite=Strict après redirection) : un rechargement, puis la page verrouillée", () => {
+    const token = sessionToken();
+    expect(sessionGate("/carte", null, "cross-site", "document")).toEqual({ kind: "retry" });
+    expect(sessionGate("/carte", null, "none", "document")).toEqual({ kind: "retry" });
+    // le rechargement part de N2 : sans cookie, pas de boucle ; sans en-tête Sec-Fetch-Site non plus
+    expect(sessionGate("/carte", null, "same-origin", "document")).toEqual({ kind: "deny" });
+    expect(sessionGate("/carte", null, null, "document")).toEqual({ kind: "deny" });
+    // ressources et fonctions serveur venues d'ailleurs : refusées
+    expect(sessionGate("/_serverFn/x", null, "cross-site", "empty")).toEqual({ kind: "deny" });
+    expect(sessionGate("/carte", cookieOf(token), "cross-site", "document")).toEqual({ kind: "pass" });
+    expect(lockedPage("fr", true)).toContain('<meta http-equiv="refresh" content="0">');
+    expect(lockedPage("fr")).not.toContain("refresh");
+  });
+
   it("relit le fichier s'il est remplacé pendant que N2 tourne", () => {
     sessionToken();
     const other = "B".repeat(43);
