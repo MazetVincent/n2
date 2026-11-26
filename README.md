@@ -138,6 +138,7 @@ Tout ce qui est propre à ton compte et à ton projet est dans `config.local.jso
 | `calendar` | non | Agenda du Dashboard |
 | `slack` | non | carte Slack du Dashboard |
 | `guide` | non | onglet Guide et liens « Dans le guide » |
+| `remind` | non | fichier Markdown de « Remind me » (`remind.path`, `~/.config/n2/remind.md` par défaut) |
 | `links` | non | liens rapides personnels dans ⌘K |
 | `ui` | non | préférences réglées dans N2 (boulon en haut à droite) : onglets affichés (`ui.tabs`), éditeur où ouvrir le code (`ui.editor` : `jetbrains`, `vscode`, `cursor` ou `github`) |
 

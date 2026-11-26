@@ -7,7 +7,7 @@ import { loadConfig, ROOT } from "./config.ts";
 import { isAllowedUrl, openInChrome, openInIde } from "./open.ts";
 import { cached, forget, run, sourceStats, STARTED_AT } from "./run.ts";
 import { readAwsSession, readBranch, readCi, readCloudWatch, readDeploy, readLibs, readPullRequests, readSentry, readSprint } from "./sources.ts";
-import type { SourceStatus } from "./types.ts";
+import type { SourceResult, SourceStatus } from "./types.ts";
 import { isValidBranchName } from "../features/branches/logic.ts";
 import { reconnectAws as runReconnectAws } from "./sources/aws-reconnect.ts";
 import { fetchRemoteBranches, listBranches } from "./sources/branches.ts";
@@ -25,13 +25,15 @@ import { fetchSlack } from "./sources/slack.ts";
 import { fetchGuide, guideFreshness } from "./sources/guide.ts";
 import { docIndex } from "./sources/docs.ts";
 import { getPrefs, recordSecret, savePrefs } from "./sources/prefs.ts";
+import { changeRemind as runChangeRemind, readRemind } from "./sources/remind.ts";
+import { REMIND_MAX_BYTES, REMIND_TEXT_MAX, type RemindData } from "../features/remind/logic.ts";
 import { CHOOSABLE_TABS, EDITORS, editorName } from "../features/prefs/logic.ts";
 import { libMentions, searchDocs as findDocs } from "../features/docs/logic.ts";
 import { fetchActivity } from "./sources/activity.ts";
 import { fetchStats } from "./sources/stats.ts";
 import { buildQuickLinks } from "../features/links/logic.ts";
 import { msg } from "./messages.ts";
-import { MessageError, redact } from "./run.ts";
+import { MessageError, redact, toSourceError } from "./run.ts";
 
 const MIN = 60_000;
 
@@ -254,11 +256,13 @@ export const savePreferences = createServerFn({ method: "POST" })
       projectPath: path.refine((p) => p.trim().length > 0),
       // lecture du guide : absente d'une page ouverte avant son ajout, elle reste désactivée
       guide: z.object({ enabled: z.boolean(), path, references: z.boolean().default(false), terms: z.boolean().default(false) }),
+      // absent d'une page ouverte avant son ajout : le chemin reste celui de la config
+      remindPath: path.optional(),
     }),
   )
   .handler(({ data }) => {
     try {
-      return { ok: true as const, data: savePrefs(data as Parameters<typeof savePrefs>[0]) };
+      return { ok: true as const, data: savePrefs({ ...data, remindPath: data.remindPath ?? getPrefs().remindPath } as Parameters<typeof savePrefs>[0]) };
     } catch (e) {
       return { ok: false as const, error: e instanceof MessageError ? e.msg : msg("srv_raw", { text: redact(e instanceof Error ? e.message : String(e)) || "?" }) };
     }
@@ -270,6 +274,35 @@ export const secretEvent = createServerFn({ method: "POST" })
   .handler(({ data }) => {
     try {
       return { ok: true as const, data: recordSecret(data.event) };
+    } catch (e) {
+      return { ok: false as const, error: e instanceof MessageError ? e.msg : msg("srv_raw", { text: redact(e instanceof Error ? e.message : String(e)) || "?" }) };
+    }
+  });
+
+// ---------- « Remind me » : le fichier Markdown des rappels (le seul que N2 écrit hors de sa config, ADR 0010) ----------
+export const getRemind = createServerFn({ method: "GET" }).handler((): SourceResult<RemindData> => {
+  const fetchedAt = new Date().toISOString();
+  try {
+    return { ok: true, data: readRemind(), fetchedAt };
+  } catch (e) {
+    return { ok: false, error: toSourceError(e), fetchedAt };
+  }
+});
+
+const remindLine = { line: z.number().int().min(0).max(1_000_000), text: z.string().max(REMIND_MAX_BYTES) };
+export const changeRemind = createServerFn({ method: "POST" })
+  .validator(
+    z.discriminatedUnion("op", [
+      z.object({ op: z.literal("add"), text: z.string().trim().min(1).max(REMIND_TEXT_MAX) }),
+      z.object({ op: z.literal("toggle"), ...remindLine }),
+      z.object({ op: z.literal("remove"), ...remindLine }),
+      z.object({ op: z.literal("clearDone") }),
+      z.object({ op: z.literal("replace"), content: z.string().max(REMIND_MAX_BYTES), version: z.string().max(64) }),
+    ]),
+  )
+  .handler(({ data }) => {
+    try {
+      return { ok: true as const, data: runChangeRemind(data) };
     } catch (e) {
       return { ok: false as const, error: e instanceof MessageError ? e.msg : msg("srv_raw", { text: redact(e instanceof Error ? e.message : String(e)) || "?" }) };
     }

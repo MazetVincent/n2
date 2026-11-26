@@ -8,7 +8,7 @@ Un tableau de bord qui fusionne, valide une mise en prod ou écrit dans Jira dev
 
 ## Décision
 
-N2 est en lecture seule sur les outils : il ouvre la bonne page (GitHub, console AWS, Jira…) pour agir. Ses seules écritures : sa propre config (`config.local.json`, champs limités et chemins vérifiés), `git fetch` sans identifiants, et le script de reconnexion AWS déclaré dans la config. Le navigateur n'envoie jamais de commande ; les sites ouverts dans Chrome et les fichiers ouverts dans l'éditeur passent par une liste d'autorisations côté serveur.
+N2 est en lecture seule sur les outils : il ouvre la bonne page (GitHub, console AWS, Jira…) pour agir. Ses seules écritures : sa propre config (`config.local.json`, champs limités et chemins vérifiés), le fichier Markdown des rappels de « Remind me » ([0010](0010-fichier-de-rappels.md)), `git fetch` sans identifiants, et le script de reconnexion AWS déclaré dans la config. Le navigateur n'envoie jamais de commande ; les sites ouverts dans Chrome et les fichiers ouverts dans l'éditeur passent par une liste d'autorisations côté serveur.
 
 ## Conséquences
 

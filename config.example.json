@@ -52,6 +52,9 @@
     "links": { "deploy": [], "observability": [], "prs": [] },
     "enabled": true
   },
+  "remind": {
+    "path": "~/.config/n2/remind.md"
+  },
   "ui": {
     "editor": "jetbrains"
   },
