@@ -1149,6 +1149,8 @@
   "theme_aubergine": "Aubergine douce",
   "theme_classique": "Classique",
   "theme_enseigne": "Enseigne",
+  "theme_miami": "Miami",
+  "theme_retrowave": "Retrowave",
   "todo_30_days": "Pendant 30 jours",
   "todo_approved_ci": "#{number} · approuvée, CI ✓",
   "todo_awaiting_prod_approval": "Attend la validation prod",

@@ -1,6 +1,7 @@
 // Thème de N2 : cookie lu et écrit, thème affiché selon le choix et macOS, script de <head> fidèle à cette règle.
 import { describe, expect, it } from "vitest";
-import { DEFAULT_THEME, formatTheme, logoStill, parseTheme, resolveTheme, THEME_MODES, THEME_SCRIPT, themeAttributes, type ThemeChoice } from "../src/features/theme/logic.ts";
+import { THEME_SCHEME, THEME_COLORS, EXTRA_THEMES } from "../src/styles/themes.ts";
+import { DAY_THEMES, DEFAULT_THEME, formatTheme, logoStill, parseTheme, resolveTheme, THEME_MODES, NIGHT_THEMES, THEME_SCRIPT, themeAttributes, type ThemeChoice } from "../src/features/theme/logic.ts";
 
 /** Lance THEME_SCRIPT sur un faux <html> ; `systemDark` : réglage de macOS. Renvoie le <html> et de quoi changer macOS. */
 function runScript(attrs: Record<string, string>, systemDark: boolean) {
@@ -69,5 +70,13 @@ describe("thème", () => {
     expect(themeAttributes(DEFAULT_THEME)["data-logo"]).toBe("blink");
     // hors d'une page (serveur, tests) : rien n'est coupé
     expect(logoStill()).toBe(false);
+  });
+
+  it("chaque thème est proposé du bon côté : clairs le jour, sombres la nuit ; aucun ne touche au logo", () => {
+    expect(DAY_THEMES.filter((t) => t !== "enseigne").every((t) => THEME_SCHEME[t] === "light")).toBe(true);
+    expect(NIGHT_THEMES.filter((t) => t !== "enseigne").every((t) => THEME_SCHEME[t] === "dark")).toBe(true);
+    // tout thème défini dans src/styles/themes.ts est proposé dans les Préférences
+    expect([...EXTRA_THEMES].sort()).toEqual([...DAY_THEMES, ...NIGHT_THEMES].filter((t) => t !== "enseigne").sort());
+    for (const t of EXTRA_THEMES) expect(THEME_COLORS[t]).not.toHaveProperty("sign");
   });
 });

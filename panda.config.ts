@@ -22,6 +22,40 @@ const shadow = (name: string, base: string, dark: string) => themed(base, dark, 
 const gradient = (name: string, base: string, dark: string) => themed(base, dark, (t) => THEME_GRADIENTS[t][name]);
 const font = (name: keyof (typeof THEME_FONTS)[ExtraTheme], enseigne: string) => themed(enseigne, enseigne, (t) => THEME_FONTS[t][name]);
 
+/** Décor « coucher de soleil » d'un thème : ciel sur toute la fenêtre, soleil rayé en haut à droite, grille au sol */
+function sunset(o: { sky: string; sun: string; sunOpacity: number; rows: string; columns: string }) {
+  const layer = { content: '""', position: "fixed", zIndex: -1, pointerEvents: "none" };
+  return {
+    "&": { background: `${o.sky} fixed` },
+    "& body": { background: "transparent" },
+    // soleil : la moitié haute, en bandes qui s'amincissent comme sur les affiches
+    "& body::before": {
+      ...layer,
+      right: "6vw",
+      top: "110px",
+      w: "min(380px, 40vw)",
+      aspectRatio: "1",
+      borderRadius: "full",
+      background: o.sun,
+      opacity: o.sunOpacity,
+      maskImage: "linear-gradient(180deg, #000 0 48%, transparent 0), repeating-linear-gradient(180deg, #000 0 14px, transparent 14px 19px)",
+      maskComposite: "intersect",
+    },
+    // grille du sol, couchée en perspective, qui s'efface vers l'horizon
+    "& body::after": {
+      ...layer,
+      left: "-25%",
+      right: "-25%",
+      bottom: 0,
+      h: "42vh",
+      background: `linear-gradient(${o.rows} 1px, transparent 1px) 0 0 / 100% 34px, linear-gradient(90deg, ${o.columns} 1px, transparent 1px) 0 0 / 64px 100%`,
+      transform: "perspective(420px) rotateX(62deg)",
+      transformOrigin: "bottom",
+      maskImage: "linear-gradient(transparent, #000 70%)",
+    },
+  };
+}
+
 export default defineConfig({
   presets: [presetBase, presetPanda],
   preflight: true,
@@ -52,6 +86,8 @@ export default defineConfig({
           sign: { value: "'Tilt Neon', system-ui, sans-serif" }, // enseigne : le logo dans tous les thèmes, les titres d'Enseigne
           chakra: { value: "'Chakra Petch', system-ui, sans-serif" },
           kode: { value: "'Kode Mono', ui-monospace, SFMono-Regular, Menlo, monospace" },
+          audiowide: { value: "'Audiowide', system-ui, sans-serif" }, // titres de Retrowave
+          righteous: { value: "'Righteous', system-ui, sans-serif" }, // titres de Miami
         },
       },
       semanticTokens: {
@@ -75,6 +111,7 @@ export default defineConfig({
           tube: { DEFAULT: c("tube"), off: c("tube.off") },
           screw: { DEFAULT: c("screw"), ring: c("screw.ring") },
           electrode: c("electrode"),
+          heading: { fill: c("heading.fill") },
           contrast: c("contrast"),
           heat: c("heat"),
           muted: c("muted"),
@@ -130,6 +167,8 @@ export default defineConfig({
           card: gradient("card", "none", "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 13%), rgb(255 61 119 / 4%) 45%, transparent 75%), linear-gradient(180deg, #1e1823 0%, #151019 100%)"),
           cardHead: gradient("cardHead", "none", "linear-gradient(180deg, rgb(255 255 255 / 3%), transparent)"),
           rim: gradient("rim", "none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
+          // encre des titres de cartes (Retrowave, Miami : un dégradé, vu à travers les lettres ; jeton heading.fill)
+          headingInk: gradient("headingInk", "none", "none"),
           tabGlow: gradient("tabGlow", "none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
         },
       },
@@ -180,6 +219,9 @@ export default defineConfig({
       // clignotements du logo coupés (Préférences) : sa lumière reste allumée, sans bouger
       "&[data-logo=still] body::before": { animation: "none" },
     },
+    // Retrowave et Miami : un coucher de soleil derrière les cartes (ciel en dégradé, soleil rayé, grille en perspective)
+    "[data-theme=retrowave][data-scheme=dark]": sunset({ sky: "linear-gradient(180deg, #140a26 0%, #1f0b36 55%, #2c0c3c 100%)", sun: "linear-gradient(180deg, #ffc846 0%, #ff8241 42%, #ff3d77 78%)", sunOpacity: 0.32, rows: "rgb(255 61 119 / 32%)", columns: "rgb(130 100 225 / 32%)" }),
+    "[data-theme=miami][data-scheme=light]": sunset({ sky: "linear-gradient(180deg, #ffe6f0 0%, #fff4f8 45%, #e6f7ff 100%)", sun: "linear-gradient(180deg, #ffd36e 0%, #ffa0b8 55%, #ff7fb0 100%)", sunOpacity: 0.45, rows: "rgb(51 209 255 / 40%)", columns: "rgb(255 61 119 / 26%)" }),
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },
     "button, input": { font: "inherit", color: "inherit" },

@@ -6,8 +6,10 @@
       "name": "n2",
       "dependencies": {
         "@ark-ui/react": "^5.39.3",
+        "@fontsource/audiowide": "^5.3.0",
         "@fontsource/chakra-petch": "^5.3.0",
         "@fontsource/kode-mono": "^5.3.0",
+        "@fontsource/righteous": "^5.3.0",
         "@fontsource/tilt-neon": "^5.3.0",
         "@tanstack/react-query": "^5.105.3",
         "@tanstack/react-router": "^1.170.42",
@@ -135,9 +137,13 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.12", "", {}, "sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww=="],
 
+    "@fontsource/audiowide": ["@fontsource/audiowide@5.3.0", "", {}, "sha512-ECBdWgQPaCSuwlFyeXzV0i2DAGq0SKID7jxD1oHhYTObx3wz26YKs3F9Ic/EO369Anzld9IqxflRukJm6nVxpw=="],
+
     "@fontsource/chakra-petch": ["@fontsource/chakra-petch@5.3.0", "", {}, "sha512-QZvbM/q2R6n1pg2x+TJPftZmBNS+ADU37L4Z4L/6UJIz+JZ/SRaEf8usPFRiP7Ht28sIideMu/Bm1SnGlSrwNw=="],
 
     "@fontsource/kode-mono": ["@fontsource/kode-mono@5.3.0", "", {}, "sha512-9xtuE63XocejXWwHa1vjV9IfQ1JbSKyCwyPV2SfFI+lgoMmuTKwI1DXZxxjZT+Q7qOdflwxj9fRrosGrh1YWpg=="],
+
+    "@fontsource/righteous": ["@fontsource/righteous@5.3.0", "", {}, "sha512-xr3w0E1jtc7xoXLfgJrcaKqWjvh5XiAAthVLrl9v9HKC7TfwMy3nARytetfi2GIgo51+aWsEJ51Uyd3XEXbj/A=="],
 
     "@fontsource/tilt-neon": ["@fontsource/tilt-neon@5.3.0", "", {}, "sha512-A9C6HZEwi8TWuLiSzJQdpeb7F3rbB+nfe5MswkiR27iZVgZ9DAAB3fORtYIkAbndhH9ydnwfOJC2oR04HXyW5w=="],
 

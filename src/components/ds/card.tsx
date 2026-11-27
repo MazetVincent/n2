@@ -19,7 +19,9 @@ export const LIST_MAX_H = 460;
 // à droite (::before, cadre en dégradé découpé par un masque), halo rose au survol. Les jetons valent « none » en clair.
 export const cardFrame = css({
   position: "relative",
-  bg: "surface",
+  // Retrowave, Miami : carte en verre (fond du dégradé « card » translucide, décor flouté derrière)
+  bg: { base: "surface", _retrowave: "transparent", _miami: "transparent" },
+  backdropFilter: { _retrowave: "blur(6px)", _miami: "blur(6px) saturate(1.2)" },
   bgGradient: "card",
   backgroundAttachment: { _dark: "fixed, scroll" },
   border: "1px solid token(colors.border)",
@@ -102,7 +104,11 @@ export function Card({
               flexWrap: "wrap",
               color: "neon",
               textShadow: "neonText",
-              "& *": { textShadow: "none", fontFamily: "body" },
+              // Retrowave, Miami : lettres en dégradé (heading.fill transparent laisse voir headingInk)
+              bgImage: "token(gradients.headingInk)",
+              bgClip: "text",
+              WebkitTextFillColor: "token(colors.heading.fill)",
+              "& *": { textShadow: "none", fontFamily: "body", WebkitTextFillColor: "currentColor" },
             })}
           >
             {title}

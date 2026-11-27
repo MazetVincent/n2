@@ -1149,6 +1149,8 @@
   "theme_aubergine": "Soft aubergine",
   "theme_classique": "Classic",
   "theme_enseigne": "Neon sign",
+  "theme_miami": "Miami",
+  "theme_retrowave": "Retrowave",
   "todo_30_days": "For 30 days",
   "todo_approved_ci": "#{number} · approved, CI ✓",
   "todo_awaiting_prod_approval": "Awaiting prod approval",

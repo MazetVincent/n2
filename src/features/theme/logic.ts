@@ -12,8 +12,8 @@
 
 /** Thèmes proposés le jour (clairs) et la nuit (sombres) ; « enseigne » existe dans les deux schémas.
  *  Ce que chaque autre thème change : src/styles/themes.ts */
-export const DAY_THEMES = ["enseigne", "classique"] as const;
-export const NIGHT_THEMES = ["enseigne", "aubergine"] as const;
+export const DAY_THEMES = ["enseigne", "classique", "miami"] as const;
+export const NIGHT_THEMES = ["enseigne", "retrowave", "aubergine"] as const;
 export type DayTheme = (typeof DAY_THEMES)[number];
 export type NightTheme = (typeof NIGHT_THEMES)[number];
 export type ThemeId = DayTheme | NightTheme;
