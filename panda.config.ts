@@ -222,6 +222,14 @@ export default defineConfig({
     // Retrowave et Miami : un coucher de soleil derrière les cartes (ciel en dégradé, soleil rayé, grille en perspective)
     "[data-theme=retrowave][data-scheme=dark]": sunset({ sky: "linear-gradient(180deg, #140a26 0%, #1f0b36 55%, #2c0c3c 100%)", sun: "linear-gradient(180deg, #ffc846 0%, #ff8241 42%, #ff3d77 78%)", sunOpacity: 0.32, rows: "rgb(255 61 119 / 32%)", columns: "rgb(130 100 225 / 32%)" }),
     "[data-theme=miami][data-scheme=light]": sunset({ sky: "linear-gradient(180deg, #ffe6f0 0%, #fff4f8 45%, #e6f7ff 100%)", sun: "linear-gradient(180deg, #ffd36e 0%, #ffa0b8 55%, #ff7fb0 100%)", sunOpacity: 0.45, rows: "rgb(51 209 255 / 40%)", columns: "rgb(255 61 119 / 26%)" }),
+    // Holo : lignes de balayage presque invisibles et une lueur violette en haut de la page
+    "[data-theme=holo][data-scheme=dark]": {
+      "&": {
+        background: "repeating-linear-gradient(0deg, rgb(255 255 255 / 1.6%) 0 1px, transparent 1px 3px), radial-gradient(70% 55% at 30% -5%, rgb(130 100 225 / 20%), transparent 70%), token(colors.bg)",
+        backgroundAttachment: "fixed",
+      },
+      "& body": { background: "transparent" },
+    },
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },
     "button, input": { font: "inherit", color: "inherit" },

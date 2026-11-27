@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { createContext, runInContext } from "node:vm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { readLiteral } from "../src/features/guide/literal.ts";
-import { DEFAULT_THEME, type DayTheme, type NightTheme, type ThemeMode } from "../src/features/theme/logic.ts";
+import { DEFAULT_THEME, type DayTheme, type NightTheme, type ThemeChoice, type ThemeMode } from "../src/features/theme/logic.ts";
 import { fileRefs, guideFromJson, parseGuide } from "../src/features/guide/parse.ts";
 import { readGuideJson } from "../src/features/guide/format/schema.ts";
 import { freshnessMarkdown, isGuideTarget, resolveRefs, sectionsForFiles, sectionsUnder } from "../src/features/guide/logic.ts";
@@ -438,8 +438,11 @@ describe("guide adapté à N2", () => {
     const store = storageAfter(embedGuide(page, settings));
     expect(store.getItem("guide-locale")).toBe("fr");
     expect(JSON.parse(store.getItem("guide-sources")!)).toEqual({ editor: "vscode", folder: "/Users/me/monprojet", glossary: false, visible: true });
-    // pas de thème imposé : le guide suit le système, comme N2
+    // thème de N2 en Automatique : le guide suit le système, comme N2
     expect(store.getItem("guide-theme")).toBeNull();
+    // Toujours le jour / la nuit : le guide aussi (ses blocs de code et schémas compris)
+    expect(storageAfter(embedGuide(page, { ...settings, theme: { ...DEFAULT_THEME, mode: "day" } })).getItem("guide-theme")).toBe("light");
+    expect(storageAfter(embedGuide(page, { ...settings, theme: { ...DEFAULT_THEME, mode: "night" } })).getItem("guide-theme")).toBe("dark");
     // le guide peut y écrire (pages lues, progression), le temps de la page
     store.setItem("guide.recipe-progress", "{}");
     expect(store.getItem("guide.recipe-progress")).toBe("{}");
@@ -490,8 +493,11 @@ describe("guide adapté à N2", () => {
 
   it("réglages du guide tirés des préférences de N2", () => {
     const guide = { enabled: true, path: "/g.html", references: true, terms: false };
-    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en")).toEqual({ lang: "en", editor: "vscode", folder: "/p", references: true, terms: false, theme: DEFAULT_THEME });
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en")).toEqual({ lang: "en", editor: "vscode", folder: "/p", references: true, terms: false, theme: { mode: "auto", day: "enseigne", night: "enseigne" } });
     expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en", { ...DEFAULT_THEME, mode: "night" }).theme.mode).toBe("night");
+    // les clignotements du logo ne regardent pas le guide : les changer ne le recharge pas
+    const still: ThemeChoice = { ...DEFAULT_THEME, logoBlink: false };
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en", still)).toEqual(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en"));
     // le dossier ne sert qu'à VS Code et Cursor : le guide ne le reçoit pas sinon
     expect(guideSettings({ editor: "jetbrains", projectPath: "/p", guide }, "en").folder).toBe("");
     expect(guideSettings({ editor: "github", projectPath: "/p", guide: { ...guide, references: false, terms: true } }, "fr")).toMatchObject({ references: false, terms: true });

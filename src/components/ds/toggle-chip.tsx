@@ -50,8 +50,8 @@ export const toggleChip = cva({
     "&[aria-pressed=true]": selected,
     "&[aria-pressed=true]:hover:enabled": selectedHover,
     "& > [data-check]": { flex: "none", opacity: 0, transition: "opacity 0.12s" },
-    // coche (ou cadenas) lumineuse : en sombre, le verre du tube et un halo rose
-    "&[aria-pressed=true] > [data-check]": { opacity: 1, color: { base: "accent", _dark: "tube" }, filter: { _dark: "drop-shadow(0 0 3px #ff3d77)" } },
+    // coche (ou cadenas) lumineuse : en sombre, le verre du tube et un halo de l'accent du thème (aucun en Aubergine douce)
+    "&[aria-pressed=true] > [data-check]": { opacity: 1, color: { base: "accent", _dark: "tube" }, filter: { _dark: "drop-shadow(0 0 3px token(colors.accent))", _aubergine: "none" } },
     _disabled: { cursor: "default" },
   },
   variants: {

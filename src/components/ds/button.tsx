@@ -41,8 +41,8 @@ export const button = cva({
         fontWeight: "semibold",
         textShadow: "neonText",
         boxShadow: "neonButton",
-        _hover: { _enabled: { filter: { base: "brightness(1.08)", _dark: "none" }, bg: { _dark: "rgb(255 61 119 / 8%)" }, boxShadow: "neonButtonHover" } },
-        _active: { _enabled: { animation: { _dark: "neon-flick 0.3s steps(1)" } } },
+        _hover: { _enabled: { filter: { base: "brightness(1.08)", _dark: "none" }, bg: { _dark: "color-mix(in srgb, token(colors.accent) 8%, transparent)" }, boxShadow: "neonButtonHover" } },
+        _active: { _enabled: { animation: { _dark: "neon-flick 0.3s steps(1)", _aubergine: "none" } } },
       },
       // tube éteint, qui s'allume au survol (sombre)
       outline: {

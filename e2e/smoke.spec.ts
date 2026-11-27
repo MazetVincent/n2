@@ -104,5 +104,12 @@ test("Apparence : « Toujours la nuit » et un thème s'appliquent tout de suite
   await expect(html).toHaveAttribute("data-scheme", "light");
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(html).toHaveAttribute("data-scheme", "dark");
+  // clignotements du logo coupés : l'enseigne reste allumée, sans animation
+  // (la fenêtre Préférences est ouverte : le reste de la page est masqué aux rôles d'accessibilité, d'où le sélecteur CSS)
+  const logo = page.locator('header a[href="/dashboard"] > span').first();
+  await expect(logo).toHaveCSS("animation-name", "neon-flicker");
+  await page.getByRole("dialog").getByText(/^(Clignotements du logo|Logo flicker)$/).click();
+  await expect(html).toHaveAttribute("data-logo", "still");
+  await expect(logo).toHaveCSS("animation-name", "none");
   expect(errors).toEqual([]);
 });

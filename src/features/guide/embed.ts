@@ -4,13 +4,14 @@
 // (origine opaque), ce stockage lui est refusé. N2 lui en donne un en mémoire, déjà rempli avec ses propres réglages :
 //  - guide-locale : la langue de N2 ;
 //  - guide-sources : où ouvrir les fichiers (éditeur et dossier du projet des préférences N2) et la lecture ;
-//  - pas de guide-theme : le guide prend les couleurs de N2.
+//  - guide-theme : « light » ou « dark » quand le thème de N2 ne suit pas macOS (Toujours le jour, Toujours la nuit),
+//    pour que les couleurs propres au guide (blocs de code, schémas) suivent elles aussi ; absent en Automatique.
 // Une feuille de style lui donne les couleurs de N2 (src/styles/colors.ts), claires ou sombres comme le thème de N2
 // (Préférences, Apparence : selon macOS, ou toujours le jour, ou toujours la nuit), et masque ses propres contrôles
 // (langue, Préférences), puisque ces réglages viennent de N2. Le cadre du guide ne voit pas le thème de la page qui
 // l'affiche (il ne voit que le réglage de macOS) : N2 le lui donne au chargement.
 import type { Lang } from "../../lib/i18n.ts";
-import { COLORS, type ColorName } from "../../styles/colors.ts";
+import type { ColorName } from "../../styles/colors.ts";
 import type { Editor, Preferences } from "../prefs/logic.ts";
 import { DEFAULT_THEME, type ThemeChoice } from "../theme/logic.ts";
 import { themeColors } from "../../styles/themes.ts";
@@ -25,17 +26,20 @@ export interface GuideSettings {
   /** « Expliquer les termes » : vocabulaire du guide souligné, définition au survol */
   terms: boolean;
   /** thème de N2 : couleurs de jour et de nuit, et quand afficher celles de nuit (selon macOS, jamais, toujours) */
-  theme: ThemeChoice;
+  theme: GuideTheme;
 }
 
 /**
  * Réglages du guide tirés de ceux de N2. Le serveur s'en sert pour remplir la page du guide ; la page de N2,
  * pour la recharger quand ils changent.
  */
-export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "guide">, lang: Lang, theme: ThemeChoice = DEFAULT_THEME): GuideSettings {
+/** Ce que le guide reçoit du thème (pas les clignotements du logo : les changer ne recharge pas le guide) */
+export type GuideTheme = Pick<ThemeChoice, "mode" | "day" | "night">;
+
+export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "guide">, lang: Lang, theme: GuideTheme = DEFAULT_THEME): GuideSettings {
   // le dossier ne sert qu'aux liens VS Code et Cursor : le guide (code d'un tiers) ne le reçoit pas sinon
   const folder = p.editor === "vscode" || p.editor === "cursor" ? p.projectPath : "";
-  return { lang, editor: p.editor, folder, references: p.guide.references, terms: p.guide.terms, theme };
+  return { lang, editor: p.editor, folder, references: p.guide.references, terms: p.guide.terms, theme: { mode: theme.mode, day: theme.day, night: theme.night } };
 }
 
 /** Couleurs de l'interface du guide (--colors-…) → couleur de N2. Les palettes d'illustration (code, schémas) restent les siennes. */
@@ -68,7 +72,7 @@ const vars = (colors: Record<ColorName, string>) =>
 const ROOT = "html:root:not(#n2-guide)";
 
 /** Feuille de style ajoutée au guide : couleurs du thème de jour, et de nuit selon le choix (`theme`), contrôles du guide masqués */
-export function guideStyle(theme: ThemeChoice = DEFAULT_THEME): string {
+export function guideStyle(theme: GuideTheme = DEFAULT_THEME): string {
   const dark = { auto: "@media screen and (prefers-color-scheme:dark)", night: "@media screen", day: "" }[theme.mode];
   return [
     // écran seulement : à l'impression, le guide garde sa palette (texte sombre sur papier blanc)
@@ -81,9 +85,11 @@ export function guideStyle(theme: ThemeChoice = DEFAULT_THEME): string {
 
 /** Contenu du stockage donné au guide (clés et format lus par le guide) */
 export function guideStorage(s: GuideSettings): Record<string, string> {
+  const fixed = s.theme.mode === "day" ? "light" : s.theme.mode === "night" ? "dark" : undefined;
   return {
     "guide-locale": s.lang,
     "guide-sources": JSON.stringify({ editor: s.editor, folder: s.folder, glossary: s.terms, visible: s.references }),
+    ...(fixed ? { "guide-theme": fixed } : {}),
   };
 }
 

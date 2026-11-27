@@ -84,7 +84,7 @@ export function Switch({
             borderRadius: "full",
             bg: "tube.off",
             transition: "background 0.1s",
-            "[data-state=on] > * > &": { bg: "tube", boxShadow: "neonGas", animation: "neon-ignite 0.55s steps(1)" },
+            "[data-state=on] > * > &": { bg: "tube", boxShadow: "neonGas", animation: { base: "neon-ignite 0.55s steps(1)", _aubergine: "none" } },
             "[data-state=mixed] > * > &": { right: "50%", bg: "tube", boxShadow: "neonGas" },
           })}
         />
@@ -149,7 +149,7 @@ export function Segmented<V extends string>({
           top: "var(--top)",
           left: "var(--left)",
           transition: "all 0.15s",
-          "[data-ignite] > &": { animation: { _dark: "neon-ignite 0.5s steps(1)" } },
+          "[data-ignite] > &": { animation: { _dark: "neon-ignite 0.5s steps(1)", _aubergine: "none" } },
         })}
       />
       {items.map((it) => (
@@ -172,7 +172,7 @@ export function Segmented<V extends string>({
             whiteSpace: "nowrap",
             _hover: { color: "text" },
             _checked: { color: "text", textShadow: "neonText" },
-            "[data-ignite] > &": { _checked: { animation: { _dark: "neon-ignite 0.5s steps(1)" } } },
+            "[data-ignite] > &": { _checked: { animation: { _dark: "neon-ignite 0.5s steps(1)", _aubergine: "none" } } },
             _focusVisible: { outline: "2px solid token(colors.accent)", outlineOffset: "1px" },
           })}
         >

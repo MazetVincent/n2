@@ -5,7 +5,7 @@
 import { COLORS, type ColorName } from "./colors";
 
 /** Schéma de chaque thème (Enseigne existe dans les deux) */
-export const THEME_SCHEME = { classique: "light", miami: "light", retrowave: "dark", aubergine: "dark" } as const;
+export const THEME_SCHEME = { classique: "light", miami: "light", retrowave: "dark", holo: "dark", aubergine: "dark" } as const;
 export type ExtraTheme = keyof typeof THEME_SCHEME;
 export const EXTRA_THEMES = Object.keys(THEME_SCHEME) as ExtraTheme[];
 
@@ -62,6 +62,21 @@ export const THEME_COLORS: Record<ExtraTheme, Partial<Record<ColorName, string>>
     "bad.soft": "#3d1f2a",
     "info.soft": "#1b2a48",
   },
+  // Holo : affichage holographique, arêtes irisées rose, violet et cyan, titres légèrement dédoublés ; le reste calme
+  holo: {
+    ...NO_SCREWS,
+    bg: "#0c0a12",
+    surface: "#16121c",
+    "surface.alt": "#110e16",
+    "surface.lift": "#1d1825",
+    border: "#2a2333",
+    text: "#f3eef8",
+    muted: "#a59cb3",
+    "accent.soft": "#3a1a33",
+    neon: "#ffe3ec",
+    tube: "#e6dcff",
+    "tube.off": "#3a3050",
+  },
   // Aubergine douce : fond prune, magenta clair de la charte (#FFC4D6), états en tons doux, aucune lueur
   aubergine: {
     ...NO_SCREWS,
@@ -113,6 +128,19 @@ export const THEME_SHADOWS: Record<ExtraTheme, Record<string, string>> = {
     neonFrame: "0 0 0 1.5px #ffc2a0, 0 0 6px #ff8241, 0 0 14px rgb(255 130 65 / 45%)",
     neonField: "inset 0 2px 6px rgb(0 0 0 / 60%), 0 0 4px #ff8241, 0 0 12px rgb(255 130 65 / 40%)",
   },
+  holo: {
+    card: "0 24px 46px -24px rgb(130 100 225 / 55%), 0 0 0 1px rgb(0 0 0 / 40%)",
+    cardHover: "0 24px 46px -20px rgb(130 100 225 / 70%), 0 0 0 1px rgb(0 0 0 / 40%), 0 0 22px -6px rgb(51 209 255 / 35%)",
+    inset: "inset 0 1px 3px rgb(0 0 0 / 55%)",
+    // titres : néon rose avec un léger décalage cyan et magenta
+    neonText: "-1px 0 rgb(51 209 255 / 55%), 1px 0 rgb(255 61 119 / 75%), 0 0 12px rgb(255 61 119 / 45%)",
+    neonTube: "0 0 8px rgb(255 61 119 / 70%), 0 0 18px rgb(51 209 255 / 35%)",
+    neonButton: "0 0 10px rgb(255 61 119 / 45%), 0 0 22px rgb(130 100 225 / 30%), inset 0 0 6px rgb(130 100 225 / 40%)",
+    neonButtonHover: "0 0 14px rgb(255 61 119 / 60%), 0 0 30px rgb(130 100 225 / 40%), 0 0 40px rgb(51 209 255 / 20%), inset 0 0 8px rgb(130 100 225 / 50%)",
+    neonGas: "0 0 6px rgb(130 100 225 / 90%), 0 0 16px rgb(51 209 255 / 45%)",
+    neonFrame: "0 0 0 1.5px #e6dcff, 0 0 8px rgb(130 100 225 / 60%), 0 0 16px rgb(51 209 255 / 30%), inset 0 0 6px rgb(255 61 119 / 30%)",
+    neonField: "inset 0 2px 6px rgb(0 0 0 / 60%), 0 0 6px rgb(130 100 225 / 70%), 0 0 14px rgb(51 209 255 / 35%)",
+  },
   aubergine: {
     card: "inset 0 1px 0 rgb(255 255 255 / 4%), 0 8px 24px -14px rgb(0 0 0 / 60%)",
     cardHover: "inset 0 1px 0 rgb(255 255 255 / 5%), 0 8px 24px -14px rgb(0 0 0 / 60%)",
@@ -128,7 +156,7 @@ export const THEME_SHADOWS: Record<ExtraTheme, Record<string, string>> = {
   },
 };
 
-/** Dégradés redéfinis (jetons `gradients`) : aucun dans ces thèmes */
+/** Dégradés redéfinis (jetons `gradients`) : volume et arête des cartes, lumière de l'onglet actif, encre des titres */
 export const THEME_GRADIENTS: Record<ExtraTheme, Record<string, string>> = {
   classique: {},
   // cartes en verre (translucides, floutées dans cardFrame) : le coucher de soleil passe derrière
@@ -142,6 +170,13 @@ export const THEME_GRADIENTS: Record<ExtraTheme, Record<string, string>> = {
     tabGlow: "linear-gradient(to top, rgb(255 130 65 / 22%), rgb(255 130 65 / 5%) 65%, transparent)",
     headingInk: "linear-gradient(90deg, #ff9ab8, #ffc846)",
   },
+  holo: {
+    card: "linear-gradient(transparent, transparent), linear-gradient(180deg, #1a1521 0%, #120e17 100%)",
+    cardHead: "linear-gradient(180deg, rgb(255 255 255 / 4.5%), transparent)",
+    // arête irisée autour de chaque carte
+    rim: "conic-gradient(from 210deg, rgb(255 61 119 / 85%), rgb(130 100 225 / 60%), rgb(51 209 255 / 65%), rgb(255 61 119 / 15%), rgb(255 61 119 / 85%))",
+    tabGlow: "linear-gradient(to top, rgb(130 100 225 / 24%), rgb(51 209 255 / 5%) 65%, transparent)",
+  },
   aubergine: { card: "none", cardHead: "none", rim: "none", tabGlow: "none" },
 };
 
@@ -151,6 +186,7 @@ export const THEME_FONTS: Record<ExtraTheme, { heading: string; headingWeight: s
   // Righteous et Audiowide n'ont qu'une graisse : pas de gras simulé
   miami: { heading: "{fonts.righteous}", headingWeight: "{fontWeights.normal}", display: "{fonts.body}", mono: SYSTEM_MONO, cardRadius: "{radii.xl}" },
   retrowave: { heading: "{fonts.audiowide}", headingWeight: "{fontWeights.normal}", display: "{fonts.chakra}", mono: "{fonts.kode}", cardRadius: "{radii.lg}" },
+  holo: { heading: "{fonts.chakra}", headingWeight: "{fontWeights.semibold}", display: "{fonts.chakra}", mono: "{fonts.kode}", cardRadius: "{radii.xl}" },
   classique: { heading: "{fonts.body}", headingWeight: "{fontWeights.semibold}", display: "{fonts.body}", mono: SYSTEM_MONO, cardRadius: "{radii.xl}" },
   aubergine: { heading: "{fonts.body}", headingWeight: "{fontWeights.semibold}", display: "{fonts.body}", mono: SYSTEM_MONO, cardRadius: "{radii.xl}" },
 };

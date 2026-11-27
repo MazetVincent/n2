@@ -108,6 +108,7 @@ export function Card({
               bgImage: "token(gradients.headingInk)",
               bgClip: "text",
               WebkitTextFillColor: "token(colors.heading.fill)",
+              "&::selection": { WebkitTextFillColor: "currentColor" },
               "& *": { textShadow: "none", fontFamily: "body", WebkitTextFillColor: "currentColor" },
             })}
           >

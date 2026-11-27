@@ -1,7 +1,8 @@
 // L'enseigne N2 appelle à l'aide : de temps en temps (délai tiré au hasard), le logo s'éteint et clignote S.O.S en
 // morse (· · ·  − − −  · · ·), puis se rallume. Tout ce que le logo éclaire suit le même signal : son halo sur la
-// barre du haut (::before, ::after du header) et la lumière qu'il projette dans la page (body::before, voir
-// panda.config.ts). En clair, seules les lettres du logo clignotent (les lumières n'existent qu'en sombre).
+// barre du haut (::before, ::after du header, thèmes sombres) et la lumière qu'il projette dans la page (body::before,
+// Enseigne sombre seulement : dans Retrowave et Miami, body::before est le soleil du décor, qui ne clignote pas).
+// En clair, seules les lettres du logo clignotent.
 // Animation par script (Web Animations) : elle passe devant les battements CSS (neon-flicker) le temps du message,
 // puis les laisse reprendre. Rien si le système demande moins de mouvement, si les clignotements du logo sont coupés
 // (Préférences, Apparence), ni quand l'onglet est caché.
@@ -61,12 +62,16 @@ function playSos(header: HTMLElement | null, logo: HTMLElement | null) {
   const { frames, duration } = sosKeyframes();
   const targets: [Element | null, string | undefined][] = [[logo, undefined]];
   // un navigateur qui ignore pseudoElement animerait la barre et la page entières : on lui laisse les lettres seules
-  if ("pseudoElement" in KeyframeEffect.prototype) targets.push([header, "::before"], [header, "::after"], [document.body, "::before"]);
+  if ("pseudoElement" in KeyframeEffect.prototype) {
+    targets.push([header, "::before"], [header, "::after"]);
+    const { theme, scheme } = document.documentElement.dataset;
+    if (theme === "enseigne" && scheme === "dark") targets.push([document.body, "::before"]);
+  }
   for (const [el, pseudoElement] of targets) el?.animate(frames, { duration, pseudoElement, id: SOS_ID });
 }
 
-/** Arrête un message en cours (barre du haut démontée) */
-function stopSos() {
+/** Arrête un message en cours (barre du haut démontée, clignotements coupés dans les Préférences) */
+export function stopSos() {
   for (const a of document.getAnimations()) if (a.id === SOS_ID) a.cancel();
 }
 
