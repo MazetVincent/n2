@@ -40,19 +40,20 @@ export const Route = createFileRoute("/guide-html")({
         const { embedGuide, guideSettings } = await import("~/features/guide/embed");
         const { readPreferences } = await import("~/features/prefs/logic");
         const { getLang } = await import("~/lib/i18n");
+        const { getTheme } = await import("~/features/theme/theme");
         const { allowedHosts } = await import("~/server/session");
         try {
           const cfg = loadConfig();
           const html = await guideHtml(cfg);
-          // réglages de N2 : langue (cookie) ; éditeur, dossier du projet et lecture du guide (préférences)
-          const page = embedGuide(html, guideSettings(readPreferences(cfg), getLang()));
+          // réglages de N2 : langue et thème (cookies) ; éditeur, dossier du projet et lecture du guide (préférences)
+          const page = embedGuide(html, guideSettings(readPreferences(cfg), getLang(), getTheme()));
           return new Response(page, {
             headers: {
               "Content-Type": "text/html; charset=utf-8",
               "Content-Security-Policy": guideCsp(process.env.N2_PORT ?? "4747", allowedHosts()),
               "X-Content-Type-Options": "nosniff",
               "Referrer-Policy": "no-referrer",
-              // la page dépend de la langue et des préférences du moment
+              // la page dépend de la langue, du thème et des préférences du moment
               "Cache-Control": "no-store",
             },
           });

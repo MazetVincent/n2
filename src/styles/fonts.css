@@ -12,3 +12,6 @@
 @import "@fontsource/chakra-petch/latin-700.css";
 @import "@fontsource/kode-mono/latin-400.css";
 @import "@fontsource/kode-mono/latin-600.css";
+/* Thèmes (src/styles/themes.ts) : Audiowide pour les titres de Retrowave, Righteous pour ceux de Miami */
+@import "@fontsource/audiowide/latin-400.css";
+@import "@fontsource/righteous/latin-400.css";

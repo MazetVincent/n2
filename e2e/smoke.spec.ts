@@ -113,3 +113,36 @@ test("Remind me : ajouter puis cocher un rappel (fichier en mémoire en mode dé
   await expect(card.getByRole("checkbox", { name: text, checked: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("Apparence : « Toujours la nuit » et un thème s'appliquent tout de suite et restent après un rechargement", async ({ page }) => {
+  const errors = watchErrors(page);
+  // macOS (émulé) en clair : en Automatique, N2 est en clair
+  await page.emulateMedia({ colorScheme: "light" });
+  await unlock(page, "/dashboard?fenetre=preferences");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-scheme", "light");
+  await page.getByRole("dialog").getByText(/^(Toujours la nuit|Always night)$/).click();
+  await expect(html).toHaveAttribute("data-scheme", "dark");
+  await expect(html).toHaveAttribute("data-theme", "enseigne");
+  // rendu par le serveur dès le chargement (cookie), sans attendre la page
+  await page.reload();
+  await expect(html).toHaveAttribute("data-mode", "night");
+  await expect(html).toHaveAttribute("data-scheme", "dark");
+  // un autre thème de nuit : ses couleurs remplacent celles d'Enseigne, sans recharger
+  await page.getByRole("dialog").getByText(/^(Aubergine douce|Soft aubergine)$/).click();
+  await expect(html).toHaveAttribute("data-theme", "aubergine");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(26, 16, 32)");
+  // Automatique : suit de nouveau macOS, y compris quand il change
+  await page.getByRole("dialog").getByText(/^(Automatique|Automatic)$/).click();
+  await expect(html).toHaveAttribute("data-scheme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(html).toHaveAttribute("data-scheme", "dark");
+  // clignotements du logo coupés : l'enseigne reste allumée, sans animation
+  // (la fenêtre Préférences est ouverte : le reste de la page est masqué aux rôles d'accessibilité, d'où le sélecteur CSS)
+  const logo = page.locator('header a[href="/dashboard"] > span').first();
+  await expect(logo).toHaveCSS("animation-name", "neon-flicker");
+  await page.getByRole("dialog").getByText(/^(Clignotements du logo|Logo flicker)$/).click();
+  await expect(html).toHaveAttribute("data-logo", "still");
+  await expect(logo).toHaveCSS("animation-name", "none");
+  expect(errors).toEqual([]);
+});

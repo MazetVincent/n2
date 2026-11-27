@@ -15,7 +15,7 @@ export const input = cva({
     h: "32px",
     transition: "border-color 0.15s, box-shadow 0.15s",
     _placeholder: { color: "muted" },
-    _focusVisible: { outline: { base: "2px solid token(colors.accent)", _osDark: "none" }, outlineOffset: "-1px", borderColor: { _osDark: "tube" }, boxShadow: "neonField" },
+    _focusVisible: { outline: { base: "2px solid token(colors.accent)", _dark: "none" }, outlineOffset: "-1px", borderColor: { _dark: "tube" }, boxShadow: "neonField" },
   },
   variants: {
     bare: { true: { border: "none", borderRadius: 0, bg: "transparent", h: "auto", py: "2.5", _focusVisible: { outline: "none", boxShadow: "none" } } },

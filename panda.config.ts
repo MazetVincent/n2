@@ -2,17 +2,59 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import presetPanda from "@pandacss/preset-panda";
 import { COLORS, type ColorName } from "./src/styles/colors";
+import { EXTRA_THEMES, type ExtraTheme, THEME_COLORS, THEME_FONTS, THEME_GRADIENTS, THEME_SCHEME, THEME_SHADOWS } from "./src/styles/themes";
 
 /*
  * Panda CSS : styles générés dans `styled-system/` (non versionné, `bun run codegen`).
- * Les couleurs sont des « semantic tokens » clair / sombre (préférence du système).
+ * Les couleurs sont des « semantic tokens » clair / sombre : le schéma du thème affiché (condition `_dark`, attribut
+ * data-scheme de <html>, posé avant l'affichage par src/features/theme selon le thème choisi et le réglage de macOS).
  * Ils sont aussi exposés en variables CSS (--colors-…), utilisées par src/styles/map.css.
+ * Les thèmes autres qu'Enseigne (src/styles/themes.ts) redéfinissent certains jetons sous leur propre condition
+ * (`_classique`… : attributs data-theme et data-scheme de <html>, plus forts que `_dark`).
  */
-const pair = (base: string, dark: string) => ({ value: { base, _osDark: dark } });
-const c = (name: ColorName) => {
-  const [base, dark] = COLORS[name];
-  return pair(base, dark);
-};
+const pair = (base: string, dark: string) => ({ value: { base, _dark: dark } });
+/** Jeton clair / sombre, et la valeur de chaque thème qui le redéfinit */
+const themed = (base: string, dark: string, own: (t: ExtraTheme) => string | undefined) => ({
+  value: { base, _dark: dark, ...Object.fromEntries(EXTRA_THEMES.flatMap((t) => (own(t) === undefined ? [] : [[`_${t}`, own(t)]]))) },
+});
+const c = (name: ColorName) => themed(COLORS[name][0], COLORS[name][1], (t) => THEME_COLORS[t][name]);
+const shadow = (name: string, base: string, dark: string) => themed(base, dark, (t) => THEME_SHADOWS[t][name]);
+const gradient = (name: string, base: string, dark: string) => themed(base, dark, (t) => THEME_GRADIENTS[t][name]);
+const font = (name: keyof (typeof THEME_FONTS)[ExtraTheme], enseigne: string) => themed(enseigne, enseigne, (t) => THEME_FONTS[t][name]);
+
+/** Décor « coucher de soleil » d'un thème : ciel sur toute la fenêtre, soleil rayé en haut à droite, grille au sol */
+function sunset(o: { sky: string; sun: string; sunOpacity: number; rows: string; columns: string }) {
+  const layer = { content: '""', position: "fixed", zIndex: -1, pointerEvents: "none" };
+  return {
+    "&": { background: `${o.sky} fixed` },
+    "& body": { background: "transparent" },
+    // soleil : la moitié haute, en bandes qui s'amincissent comme sur les affiches
+    "& body::before": {
+      ...layer,
+      right: "6vw",
+      top: "110px",
+      w: "min(380px, 40vw)",
+      aspectRatio: "1",
+      borderRadius: "full",
+      background: o.sun,
+      opacity: o.sunOpacity,
+      maskImage: "linear-gradient(180deg, #000 0 48%, transparent 0), repeating-linear-gradient(180deg, #000 0 14px, transparent 14px 19px)",
+      maskComposite: "intersect",
+    },
+    // grille du sol, couchée en perspective, qui s'efface vers l'horizon
+    "& body::after": {
+      ...layer,
+      left: "-25%",
+      right: "-25%",
+      bottom: 0,
+      h: "42vh",
+      background: `linear-gradient(${o.rows} 1px, transparent 1px) 0 0 / 100% 34px, linear-gradient(90deg, ${o.columns} 1px, transparent 1px) 0 0 / 64px 100%`,
+      transform: "perspective(420px) rotateX(62deg)",
+      transformOrigin: "bottom",
+      maskImage: "linear-gradient(transparent, #000 70%)",
+    },
+  };
+}
 
 export default defineConfig({
   presets: [presetBase, presetPanda],
@@ -22,21 +64,42 @@ export default defineConfig({
   outdir: "styled-system",
   importMap: "styled-system",
   jsxFramework: "react",
+  // `_dark` : thème affiché en sombre (et non plus « macOS en sombre ») : le choix des Préférences peut le contredire
+  // `_classique`, `_aubergine`… : ce thème est affiché ; `_enseigneDark` : Enseigne en sombre (trame et lumière de la page)
+  conditions: {
+    extend: {
+      dark: "[data-scheme=dark] &",
+      enseigneDark: "[data-theme=enseigne][data-scheme=dark] &",
+      ...Object.fromEntries(EXTRA_THEMES.map((t) => [t, `[data-theme=${t}][data-scheme=${THEME_SCHEME[t]}] &`])),
+    },
+  },
   theme: {
     extend: {
       tokens: {
         radii: { sm: { value: "4px" }, md: { value: "6px" }, lg: { value: "8px" }, xl: { value: "12px" } },
         // échelle de texte en px (la page est à 14px) : pas de taille intermédiaire (12.5px, 11.5px…)
         fontSizes: { xs: { value: "11px" }, sm: { value: "12px" }, md: { value: "13px" }, base: { value: "14px" }, lg: { value: "15px" }, xl: { value: "20px" } },
-        // polices servies en local (src/styles/fonts.css) ; le texte courant reste en police système
+        // polices servies en local (src/styles/fonts.css) ; le texte courant reste en police système.
+        // Les rôles (titres, onglets, chiffres) sont des jetons de thème, plus bas.
         fonts: {
           body: { value: "system-ui, -apple-system, 'Segoe UI', sans-serif" }, // texte courant
-          sign: { value: "'Tilt Neon', system-ui, sans-serif" }, // enseigne : logo, titres de cartes et de page
-          display: { value: "'Chakra Petch', system-ui, sans-serif" }, // onglets, rubriques
-          mono: { value: "'Kode Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }, // chiffres, versions, code
+          sign: { value: "'Tilt Neon', system-ui, sans-serif" }, // enseigne : le logo dans tous les thèmes, les titres d'Enseigne
+          chakra: { value: "'Chakra Petch', system-ui, sans-serif" },
+          kode: { value: "'Kode Mono', ui-monospace, SFMono-Regular, Menlo, monospace" },
+          audiowide: { value: "'Audiowide', system-ui, sans-serif" }, // titres de Retrowave
+          righteous: { value: "'Righteous', system-ui, sans-serif" }, // titres de Miami
         },
       },
       semanticTokens: {
+        // rôles des polices, selon le thème : titres de cartes et de page, onglets et rubriques, chiffres et code
+        fonts: {
+          heading: font("heading", "{fonts.sign}"),
+          display: font("display", "{fonts.chakra}"),
+          mono: font("mono", "{fonts.kode}"),
+        },
+        // Tilt Neon n'a qu'une graisse : pas de gras pour les titres d'Enseigne (il serait simulé)
+        fontWeights: { heading: font("headingWeight", "{fontWeights.normal}") },
+        radii: { card: font("cardRadius", "{radii.md}") },
         // valeurs dans src/styles/colors.ts (partagées avec le guide de l'équipe)
         colors: {
           bg: c("bg"),
@@ -44,8 +107,11 @@ export default defineConfig({
           border: c("border"),
           text: c("text"),
           neon: c("neon"),
+          sign: c("sign"),
           tube: { DEFAULT: c("tube"), off: c("tube.off") },
-          screw: c("screw"),
+          screw: { DEFAULT: c("screw"), ring: c("screw.ring") },
+          electrode: c("electrode"),
+          heading: { fill: c("heading.fill") },
           contrast: c("contrast"),
           heat: c("heat"),
           muted: c("muted"),
@@ -66,12 +132,12 @@ export default defineConfig({
         shadows: {
           // Relief (sombre) : carte posée sur la trame (reflet sur le bord haut, ombre portée profonde) ;
           // au survol, un halo rose. En clair, l'ombre douce d'avant, sans changement au survol.
-          card: pair("0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "inset 0 1px 0 rgb(255 255 255 / 7%), 0 1px 0 rgb(0 0 0 / 60%), 0 20px 40px -20px rgb(0 0 0 / 95%)"),
-          cardHover: pair("0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "inset 0 1px 0 rgb(255 255 255 / 9%), 0 1px 0 rgb(0 0 0 / 60%), 0 20px 40px -20px rgb(0 0 0 / 95%), 0 0 26px -6px rgb(255 61 119 / 40%)"),
+          card: shadow("card", "0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "inset 0 1px 0 rgb(255 255 255 / 7%), 0 1px 0 rgb(0 0 0 / 60%), 0 20px 40px -20px rgb(0 0 0 / 95%)"),
+          cardHover: shadow("cardHover", "0 1px 2px rgb(20 24 40 / 6%), 0 4px 16px rgb(20 24 40 / 4%)", "inset 0 1px 0 rgb(255 255 255 / 9%), 0 1px 0 rgb(0 0 0 / 60%), 0 20px 40px -20px rgb(0 0 0 / 95%), 0 0 26px -6px rgb(255 61 119 / 40%)"),
           // élément en creux dans une carte (ligne de liste, champ, contrôle de la barre)
-          inset: pair("none", "inset 0 1px 3px rgb(0 0 0 / 65%)"),
+          inset: shadow("inset", "none", "inset 0 1px 3px rgb(0 0 0 / 65%)"),
           // barre du haut détachée du contenu qui défile dessous
-          bar: pair("none", "0 12px 30px -12px rgb(0 0 0 / 90%)"),
+          bar: shadow("bar", "none", "0 12px 30px -12px rgb(0 0 0 / 90%)"),
           // menus et listes déroulantes (Popover)
           popover: { value: "0 12px 32px rgb(0 0 0 / 22%)" },
           // fenêtres (Dialog)
@@ -80,14 +146,15 @@ export default defineConfig({
           //   neonSign : enseigne (logo) · neonText : titre de carte, onglet actif · neonTube : trait lumineux (onglet actif)
           //   neonButton / neonButtonHover : tube du bouton principal (et d'un bouton encadré qui s'allume au survol)
           //   neonGas : gaz allumé de l'interrupteur · neonFrame : tube autour du segment choisi · neonField : champ actif
-          neonSign: pair("none", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
-          neonText: pair("none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
-          neonTube: pair("none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
-          neonButton: pair("none", "0 0 4px #ff3d77, 0 0 12px rgb(255 61 119 / 65%), inset 0 0 6px rgb(255 61 119 / 55%)"),
-          neonButtonHover: pair("0 0 0 3px {colors.accent.soft}", "0 0 6px #ff3d77, 0 0 20px rgb(255 61 119 / 75%), 0 0 40px rgb(255 61 119 / 30%), inset 0 0 10px rgb(255 61 119 / 60%)"),
-          neonGas: pair("none", "0 0 4px #ff3d77, 0 0 10px #ff3d77, 0 0 22px rgb(255 61 119 / 55%)"),
-          neonFrame: pair("0 0 0 1px {colors.accent}", "0 0 0 1.5px #ffd3df, 0 0 6px #ff3d77, 0 0 14px rgb(255 61 119 / 50%), inset 0 0 6px rgb(255 61 119 / 35%)"),
-          neonField: pair("none", "inset 0 2px 6px rgb(0 0 0 / 70%), 0 0 4px #ff3d77, 0 0 14px rgb(255 61 119 / 50%)"),
+          // le logo est une enseigne allumée dans tous les thèmes : en clair, un tube magenta à la lueur plus courte
+          neonSign: pair("0 0 1px rgb(255 255 255 / 90%), 0 0 6px rgb(255 61 119 / 55%), 0 0 16px rgb(255 61 119 / 30%)", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
+          neonText: shadow("neonText", "none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
+          neonTube: shadow("neonTube", "none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
+          neonButton: shadow("neonButton", "none", "0 0 4px #ff3d77, 0 0 12px rgb(255 61 119 / 65%), inset 0 0 6px rgb(255 61 119 / 55%)"),
+          neonButtonHover: shadow("neonButtonHover", "0 0 0 3px {colors.accent.soft}", "0 0 6px #ff3d77, 0 0 20px rgb(255 61 119 / 75%), 0 0 40px rgb(255 61 119 / 30%), inset 0 0 10px rgb(255 61 119 / 60%)"),
+          neonGas: shadow("neonGas", "none", "0 0 4px #ff3d77, 0 0 10px #ff3d77, 0 0 22px rgb(255 61 119 / 55%)"),
+          neonFrame: shadow("neonFrame", "0 0 0 1px {colors.accent}", "0 0 0 1.5px #ffd3df, 0 0 6px #ff3d77, 0 0 14px rgb(255 61 119 / 50%), inset 0 0 6px rgb(255 61 119 / 35%)"),
+          neonField: shadow("neonField", "none", "inset 0 2px 6px rgb(0 0 0 / 70%), 0 0 4px #ff3d77, 0 0 14px rgb(255 61 119 / 50%)"),
           // anneau de focus doux (éléments cliquables encadrés)
           ring: { value: "0 0 0 2px {colors.accent.soft}" },
         },
@@ -97,10 +164,12 @@ export default defineConfig({
         gradients: {
           // 1re couche : la lumière du logo, fixée sur la fenêtre (background-attachment: fixed dans cardFrame), donc chaque
           // carte en reçoit selon sa distance au logo ; 2e couche : le volume de la carte
-          card: pair("none", "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 13%), rgb(255 61 119 / 4%) 45%, transparent 75%), linear-gradient(180deg, #1e1823 0%, #151019 100%)"),
-          cardHead: pair("none", "linear-gradient(180deg, rgb(255 255 255 / 3%), transparent)"),
-          rim: pair("none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
-          tabGlow: pair("none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
+          card: gradient("card", "none", "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 13%), rgb(255 61 119 / 4%) 45%, transparent 75%), linear-gradient(180deg, #1e1823 0%, #151019 100%)"),
+          cardHead: gradient("cardHead", "none", "linear-gradient(180deg, rgb(255 255 255 / 3%), transparent)"),
+          rim: gradient("rim", "none", "linear-gradient(135deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 0) 32%, rgb(255 61 119 / 0) 62%, rgb(255 61 119 / 50%))"),
+          // encre des titres de cartes (Retrowave, Miami : un dégradé, vu à travers les lettres ; jeton heading.fill)
+          headingInk: gradient("headingInk", "none", "none"),
+          tabGlow: gradient("tabGlow", "none", "linear-gradient(to top, rgb(255 61 119 / 24%), rgb(255 61 119 / 6%) 65%, transparent)"),
         },
       },
       /*
@@ -112,21 +181,24 @@ export default defineConfig({
         label: { value: { fontSize: "xs", fontWeight: "semibold" } }, // pastilles, compteurs
         caption: { value: { fontSize: "sm" } }, // métadonnées, boutons compacts
         body: { value: { fontSize: "md" } }, // listes, menus, champs
-        // titres en police d'enseigne (Tilt Neon n'a qu'une graisse : pas de gras, il serait simulé)
-        heading: { value: { fontFamily: "sign", fontSize: "lg", fontWeight: "normal" } }, // titre de carte
-        title: { value: { fontFamily: "sign", fontSize: "xl", fontWeight: "normal", lineHeight: "1.25" } }, // titre de page
+        // titres : police d'enseigne en Enseigne, police du texte en gras ailleurs (jetons heading)
+        heading: { value: { fontFamily: "heading", fontSize: "lg", fontWeight: "heading" } }, // titre de carte
+        title: { value: { fontFamily: "heading", fontSize: "xl", fontWeight: "heading", lineHeight: "1.25" } }, // titre de page
         overline: { value: { fontFamily: "display", fontSize: "sm", textTransform: "uppercase", letterSpacing: "0.06em" } }, // rubriques
       },
     },
   },
   globalCss: {
-    ":root": { colorScheme: "light dark" },
+    // contrôles natifs, barres de défilement (et guide, dans son cadre) dans le schéma du thème affiché
+    ":root": { colorScheme: "light" },
+    ":root[data-scheme=dark]": { colorScheme: "dark" },
     "html, body": { bg: "bg", color: "text", fontFamily: "body", fontSize: "base", lineHeight: "1.45" },
     // Relief (sombre) : une trame fine et une lueur en haut de page, sous les cartes. Sur html (toute la fenêtre,
     // même quand la page est plus courte), body transparent par-dessus.
-    "@media (prefers-color-scheme: dark)": {
-      body: { background: "transparent" },
-      html: {
+    // Enseigne seulement (les autres thèmes sombres gardent un fond uni)
+    "[data-theme=enseigne][data-scheme=dark]": {
+      "& body": { background: "transparent" },
+      "&": {
         background:
           "linear-gradient(rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, radial-gradient(120% 60% at 50% -10%, #1e1424, transparent 60%), token(colors.bg)",
         backgroundAttachment: "fixed",
@@ -135,7 +207,7 @@ export default defineConfig({
       // les onglets. Fixe (la barre du haut, et donc le logo, reste en place au défilement), au rythme des battements du
       // logo (même animation, src/styles/app.css). Centre : celui du logo (marge de la barre + 18px). Même géométrie
       // que la couche de lumière du jeton « card », pour que la lumière se raccorde au bord des cartes.
-      "body::before": {
+      "& body::before": {
         content: '""',
         position: "fixed",
         inset: 0,
@@ -144,6 +216,19 @@ export default defineConfig({
         background: "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 16%), rgb(255 61 119 / 6%) 45%, transparent 75%)",
         animation: "neon-flicker 9s linear infinite",
       },
+      // clignotements du logo coupés (Préférences) : sa lumière reste allumée, sans bouger
+      "&[data-logo=still] body::before": { animation: "none" },
+    },
+    // Retrowave et Miami : un coucher de soleil derrière les cartes (ciel en dégradé, soleil rayé, grille en perspective)
+    "[data-theme=retrowave][data-scheme=dark]": sunset({ sky: "linear-gradient(180deg, #140a26 0%, #1f0b36 55%, #2c0c3c 100%)", sun: "linear-gradient(180deg, #ffc846 0%, #ff8241 42%, #ff3d77 78%)", sunOpacity: 0.32, rows: "rgb(255 61 119 / 32%)", columns: "rgb(130 100 225 / 32%)" }),
+    "[data-theme=miami][data-scheme=light]": sunset({ sky: "linear-gradient(180deg, #ffe6f0 0%, #fff4f8 45%, #e6f7ff 100%)", sun: "linear-gradient(180deg, #ffd36e 0%, #ffa0b8 55%, #ff7fb0 100%)", sunOpacity: 0.45, rows: "rgb(51 209 255 / 40%)", columns: "rgb(255 61 119 / 26%)" }),
+    // Holo : lignes de balayage presque invisibles et une lueur violette en haut de la page
+    "[data-theme=holo][data-scheme=dark]": {
+      "&": {
+        background: "repeating-linear-gradient(0deg, rgb(255 255 255 / 1.6%) 0 1px, transparent 1px 3px), radial-gradient(70% 55% at 30% -5%, rgb(130 100 225 / 20%), transparent 70%), token(colors.bg)",
+        backgroundAttachment: "fixed",
+      },
+      "& body": { background: "transparent" },
     },
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },

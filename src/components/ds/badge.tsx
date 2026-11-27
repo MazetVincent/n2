@@ -6,12 +6,14 @@ export type Tone = "ok" | "warn" | "bad" | "info" | "accent" | "neutral";
 export const TONES: readonly Tone[] = ["ok", "warn", "bad", "info", "accent", "neutral"];
 
 // Enseigne, sombre : la pastille devient un petit tube de sa couleur (cadre, lueur, fond vide) ; en clair, fond pâle.
+// Aubergine douce : le même tube, sans lueur.
 const tube = {
-  _osDark: {
+  _dark: {
     bg: "transparent",
     borderColor: "currentColor",
     boxShadow: "0 0 6px color-mix(in srgb, currentColor 45%, transparent), inset 0 0 4px color-mix(in srgb, currentColor 30%, transparent)",
     textShadow: "0 0 6px color-mix(in srgb, currentColor 55%, transparent)",
+    _aubergine: { boxShadow: "none", textShadow: "none" },
   },
 } as const;
 

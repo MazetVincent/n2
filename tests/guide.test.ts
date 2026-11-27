@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { createContext, runInContext } from "node:vm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { readLiteral } from "../src/features/guide/literal.ts";
+import { DEFAULT_THEME, type DayTheme, type NightTheme, type ThemeChoice, type ThemeMode } from "../src/features/theme/logic.ts";
 import { fileRefs, guideFromJson, parseGuide } from "../src/features/guide/parse.ts";
 import { readGuideJson } from "../src/features/guide/format/schema.ts";
 import { freshnessMarkdown, isGuideTarget, resolveRefs, sectionsForFiles, sectionsUnder } from "../src/features/guide/logic.ts";
@@ -14,6 +15,7 @@ import { embedGuide, guideSettings, guideStyle, type GuideSettings } from "../sr
 import { guideCsp } from "../src/routes/guide-html.ts";
 import { allowedHosts } from "../src/server/session.ts";
 import { COLORS } from "../src/styles/colors.ts";
+import { THEME_COLORS } from "../src/styles/themes.ts";
 import { fetchGuide, guideFreshness, indexGuide, parseHunks, staleRefs } from "../src/server/sources/guide.ts";
 import type { GuideContent, GuideIndex } from "../src/server/types.ts";
 import { gitInit, makeConfig, remove, tempDir, writeFiles } from "./helpers.ts";
@@ -398,7 +400,7 @@ describe("isolement du guide", () => {
 });
 
 describe("guide adapté à N2", () => {
-  const settings: GuideSettings = { lang: "fr", editor: "vscode", folder: "/Users/me/monprojet", references: true, terms: false };
+  const settings: GuideSettings = { lang: "fr", editor: "vscode", folder: "/Users/me/monprojet", references: true, terms: false, theme: DEFAULT_THEME };
   const page = `<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <script type="module">const t=\`<head></head>\`;</script>\n  </head><body></body></html>`;
 
   /** Exécute les scripts ajoutés par N2 dans une fenêtre où le stockage est refusé (comme dans le bac à sable) */
@@ -436,8 +438,11 @@ describe("guide adapté à N2", () => {
     const store = storageAfter(embedGuide(page, settings));
     expect(store.getItem("guide-locale")).toBe("fr");
     expect(JSON.parse(store.getItem("guide-sources")!)).toEqual({ editor: "vscode", folder: "/Users/me/monprojet", glossary: false, visible: true });
-    // pas de thème imposé : le guide suit le système, comme N2
+    // thème de N2 en Automatique : le guide suit le système, comme N2
     expect(store.getItem("guide-theme")).toBeNull();
+    // Toujours le jour / la nuit : le guide aussi (ses blocs de code et schémas compris)
+    expect(storageAfter(embedGuide(page, { ...settings, theme: { ...DEFAULT_THEME, mode: "day" } })).getItem("guide-theme")).toBe("light");
+    expect(storageAfter(embedGuide(page, { ...settings, theme: { ...DEFAULT_THEME, mode: "night" } })).getItem("guide-theme")).toBe("dark");
     // le guide peut y écrire (pages lues, progression), le temps de la page
     store.setItem("guide.recipe-progress", "{}");
     expect(store.getItem("guide.recipe-progress")).toBe("{}");
@@ -465,9 +470,34 @@ describe("guide adapté à N2", () => {
     expect(css).toMatch(/\[data-preferences-trigger\][^{]*\[aria-label="Langue"\],\[aria-label="Language"\]\{display:none!important\}/);
   });
 
+  it("couleurs sombres selon le thème de N2 : avec macOS, jamais, ou toujours", () => {
+    const theme = (mode: ThemeMode, day: DayTheme = "enseigne", night: NightTheme = "enseigne") => ({ ...DEFAULT_THEME, mode, day, night });
+    expect(guideStyle(theme("auto"))).toContain(`@media screen and (prefers-color-scheme:dark){html:root:not(#n2-guide){--colors-canvas:${COLORS.bg[1]};`);
+    // toujours le jour : seulement les couleurs claires, même si macOS est en sombre
+    expect(guideStyle(theme("day"))).not.toContain(COLORS.bg[1]);
+    expect(guideStyle(theme("day"))).toContain(`--colors-canvas:${COLORS.bg[0]};`);
+    // toujours la nuit : les couleurs sombres passent après les claires, sans condition sur macOS
+    const night = guideStyle(theme("night"));
+    expect(night).not.toContain("prefers-color-scheme");
+    expect(night.indexOf(`--colors-canvas:${COLORS.bg[1]};`)).toBeGreaterThan(night.indexOf(`--colors-canvas:${COLORS.bg[0]};`));
+    expect(embedGuide(page, { ...settings, theme: theme("night") })).not.toContain("prefers-color-scheme");
+  });
+
+  it("couleurs du thème choisi : Aubergine douce la nuit, Enseigne le jour", () => {
+    const css = guideStyle({ ...DEFAULT_THEME, mode: "night", day: "classique", night: "aubergine" });
+    expect(css).toContain(`--colors-canvas:${THEME_COLORS.aubergine.bg};`);
+    expect(css).toContain(`--colors-accent:${THEME_COLORS.aubergine.accent};`);
+    // Classique garde les couleurs claires d'Enseigne
+    expect(css).toContain(`--colors-canvas:${COLORS.bg[0]};`);
+  });
+
   it("réglages du guide tirés des préférences de N2", () => {
     const guide = { enabled: true, path: "/g.html", references: true, terms: false };
-    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en")).toEqual({ lang: "en", editor: "vscode", folder: "/p", references: true, terms: false });
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en")).toEqual({ lang: "en", editor: "vscode", folder: "/p", references: true, terms: false, theme: { mode: "auto", day: "enseigne", night: "enseigne" } });
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en", { ...DEFAULT_THEME, mode: "night" }).theme.mode).toBe("night");
+    // les clignotements du logo ne regardent pas le guide : les changer ne le recharge pas
+    const still: ThemeChoice = { ...DEFAULT_THEME, logoBlink: false };
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en", still)).toEqual(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en"));
     // le dossier ne sert qu'à VS Code et Cursor : le guide ne le reçoit pas sinon
     expect(guideSettings({ editor: "jetbrains", projectPath: "/p", guide }, "en").folder).toBe("");
     expect(guideSettings({ editor: "github", projectPath: "/p", guide: { ...guide, references: false, terms: true } }, "fr")).toMatchObject({ references: false, terms: true });

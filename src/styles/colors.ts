@@ -19,12 +19,20 @@ export const COLORS = {
   accent: ["#e5007d", "#ff3d77"],
   // cœur d'un tube de néon (logo, titres de cartes en sombre) ; en clair, simple couleur du texte
   neon: ["#1c2130", "#ffe3ec"],
+  // le logo : une enseigne allumée dans tous les thèmes (en clair, un tube magenta ; en sombre, le cœur blanc rosé du tube)
+  sign: ["#ff2d6f", "#ffe3ec"],
   // Enseigne : verre d'un tube allumé (cadre du bouton principal, gaz de l'interrupteur) et d'un tube éteint ;
   // en clair, l'enseigne est éteinte de jour : le tube allumé est simplement magenta, sans lueur
   tube: ["#e5007d", "#ffd3df"],
   "tube.off": ["#ead9e1", "#4e2c3a"],
   // tête des vis aux coins des cartes (caisson d'enseigne) et électrodes des interrupteurs
   screw: ["#c3c7d0", "#8a7f8f"],
+  // électrodes aux bouts du tube des interrupteurs : comme les vis, mais gardées dans tous les thèmes
+  electrode: ["#c3c7d0", "#8a7f8f"],
+  // remplissage des titres de cartes : leur couleur ; « transparent » laisse voir le dégradé du thème (jeton headingInk)
+  "heading.fill": ["currentColor", "currentColor"],
+  // bague autour de la vis (la couleur des bordures, en Enseigne)
+  "screw.ring": ["#e3e6ec", "#2b2231"],
   // texte posé sur une couleur vive (pastilles pleines : warn, info, ok, accent) : blanc en clair, noir en sombre,
   // où ces couleurs sont trop claires pour du blanc
   contrast: ["#ffffff", "#0d0a10"],

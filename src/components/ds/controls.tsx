@@ -1,7 +1,7 @@
 // Contrôles : interrupteur (texte puis interrupteur, à la place des cases à cocher), contrôle segmenté, onglets, barre de progression.
 import { SegmentGroup } from "@ark-ui/react/segment-group";
 import { Tabs as ArkTabs } from "@ark-ui/react/tabs";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { css, cx } from "styled-system/css";
 import { Count } from "./badge";
 
@@ -72,7 +72,7 @@ export function Switch({
           borderRadius: "full",
           border: "1px solid token(colors.border)",
           bg: "surface.alt",
-          "&::before, &::after": { content: '""', position: "absolute", top: "1px", w: "5px", h: "8px", borderRadius: "1px", bg: "screw" },
+          "&::before, &::after": { content: '""', position: "absolute", top: "1px", w: "5px", h: "8px", borderRadius: "1px", bg: "electrode" },
           _before: { left: "-6px" },
           _after: { right: "-6px" },
         })}
@@ -84,7 +84,7 @@ export function Switch({
             borderRadius: "full",
             bg: "tube.off",
             transition: "background 0.1s",
-            "[data-state=on] > * > &": { bg: "tube", boxShadow: "neonGas", animation: "neon-ignite 0.55s steps(1)" },
+            "[data-state=on] > * > &": { bg: "tube", boxShadow: "neonGas", animation: { base: "neon-ignite 0.55s steps(1)", _aubergine: "none" } },
             "[data-state=mixed] > * > &": { right: "50%", bg: "tube", boxShadow: "neonGas" },
           })}
         />
@@ -110,20 +110,38 @@ export function Segmented<V extends string>({
   label: string;
   className?: string;
 }) {
+  // Le tube ne s'amorce que quand on choisit un segment, pas au premier affichage : `data-ignite` est posé au premier choix
+  // (le segment choisi s'anime alors à chaque fois qu'il devient « checked »). L'indicateur, lui, reste le même élément
+  // (Ark le déplace) : son animation est relancée à la main.
+  const [ignite, setIgnite] = useState(false);
+  const indicator = useRef<HTMLDivElement>(null);
   return (
     <SegmentGroup.Root
       value={value}
-      onValueChange={(e) => e.value && onChange(e.value as V)}
+      onValueChange={(e) => {
+        if (!e.value) return;
+        for (const a of indicator.current?.getAnimations() ?? []) {
+          if (a instanceof CSSAnimation && a.animationName === "neon-ignite") {
+            a.cancel();
+            a.play();
+          }
+        }
+        setIgnite(true);
+        onChange(e.value as V);
+      }}
+      data-ignite={ignite || undefined}
       aria-label={label}
       className={cx(
         css({ display: "inline-flex", gap: "2px", p: "3px", bg: "surface.alt", border: "1px solid token(colors.border)", borderRadius: "full", position: "relative", flexWrap: "wrap" }),
         className,
       )}
     >
-      {/* Enseigne, sombre : le segment choisi est entouré d'un tube allumé (fond vide, texte en néon) */}
+      {/* Enseigne, sombre : le segment choisi est entouré d'un tube allumé (fond vide, texte en néon), qui s'amorce
+          (quelques ratés, neon-ignite) quand on le choisit */}
       <SegmentGroup.Indicator
+        ref={indicator}
         className={css({
-          bg: { base: "accent.soft", _osDark: "transparent" },
+          bg: { base: "accent.soft", _dark: "transparent" },
           borderRadius: "full",
           boxShadow: "neonFrame",
           w: "var(--width)",
@@ -131,6 +149,7 @@ export function Segmented<V extends string>({
           top: "var(--top)",
           left: "var(--left)",
           transition: "all 0.15s",
+          "[data-ignite] > &": { animation: { _dark: "neon-ignite 0.5s steps(1)", _aubergine: "none" } },
         })}
       />
       {items.map((it) => (
@@ -153,6 +172,7 @@ export function Segmented<V extends string>({
             whiteSpace: "nowrap",
             _hover: { color: "text" },
             _checked: { color: "text", textShadow: "neonText" },
+            "[data-ignite] > &": { _checked: { animation: { _dark: "neon-ignite 0.5s steps(1)", _aubergine: "none" } } },
             _focusVisible: { outline: "2px solid token(colors.accent)", outlineOffset: "1px" },
           })}
         >
