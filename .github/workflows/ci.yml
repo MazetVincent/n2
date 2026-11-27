@@ -47,9 +47,9 @@ jobs:
       - name: Build de production
         run: bun run build
 
-      # Tests de navigateur sur N2 en mode démo (données inventées) : chaque onglet, verrou, accessibilité
+      # Tests de navigateur sur N2 en mode démo (données inventées) : chaque onglet, verrou, accessibilité, dans Chromium et Firefox
       - name: Navigateur pour les tests
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium firefox
 
       - name: Tests de navigateur
         run: bun run test:e2e

@@ -1,6 +1,6 @@
 // Préférences de N2 : lecture et écriture dans la config, onglets affichés, adresses des éditeurs.
 import { describe, expect, it } from "vitest";
-import { applyPreferences, applySecret, CHOOSABLE_TABS, DEFAULT_JETBRAINS, defaultJetbrains, editorFileUrl, editorName, githubFileUrl, isJetbrainsLauncher, konamiMessage, readPreferences, readSecret, visibleTabs } from "../src/features/prefs/logic.ts";
+import { applyPreferences, applySecret, CHOOSABLE_TABS, DEFAULT_JETBRAINS, defaultJetbrains, editorFileUrl, editorName, githubFileUrl, isJetbrainsLauncher, konamiMessage, opensInChrome, readPreferences, readSecret, visibleTabs } from "../src/features/prefs/logic.ts";
 
 const raw = {
   github: { repos: ["org/depot"] },
@@ -15,6 +15,7 @@ describe("préférences", () => {
     expect(p).toEqual({
       tabs: [...CHOOSABLE_TABS],
       editor: "jetbrains",
+      links: "browser",
       jetbrains: "/Applications/PhpStorm.app/Contents/MacOS/phpstorm",
       projectPath: "~/Projet",
       guide: { enabled: true, path: "~/guide.html", references: true, terms: true },
@@ -25,11 +26,11 @@ describe("préférences", () => {
   });
 
   it("écrites sans toucher au reste de la config ; relues à l'identique", () => {
-    const p = { ...readPreferences(raw), tabs: ["/carte", "/sprint", "/statistiques"] as never, editor: "cursor" as const, projectPath: "~/Autre", guide: { enabled: false, path: "~/guide.html", references: true, terms: false } };
+    const p = { ...readPreferences(raw), tabs: ["/carte", "/sprint", "/statistiques"] as never, editor: "cursor" as const, links: "chrome" as const, projectPath: "~/Autre", guide: { enabled: false, path: "~/guide.html", references: true, terms: false } };
     const out = applyPreferences(raw, p);
     expect(out.calendar).toEqual({ icsUrl: "secret" });
     expect(out.libs).toEqual({ projectPath: "~/Autre", packages: ["zod"] });
-    expect(out.ui).toEqual({ tabs: ["/sprint", "/carte"], editor: "cursor" }); // ordre de la barre, Stats ignoré
+    expect(out.ui).toEqual({ tabs: ["/sprint", "/carte"], editor: "cursor", links: "chrome" }); // ordre de la barre, Stats ignoré
     expect(out.guide).toEqual({ path: "~/guide.html", enabled: false, references: true, terms: false });
     expect(out.codemap).toBeUndefined(); // lanceur par défaut : rien d'écrit
     expect(raw.libs.projectPath).toBe("~/Projet"); // l'original n'est pas modifié
@@ -46,6 +47,19 @@ describe("préférences", () => {
     expect(readPreferences(on).guide).toMatchObject({ references: false, terms: true });
     const noPath = applyPreferences(on, { ...p, guide: { enabled: true, path: " ", references: true, terms: true } });
     expect(noPath.guide).toEqual({ path: "~/guide.html", enabled: false, references: true, terms: true });
+  });
+
+  it("liens : navigateur courant par défaut ; Chrome seulement pour un clic gauche simple", () => {
+    expect(readPreferences({ ...raw, ui: { links: "firefox" } }).links).toBe("browser");
+    expect(readPreferences({ ...raw, ui: { links: "chrome" } }).links).toBe("chrome");
+    const click = { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false };
+    expect(opensInChrome("chrome", click)).toBe(true);
+    expect(opensInChrome("browser", click)).toBe(false);
+    // ⌘/Ctrl-clic, Maj-clic, clic molette : comportement normal du navigateur
+    expect(opensInChrome("chrome", { ...click, metaKey: true })).toBe(false);
+    expect(opensInChrome("chrome", { ...click, ctrlKey: true })).toBe(false);
+    expect(opensInChrome("chrome", { ...click, shiftKey: true })).toBe(false);
+    expect(opensInChrome("chrome", { ...click, button: 1 })).toBe(false);
   });
 
   it("le chemin du projet suit aussi codemap.projectPath s'il existe ; un autre lanceur JetBrains est retenu", () => {

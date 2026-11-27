@@ -66,7 +66,7 @@ N2 démarre sur `http://n2.localhost:4848` avec des données inventées pour tou
 
 - **macOS**, **Linux**, ou **Windows avec WSL2** (voir [Linux et Windows (WSL2)](#linux-et-windows-wsl2) ; Windows sans WSL n'est pas pris en charge) ;
 - **[Bun](https://bun.sh)** ;
-- **Google Chrome** (les liens s'ouvrent dans un nouvel onglet Chrome ; sous Linux sans Chrome et sous WSL, dans le navigateur par défaut) ;
+- un navigateur récent : **Chrome**, **Firefox** (ou dérivé : Zen…) ou **Safari**. Les liens s'ouvrent dans un nouvel onglet de ce navigateur ; pour les envoyer plutôt dans Google Chrome, voir `ui.links` dans [la configuration](#la-configuration-configlocaljson) ;
 - **PhpStorm** (facultatif, pour ouvrir un fichier à la bonne ligne ; un autre IDE JetBrains, VS Code ou Cursor marchent aussi) ;
 - une copie locale (clonée) du **projet à suivre** ;
 - les CLI des outils que tu veux brancher, voir [Brancher chaque partie](#brancher-chaque-partie).
@@ -95,7 +95,7 @@ N2 répond sur **http://n2.localhost:4747**, mais il est **verrouillé** : seul 
 bun run open
 ```
 
-Chrome s'ouvre sur N2, déverrouillé ; ensuite tes favoris et `http://n2.localhost:4747` marchent directement. Voir [Qui peut ouvrir N2 ?](#qui-peut-ouvrir-n2-).
+Chrome s'ouvre sur N2, déverrouillé ; ensuite tes favoris et `http://n2.localhost:4747` marchent directement. Pour un autre navigateur (Firefox, Safari…) : `bun run open --print` affiche l'adresse de déverrouillage (valable 2 minutes, une seule fois), à coller dans ce navigateur. Voir [Qui peut ouvrir N2 ?](#qui-peut-ouvrir-n2-).
 
 **Pourquoi `n2.localhost` ?** Tout nom en `.localhost` mène à ta machine, sans rien installer ni configurer (Chrome le sait). Un ancien favori sur `http://127.0.0.1:4747` est renvoyé vers `http://n2.localhost:4747` ; déverrouille alors N2 une fois sous ce nom (`bun run open`). Les préférences gardées dans le navigateur (éléments reportés, filtre « Ma branche », notifications, langue) sont propres à chaque adresse : à refaire une fois. Pour garder l'ancienne adresse (navigateur qui ne connaîtrait pas `.localhost`) : `N2_HOST=127.0.0.1`, pour le serveur comme pour `bun run open`.
 
@@ -109,7 +109,7 @@ N2 tourne aussi sous **Linux** et sous **Windows avec WSL2** (N2 dans la distrib
 
 | | macOS | Linux | WSL2 |
 |---|---|---|---|
-| Liens | nouvel onglet Chrome (`open -a`) | `google-chrome` s'il est installé, sinon le navigateur par défaut (`xdg-open`) | navigateur par défaut de Windows (`rundll32.exe url.dll,FileProtocolHandler`) |
+| Liens avec `ui.links: "chrome"` (par défaut : nouvel onglet du navigateur où N2 est ouvert) | nouvel onglet Chrome (`open -a`) | `google-chrome` s'il est installé, sinon le navigateur par défaut (`xdg-open`) | navigateur par défaut de Windows (`rundll32.exe url.dll,FileProtocolHandler`) |
 | `bun run open` | Chrome, par AppleScript | même commande que les liens ; sans écran graphique (SSH), l'adresse est affichée | même commande que les liens |
 | Lanceur JetBrains | `/Applications/<IDE>.app/Contents/MacOS/<ide>` | script de JetBrains Toolbox (`~/.local/share/JetBrains/Toolbox/scripts/phpstorm`, défaut) ou `/opt/<IDE>/bin/<ide>.sh` | idem Linux (IDE installé dans WSL, affiché par WSLg) ; plus simple : VS Code ou Cursor |
 | VS Code, Cursor | `vscode://file/…` | idem, par `xdg-open` | `vscode://vscode-remote/wsl+<distribution>/…` : l'éditeur de Windows ouvre le fichier dans WSL (extension **WSL** requise) |
@@ -140,11 +140,11 @@ Tout ce qui est propre à ton compte et à ton projet est dans `config.local.jso
 | `guide` | non | onglet Guide et liens « Dans le guide » |
 | `remind` | non | fichier Markdown de « Remind me » (`remind.path`, `~/.config/n2/remind.md` par défaut ; à régler ici seulement, pas dans les Préférences) |
 | `links` | non | liens rapides personnels dans ⌘K |
-| `ui` | non | préférences réglées dans N2 (boulon en haut à droite) : onglets affichés (`ui.tabs`), éditeur où ouvrir le code (`ui.editor` : `jetbrains`, `vscode`, `cursor` ou `github`) |
+| `ui` | non | préférences réglées dans N2 (boulon en haut à droite) : onglets affichés (`ui.tabs`), éditeur où ouvrir le code (`ui.editor` : `jetbrains`, `vscode`, `cursor` ou `github`), où s'ouvrent les liens (`ui.links` : `browser`, le défaut, nouvel onglet du navigateur où N2 est ouvert ; `chrome`, un clic simple ouvre le lien dans Google Chrome, ⌘-clic et clic molette restant dans le navigateur) |
 
 Les sections « obligatoires » doivent exister dans le fichier ; si tu n'utilises pas l'outil correspondant, laisse les valeurs d'exemple : la carte concernée affichera simplement une erreur.
 
-**Préférences** (icône boulon, à droite de la cloche) : langue, onglets affichés (le Dashboard l'est toujours), éditeur où ouvrir le code (JetBrains, VS Code, Cursor ou GitHub), chemin du projet, guide activé ou non et son chemin. Tout sauf la langue (cookie du navigateur) est écrit dans `config.local.json` ; N2 vérifie les chemins avant d'enregistrer et relit ses sources aussitôt, sans redémarrage. Statistiques est un onglet discret : toujours le dernier à droite, invisible, absent de ⌘K et des touches 1 à 9. Un onglet masqué reste trouvable dans ⌘K ; les touches 1 à 9 suivent les onglets affichés.
+**Préférences** (icône boulon, à droite de la cloche) : langue, onglets affichés (le Dashboard l'est toujours), éditeur où ouvrir le code (JetBrains, VS Code, Cursor ou GitHub), navigateur où ouvrir les liens (celui-ci ou Google Chrome), chemin du projet, guide activé ou non et son chemin. Tout sauf la langue (cookie du navigateur) est écrit dans `config.local.json` ; N2 vérifie les chemins avant d'enregistrer et relit ses sources aussitôt, sans redémarrage. Statistiques est un onglet discret : toujours le dernier à droite, invisible, absent de ⌘K et des touches 1 à 9. Un onglet masqué reste trouvable dans ⌘K ; les touches 1 à 9 suivent les onglets affichés.
 
 Exemple complet : [`config.example.json`](config.example.json). Le détail de chaque option est dans la section de la partie concernée ci-dessous. Les chemins acceptent `~/`.
 
@@ -414,7 +414,7 @@ Pour ajouter tes propres liens (prod, staging, back-office…) :
 | Champ | Rôle |
 |---|---|
 | `label` | texte affiché |
-| `url` | lien `https` uniquement ; N2 accepte ensuite d'ouvrir ce site exact dans Chrome (pas ses sous-domaines) |
+| `url` | lien `https` uniquement ; avec `ui.links: "chrome"`, N2 accepte ensuite d'ouvrir ce site exact dans Chrome (pas ses sous-domaines) |
 | `group` | rubrique dans ⌘K (« Liens » par défaut), cherchable |
 | `keywords` | mots-clés supplémentaires pour la recherche (« prod bo ») |
 
@@ -441,7 +441,7 @@ Pour ajouter tes propres liens (prod, staging, back-office…) :
 
 **Notifications** : le titre de l'onglet affiche le nombre d'urgences (« (3) N2 ») et les onglets portent des compteurs. La cloche de la barre du haut active les notifications du système (via le navigateur) : nouvelles urgences, réunion dans 5 minutes (clic = rejoindre), messages directs et mentions Slack, nouveautés GitHub · Jira. Une seule fois par nouveauté, rien pour ce qui existait déjà à l'activation. Un onglet N2 doit rester ouvert.
 
-**Recherche globale : ⌘K** : PR, tickets, erreurs, parties, sous-dossiers, librairies, fichiers, sections et glossaire du guide, liens rapides. Un élément externe s'ouvre dans un **nouvel onglet Chrome**, un fichier dans **l'éditeur choisi** (Préférences) à la bonne ligne.
+**Recherche globale : ⌘K** : PR, tickets, erreurs, parties, sous-dossiers, librairies, fichiers, sections et glossaire du guide, liens rapides. Un élément externe s'ouvre dans un **nouvel onglet** (ou dans Chrome, selon `ui.links`), un fichier dans **l'éditeur choisi** (Préférences) à la bonne ligne.
 
 **État des sources** (⌘K « État des sources », ou Préférences → Diagnostic) : pour chaque source depuis le démarrage de N2, l'état de la dernière lecture, sa durée, le dernier succès, le nombre de lectures et d'échecs, et la dernière erreur ; une source sans section de config est « non configurée », pas en échec. Le journal de N2 ne note que l'utile : les échecs, les lectures de plus de 5 s et le retour à la normale (`[n2] source=… ms échec=…`).
 
@@ -500,13 +500,13 @@ sh scripts/autostart.sh uninstall
 | `bun run setup` | hooks anti-secrets, `config.local.json`, traductions, styles Panda |
 | `bun run dev` | serveur de développement (rechargement à chaud) |
 | `bun run demo` | N2 avec des données inventées (port 4848), sans config ni compte : pour essayer, montrer ou tester |
-| `bun run open` | ouvre N2 dans Chrome et le déverrouille pour ce navigateur ; `--reset` : nouveau jeton, déconnecte tous les navigateurs |
+| `bun run open` | ouvre N2 dans Chrome et le déverrouille pour ce navigateur ; `--print` : affiche seulement l'adresse de déverrouillage, pour un autre navigateur ; `--reset` : nouveau jeton, déconnecte tous les navigateurs |
 | `bun run status` | l'état de N2 en une ligne (urgences, CI de la branche principale et de ta branche, sources en échec) ; `--json` : le JSON versionné de `/api/status` (`schemaVersion`), pour une barre de menus ou un script |
 | `bun run mcp` | serveur MCP de N2 (stdio), à déclarer dans Claude Code ou Codex ; voir [Fonctions transverses](#fonctions-transverses) |
 | `bun run build` | build de production |
 | `bun run start` | build puis serveur de production (utilisé par le démarrage automatique) |
 | `bun run test` | tests (Vitest) : garde-fous, carte, impact, « À faire », agenda, Slack, déploiements, guide, recherche… |
-| `bun run test:e2e` | tests de navigateur (Playwright, N2 en mode démo) : chaque onglet sans erreur, verrou, accessibilité. En local avec le Google Chrome installé ; à lancer depuis une autre copie que celle servie par le démarrage automatique |
+| `bun run test:e2e` | tests de navigateur (Playwright, N2 en mode démo) : chaque onglet sans erreur, verrou, liens, accessibilité, dans Chromium et Firefox. En local avec le Google Chrome installé et le Firefox de Playwright (`bunx playwright install firefox`) ; à lancer depuis une autre copie que celle servie par le démarrage automatique |
 | `bun run typecheck` | vérification TypeScript |
 | `bun run codegen` | régénère les styles Panda (`styled-system/`) |
 | `bun run i18n` | compile `messages/*.json` en fonctions typées (`src/paraglide/`) ; `dev`, `test` et `typecheck` le font déjà |
@@ -574,8 +574,8 @@ sh scripts/autostart.sh uninstall
 **Le jeton** est créé au premier démarrage dans `~/.config/n2/session` (dossier 700, fichier 600). `bun run open` ne met jamais ce jeton dans une URL : il écrit un **code à usage unique** (`~/.config/n2/login`, 600, valable 2 minutes), que N2 vérifie, supprime, puis échange contre le cookie. L'adresse est passée à Chrome par AppleScript, sans apparaître dans la liste des processus. Pour changer de jeton et déconnecter tous les navigateurs : `bun run open --reset` (pris en compte tout de suite, sans redémarrer N2).
 
 > Les cookies ne tiennent pas compte du port : un cookie posé pour `127.0.0.1` part vers **tous** les serveurs de `127.0.0.1`, quel que soit leur port. C'est pour cela que N2 s'ouvre sous `n2.localhost` : son cookie n'est envoyé qu'à ce nom, pas aux autres serveurs locaux (ouverts sous `localhost` ou `127.0.0.1`), et l'ancien cookie de `127.0.0.1` est effacé à la redirection. Reste un cas : un autre serveur de ta machine que tu ouvrirais toi-même sous `http://n2.localhost:<autre port>`. En cas de doute, `bun run open --reset` rend l'ancien cookie inutilisable.
-- **Ouvertures contrôlées côté serveur** : Chrome n'ouvre que GitHub, le site Jira configuré, Sentry, la console AWS, npm, Teams, Outlook, la page de connexion Microsoft, Slack, les environnements dynamiques (`deploy.envUrl`), les liens rapides de la config (site exact) et les liens de documentation lus dans le registre npm. L'éditeur (JetBrains, VS Code, Cursor, GitHub) n'ouvre que des fichiers du projet cartographié.
-- **Préférences écrites dans `config.local.json`** : seuls les onglets, l'éditeur, le chemin du projet, le lanceur JetBrains et le guide peuvent être changés depuis la page, et chaque chemin modifié est vérifié côté serveur (projet : chemin absolu d'un dépôt git ; lanceur : exécutable dans `…/Applications/<IDE>.app/Contents/MacOS/` ; guide : fichier `.html`). Une page compromise ne peut donc ni faire lancer un programme quelconque, ni faire servir un fichier qui n'est pas du HTML.
+- **Ouvertures contrôlées côté serveur** : un lien est un lien normal, ouvert par le navigateur. Avec `ui.links: "chrome"`, c'est le serveur qui lance Chrome, et seulement pour GitHub, le site Jira configuré, Sentry, la console AWS, npm, Teams, Outlook, la page de connexion Microsoft, Slack, les environnements dynamiques (`deploy.envUrl`), les liens rapides de la config (site exact) et les liens de documentation lus dans le registre npm. L'éditeur (JetBrains, VS Code, Cursor, GitHub) n'ouvre que des fichiers du projet cartographié.
+- **Préférences écrites dans `config.local.json`** : seuls les onglets, l'éditeur, le navigateur des liens, le chemin du projet, le lanceur JetBrains et le guide peuvent être changés depuis la page, et chaque chemin modifié est vérifié côté serveur (projet : chemin absolu d'un dépôt git ; lanceur : exécutable dans `…/Applications/<IDE>.app/Contents/MacOS/` ; guide : fichier `.html`). Une page compromise ne peut donc ni faire lancer un programme quelconque, ni faire servir un fichier qui n'est pas du HTML.
 - **Commandes lancées** : uniquement celles prévues par le code ou la config (`aws.reconnect`) ; le navigateur n'envoie jamais de commande. `git fetch` ne demande jamais d'identifiants.
 - **Scopes npm privés** (déclarés dans le `.npmrc` du projet) : leur nom n'est jamais envoyé au registre public.
 - **Code du projet pro** : l'analyse de la carte et les extraits de code sont calculés à la demande, **en mémoire uniquement**. Rien n'est écrit dans le dépôt N2.

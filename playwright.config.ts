@@ -26,8 +26,12 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: { baseURL: `http://n2.localhost:${PORT}`, trace: "retain-on-failure" },
-  // en local, le Google Chrome installé (rien à télécharger) ; en CI, le Chromium de Playwright (playwright install)
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], ...(process.env.CI ? {} : { channel: "chrome" }) } }],
+  // Chromium : en local, le Google Chrome installé (rien à télécharger) ; en CI, le Chromium de Playwright.
+  // Firefox : celui de Playwright (bunx playwright install firefox), pour attraper ce qui ne marche que dans Chrome.
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"], ...(process.env.CI ? {} : { channel: "chrome" }) } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+  ],
   webServer: {
     command: "bun run build && bunx vite preview",
     url: `http://127.0.0.1:${PORT}/dashboard`,

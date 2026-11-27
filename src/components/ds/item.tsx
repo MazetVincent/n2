@@ -1,13 +1,15 @@
 // Éléments de liste cliquables (carte de PR, ticket, erreur…), titres de rubrique, liens externes.
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { useId, type MouseEvent, type ReactNode } from "react";
 import { css, cva, cx } from "styled-system/css";
-import { openInChrome } from "~/lib/actions";
+import { opensInChrome } from "~/features/prefs/logic";
+import { openInChrome, useLinkTarget } from "~/lib/actions";
 import { badge, type Tone } from "./badge";
 
 // `tone` : bande colorée à gauche, pour repérer l'urgence d'un coup d'œil (vue « À faire »).
 // `flush` : sans bordure ni fond, quand l'élément est déjà dans un bloc encadré (erreur Sentry + sa trace).
 export const item = cva({
   base: {
+    position: "relative",
     display: "block",
     px: "2.5",
     py: "2",
@@ -19,7 +21,8 @@ export const item = cva({
     cursor: "pointer",
     transition: "border-color 0.12s, background 0.12s",
     _hover: { borderColor: "accent" },
-    _focusVisible: { borderColor: "accent", outline: "none", boxShadow: "ring" },
+    // le focus est sur la zone cliquable (lien ou bouton), pas sur la ligne
+    "&:has(> [data-item-hit]:focus-visible)": { borderColor: "accent", boxShadow: "ring" },
   },
   variants: {
     tone: {
@@ -36,25 +39,45 @@ export const item = cva({
   defaultVariants: { tone: "none" },
 });
 
+// La ligne entière est cliquable grâce à un vrai lien (ou bouton) étendu sous le contenu : adresse au survol, ⌘-clic,
+// clic molette et menu contextuel marchent, et les liens ou boutons du contenu restent des éléments à part (pas imbriqués).
+const hit = css({ position: "absolute", inset: 0, zIndex: 0, borderRadius: "inherit", bg: "transparent", border: "none", p: 0, cursor: "pointer", outline: "none" });
+// le contenu laisse passer les clics vers la zone cliquable, sauf sur ses propres éléments interactifs
+const content = css({
+  position: "relative",
+  zIndex: 1,
+  pointerEvents: "none",
+  "& :is(a, button, input, select, textarea, label, summary, [role=button], [tabindex])": { pointerEvents: "auto" },
+});
+
+/** `href` : lien externe ; `onSelect` : action dans N2 (navigation), prioritaire */
 export function Item({ href, onSelect, children, tone, flush }: { href?: string; onSelect?: () => void; children: ReactNode; tone?: Tone; flush?: boolean }) {
-  const go = () => (onSelect ? onSelect() : href && openInChrome(href));
+  const labelId = useId();
+  const target = useLinkTarget();
+  const hitProps = { className: hit, "aria-labelledby": labelId, "data-item-hit": "" };
   return (
-    <div
-      role="link"
-      tabIndex={0}
-      className={item({ tone, flush })}
-      onClick={go}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") go();
-      }}
-    >
-      {children}
+    <div className={item({ tone, flush })}>
+      {onSelect ? (
+        <button type="button" {...hitProps} onClick={onSelect} />
+      ) : href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" {...hitProps} onClick={(e) => chromeClick(e, href, target)} />
+      ) : null}
+      <div id={labelId} className={content}>
+        {children}
+      </div>
     </div>
   );
 }
 
+/** Clic gauche simple en mode « chrome » : le serveur ouvre le lien dans Chrome à la place du navigateur */
+function chromeClick(e: MouseEvent, href: string, target: ReturnType<typeof useLinkTarget>) {
+  if (!opensInChrome(target, e)) return;
+  e.preventDefault();
+  void openInChrome(href);
+}
+
 export const ItemTitle = ({ children }: { children: ReactNode }) => (
-  <div className={css({ fontWeight: "550", overflow: "hidden", textOverflow: "ellipsis", lineClamp: 2 })}>{children}</div>
+  <div className={css({ fontWeight: "semibold", overflow: "hidden", textOverflow: "ellipsis", lineClamp: 2 })}>{children}</div>
 );
 export const ItemMeta = ({ children }: { children: ReactNode }) => (
   <div className={css({ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1.5", mt: "1", textStyle: "caption", color: "muted" })}>{children}</div>
@@ -71,21 +94,20 @@ export const H3 = ({ children }: { children: ReactNode }) => (
   </h3>
 );
 
-// ---------- Liens externes (nouvel onglet Chrome) ----------
-const stop = (e: MouseEvent | KeyboardEvent) => {
-  e.preventDefault();
-  e.stopPropagation();
-};
-
+// ---------- Liens externes (navigateur courant, ou onglet Chrome selon ui.links) ----------
 export function ExtLink({ href, children, tone, className, title }: { href: string; children: ReactNode; tone?: Tone; className?: string; title?: string }) {
+  const target = useLinkTarget();
   return (
     <a
       href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       title={title}
       className={cx(tone ? badge({ tone, interactive: true }) : css({ color: "inherit" }), className)}
       onClick={(e) => {
-        stop(e);
-        openInChrome(href);
+        // un lien dans un élément cliquable (carte, ligne de tableau) ne déclenche que lui
+        e.stopPropagation();
+        chromeClick(e, href, target);
       }}
     >
       {children}

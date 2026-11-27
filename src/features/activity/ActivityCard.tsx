@@ -80,7 +80,7 @@ function ActivityRow({ item: i }: { item: ActivityItem }) {
   return (
     <Item href={i.url} tone={i.kind === "mention" ? "accent" : undefined}>
       <div className={css({ display: "flex", alignItems: "baseline", gap: "2", fontSize: "md", minW: 0 })}>
-        <span className={css({ fontWeight: "550", whiteSpace: "nowrap" })}>{i.author}</span>
+        <span className={css({ fontWeight: "semibold", whiteSpace: "nowrap" })}>{i.author}</span>
         <span className={css({ color: "muted", fontSize: "sm", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minW: 0 })}>
           {i.ref} · {i.title}
         </span>

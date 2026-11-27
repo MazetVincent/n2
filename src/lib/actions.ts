@@ -1,6 +1,8 @@
-// Ouvrir un lien dans un nouvel onglet Chrome, ou un fichier du projet dans l'IDE.
-// Le serveur vérifie tout (liste blanche de sites, fichiers limités au dossier du projet).
+// Ouvrir un lien (navigateur courant, ou onglet Chrome selon ui.links), ou un fichier du projet dans l'IDE.
+// Ce que lance le serveur est vérifié par lui (liste blanche de sites, fichiers limités au dossier du projet).
 import { createToaster } from "@ark-ui/react/toast";
+import type { LinkTarget } from "~/features/prefs/logic";
+import { usePreferences } from "~/lib/data";
 import { m, msg } from "~/lib/i18n";
 import { openFile, openUrl } from "~/server/fns";
 
@@ -16,6 +18,18 @@ export async function openInChrome(url: string) {
     // le serveur refuse ou ne répond pas : on ouvre dans le navigateur courant
     window.open(url, "_blank", "noopener");
   }
+}
+
+/** Où s'ouvrent les liens externes (préférence ui.links ; navigateur courant tant qu'elle n'est pas lue) */
+export function useLinkTarget(): LinkTarget {
+  const p = usePreferences().data;
+  return p?.ok ? p.data.links : "browser";
+}
+
+/** Ouvre un lien hors d'un clic sur un <a> (palette ⌘K, notification) */
+export function openLink(url: string, target: LinkTarget) {
+  if (target === "chrome") return void openInChrome(url);
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 export async function openInIde(file: string, line = 1) {

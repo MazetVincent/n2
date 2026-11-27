@@ -97,6 +97,8 @@ export interface Config {
     tabs?: string[];
     /** où ouvrir le code : IDE JetBrains (codemap.ide), VS Code, Cursor ou GitHub */
     editor?: "jetbrains" | "vscode" | "cursor" | "github";
+    /** où s'ouvrent les liens externes : navigateur courant (défaut) ou onglet Google Chrome lancé par le serveur */
+    links?: "browser" | "chrome";
     /** état du secret (voir src/features/prefs/logic.ts) : tant qu'il n'est pas débloqué, le guide est caché */
     secret?: { unlocked?: boolean; guideTouched?: boolean; statsFound?: boolean };
   };
