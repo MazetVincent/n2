@@ -27,6 +27,8 @@ export const COLORS = {
   "tube.off": ["#ead9e1", "#4e2c3a"],
   // tête des vis aux coins des cartes (caisson d'enseigne) et électrodes des interrupteurs
   screw: ["#c3c7d0", "#8a7f8f"],
+  // bague autour de la vis (la couleur des bordures, en Enseigne)
+  "screw.ring": ["#e3e6ec", "#2b2231"],
   // texte posé sur une couleur vive (pastilles pleines : warn, info, ok, accent) : blanc en clair, noir en sombre,
   // où ces couleurs sont trop claires pour du blanc
   contrast: ["#ffffff", "#0d0a10"],

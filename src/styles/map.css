@@ -68,10 +68,10 @@
 .node.cat-tooling rect:first-of-type { stroke: var(--colors-cat-tooling); }
 .node:hover rect:first-of-type, .node:focus-visible rect:first-of-type { stroke-width: 2.5; }
 .node.selected rect:first-of-type { stroke: var(--colors-accent); stroke-width: 3; }
-/* Thème sombre (data-scheme, src/features/theme) : la sélection et ses flux luisent (pas d'ombre sur tous les blocs : le flux animé les ferait redessiner) */
-[data-scheme="dark"] .node.selected { filter: drop-shadow(0 0 8px rgb(255 61 119 / 70%)); }
-[data-scheme="dark"] .has-selection .edge.out { filter: drop-shadow(0 0 3px rgb(255 61 119 / 90%)); }
-[data-scheme="dark"] .has-selection .edge.in { filter: drop-shadow(0 0 3px rgb(51 209 255 / 80%)); }
+/* Enseigne en sombre (data-theme, data-scheme : src/features/theme) : la sélection et ses flux luisent (pas d'ombre sur tous les blocs : le flux animé les ferait redessiner) */
+[data-theme="enseigne"][data-scheme="dark"] .node.selected { filter: drop-shadow(0 0 8px rgb(255 61 119 / 70%)); }
+[data-theme="enseigne"][data-scheme="dark"] .has-selection .edge.out { filter: drop-shadow(0 0 3px rgb(255 61 119 / 90%)); }
+[data-theme="enseigne"][data-scheme="dark"] .has-selection .edge.in { filter: drop-shadow(0 0 3px rgb(51 209 255 / 80%)); }
 .has-selection .node:not(.selected):not(.connected), .has-query .node:not(.match) { opacity: 0.3; }
 .node.match rect:first-of-type { stroke-width: 3; }
 .node-label { font-size: var(--font-sizes-md); font-weight: 650; fill: var(--colors-text); pointer-events: none; }

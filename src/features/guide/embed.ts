@@ -12,7 +12,8 @@
 import type { Lang } from "../../lib/i18n.ts";
 import { COLORS, type ColorName } from "../../styles/colors.ts";
 import type { Editor, Preferences } from "../prefs/logic.ts";
-import type { ThemeMode } from "../theme/logic.ts";
+import { DEFAULT_THEME, type ThemeChoice } from "../theme/logic.ts";
+import { themeColors } from "../../styles/themes.ts";
 
 export interface GuideSettings {
   lang: Lang;
@@ -23,18 +24,18 @@ export interface GuideSettings {
   references: boolean;
   /** « Expliquer les termes » : vocabulaire du guide souligné, définition au survol */
   terms: boolean;
-  /** quand afficher les couleurs sombres : selon macOS (auto), jamais (day), toujours (night) */
-  themeMode: ThemeMode;
+  /** thème de N2 : couleurs de jour et de nuit, et quand afficher celles de nuit (selon macOS, jamais, toujours) */
+  theme: ThemeChoice;
 }
 
 /**
  * Réglages du guide tirés de ceux de N2. Le serveur s'en sert pour remplir la page du guide ; la page de N2,
  * pour la recharger quand ils changent.
  */
-export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "guide">, lang: Lang, themeMode: ThemeMode = "auto"): GuideSettings {
+export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "guide">, lang: Lang, theme: ThemeChoice = DEFAULT_THEME): GuideSettings {
   // le dossier ne sert qu'aux liens VS Code et Cursor : le guide (code d'un tiers) ne le reçoit pas sinon
   const folder = p.editor === "vscode" || p.editor === "cursor" ? p.projectPath : "";
-  return { lang, editor: p.editor, folder, references: p.guide.references, terms: p.guide.terms, themeMode };
+  return { lang, editor: p.editor, folder, references: p.guide.references, terms: p.guide.terms, theme };
 }
 
 /** Couleurs de l'interface du guide (--colors-…) → couleur de N2. Les palettes d'illustration (code, schémas) restent les siennes. */
@@ -56,9 +57,9 @@ const GUIDE_COLORS: Record<string, ColorName> = {
   "diff-del-sign": "info",
 };
 
-const vars = (i: 0 | 1) =>
+const vars = (colors: Record<ColorName, string>) =>
   Object.entries(GUIDE_COLORS)
-    .map(([guide, n2]) => `--colors-${guide}:${COLORS[n2][i]};`)
+    .map(([guide, n2]) => `--colors-${guide}:${colors[n2]};`)
     .join("") +
   // N2 n'a pas de bordure appuyée : un mélange de la bordure et du texte secondaire
   "--colors-line-strong:color-mix(in srgb,var(--colors-line),var(--colors-muted) 45%);";
@@ -66,13 +67,13 @@ const vars = (i: 0 | 1) =>
 /** Sélecteur des couleurs de N2 : plus fort que ceux des jetons du guide (`:where(:root)`, `[data-theme=…]`), quel que soit l'ordre des styles */
 const ROOT = "html:root:not(#n2-guide)";
 
-/** Feuille de style ajoutée au guide : couleurs de N2 en clair, et en sombre selon le thème (`mode`), contrôles du guide masqués */
-export function guideStyle(mode: ThemeMode = "auto"): string {
-  const dark = { auto: "@media screen and (prefers-color-scheme:dark)", night: "@media screen", day: "" }[mode];
+/** Feuille de style ajoutée au guide : couleurs du thème de jour, et de nuit selon le choix (`theme`), contrôles du guide masqués */
+export function guideStyle(theme: ThemeChoice = DEFAULT_THEME): string {
+  const dark = { auto: "@media screen and (prefers-color-scheme:dark)", night: "@media screen", day: "" }[theme.mode];
   return [
     // écran seulement : à l'impression, le guide garde sa palette (texte sombre sur papier blanc)
-    `@media screen{${ROOT}{${vars(0)}}}`,
-    ...(dark ? [`${dark}{${ROOT}{${vars(1)}}}`] : []),
+    `@media screen{${ROOT}{${vars(themeColors(theme.day, 0))}}}`,
+    ...(dark ? [`${dark}{${ROOT}{${vars(themeColors(theme.night, 1))}}}`] : []),
     // contrôles du guide repris par N2 : bouton et panneau Préférences, sélecteur de langue
     `[data-preferences-trigger],[data-preferences-panel],[aria-label="Langue"],[aria-label="Language"]{display:none!important}`,
   ].join("\n");
@@ -110,5 +111,5 @@ function insertAt(html: string): number {
 /** HTML du guide adapté à N2 : stockage rempli et styles de N2 en tête, avant les scripts du guide */
 export function embedGuide(html: string, s: GuideSettings): string {
   const at = insertAt(html);
-  return `${html.slice(0, at)}<script data-n2>${storageScript(s)}</script><style data-n2>\n${guideStyle(s.themeMode)}\n</style>${html.slice(at)}`;
+  return `${html.slice(0, at)}<script data-n2>${storageScript(s)}</script><style data-n2>\n${guideStyle(s.theme)}\n</style>${html.slice(at)}`;
 }

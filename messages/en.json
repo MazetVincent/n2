@@ -1144,6 +1144,8 @@
   "tab_pull_requests": "Pull requests",
   "tab_sprint": "Jira sprint",
   "tab_stats": "Stats",
+  "theme_aubergine": "Soft aubergine",
+  "theme_classique": "Classic",
   "theme_enseigne": "Neon sign",
   "todo_30_days": "For 30 days",
   "todo_approved_ci": "#{number} · approved, CI ✓",

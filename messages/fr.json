@@ -1144,6 +1144,8 @@
   "tab_pull_requests": "Pull requests",
   "tab_sprint": "Sprint Jira",
   "tab_stats": "Statistiques",
+  "theme_aubergine": "Aubergine douce",
+  "theme_classique": "Classique",
   "theme_enseigne": "Enseigne",
   "todo_30_days": "Pendant 30 jours",
   "todo_approved_ci": "#{number} · approuvée, CI ✓",
