@@ -13,7 +13,8 @@ import { Icon } from "./icon";
 /** Hauteur maximale des cartes qui listent (À faire, Slack, GitHub · Jira…) avant de défiler */
 export const LIST_MAX_H = 460;
 
-// Enseigne : la carte est un caisson vissé (une vis à chaque coin, ::after, en clair comme en sombre).
+// Enseigne : la carte est un caisson vissé (une vis à chaque coin, ::after, en clair comme en sombre ; invisible dans les
+// autres thèmes, jetons screw transparents).
 // Sombre (Relief) : carte éclairée par la lumière du logo (couche fixée sur la fenêtre) et en volume (dégradé, reflet, ombre portée), arête claire en haut à gauche qui vire au rose en bas
 // à droite (::before, cadre en dégradé découpé par un masque), halo rose au survol. Les jetons valent « none » en clair.
 export const cardFrame = css({
@@ -22,7 +23,7 @@ export const cardFrame = css({
   bgGradient: "card",
   backgroundAttachment: { _dark: "fixed, scroll" },
   border: "1px solid token(colors.border)",
-  borderRadius: "md",
+  borderRadius: "card",
   _after: {
     content: '""',
     position: "absolute",
@@ -30,12 +31,12 @@ export const cardFrame = css({
     pointerEvents: "none",
     // une vis par coin (tête claire, bague sombre) ; écrit en entier : Panda lit les styles sans exécuter le code
     background:
-      "radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 0 0 / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 100% 0 / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 0 100% / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.border) 1.7px 2.5px, transparent 3px) 100% 100% / 6px 6px no-repeat",
+      "radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.screw.ring) 1.7px 2.5px, transparent 3px) 0 0 / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.screw.ring) 1.7px 2.5px, transparent 3px) 100% 0 / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.screw.ring) 1.7px 2.5px, transparent 3px) 0 100% / 6px 6px no-repeat, radial-gradient(circle, token(colors.screw) 0 1.3px, token(colors.screw.ring) 1.7px 2.5px, transparent 3px) 100% 100% / 6px 6px no-repeat",
   },
   boxShadow: "card",
   minW: 0,
   transition: "box-shadow 0.2s, border-color 0.2s",
-  _hover: { boxShadow: "cardHover", borderColor: { _dark: "rgb(255 61 119 / 45%)" } },
+  _hover: { boxShadow: "cardHover", borderColor: { _dark: "color-mix(in srgb, token(colors.accent) 45%, transparent)" } },
   _before: {
     content: '""',
     position: "absolute",
@@ -84,7 +85,7 @@ export function Card({
           px: "4",
           py: controls ? "2.5" : "3.5",
           borderBottom: "1px solid token(colors.border)",
-          borderTopRadius: "md",
+          borderTopRadius: "card",
           bgGradient: "cardHead",
           "[data-open=false] > &": { borderBottom: "none", alignItems: "center", py: "2.5" },
         })}

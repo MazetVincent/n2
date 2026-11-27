@@ -46,7 +46,7 @@ export const Route = createFileRoute("/guide-html")({
           const cfg = loadConfig();
           const html = await guideHtml(cfg);
           // réglages de N2 : langue et thème (cookies) ; éditeur, dossier du projet et lecture du guide (préférences)
-          const page = embedGuide(html, guideSettings(readPreferences(cfg), getLang(), getTheme().mode));
+          const page = embedGuide(html, guideSettings(readPreferences(cfg), getLang(), getTheme()));
           return new Response(page, {
             headers: {
               "Content-Type": "text/html; charset=utf-8",

@@ -263,7 +263,7 @@ function Body({ onDone }: { onDone: () => void }) {
   );
 }
 
-const THEME_LABEL: Record<ThemeId, () => string> = { enseigne: m.theme_enseigne };
+const THEME_LABEL: Record<ThemeId, () => string> = { enseigne: m.theme_enseigne, classique: m.theme_classique, aubergine: m.theme_aubergine };
 
 /** Apparence : quand afficher le thème de jour ou de nuit, et lesquels. Appliqué tout de suite (cookie, src/features/theme). */
 function ThemeField() {

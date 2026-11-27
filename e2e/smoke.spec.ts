@@ -81,7 +81,7 @@ test("Remind me : ajouter puis cocher un rappel (fichier en mémoire en mode dé
   expect(errors).toEqual([]);
 });
 
-test("Apparence : « Toujours la nuit » s'applique tout de suite et reste après un rechargement", async ({ page }) => {
+test("Apparence : « Toujours la nuit » et un thème s'appliquent tout de suite et restent après un rechargement", async ({ page }) => {
   const errors = watchErrors(page);
   // macOS (émulé) en clair : en Automatique, N2 est en clair
   await page.emulateMedia({ colorScheme: "light" });
@@ -95,6 +95,10 @@ test("Apparence : « Toujours la nuit » s'applique tout de suite et reste aprè
   await page.reload();
   await expect(html).toHaveAttribute("data-mode", "night");
   await expect(html).toHaveAttribute("data-scheme", "dark");
+  // un autre thème de nuit : ses couleurs remplacent celles d'Enseigne, sans recharger
+  await page.getByRole("dialog").getByText(/^(Aubergine douce|Soft aubergine)$/).click();
+  await expect(html).toHaveAttribute("data-theme", "aubergine");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(26, 16, 32)");
   // Automatique : suit de nouveau macOS, y compris quand il change
   await page.getByRole("dialog").getByText(/^(Automatique|Automatic)$/).click();
   await expect(html).toHaveAttribute("data-scheme", "light");

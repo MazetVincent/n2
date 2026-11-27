@@ -117,8 +117,8 @@ function GuideFrame({ target }: { target?: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const navKey = useRouterState({ select: (s) => s.location.state.__TSR_key });
   const prefs = usePreferences().data;
-  const themeMode = useThemeChoice().mode;
-  const settings = prefs?.ok ? JSON.stringify(guideSettings(prefs.data, getLang(), themeMode)) : undefined;
+  const theme = useThemeChoice();
+  const settings = prefs?.ok ? JSON.stringify(guideSettings(prefs.data, getLang(), theme)) : undefined;
   // version de la page : un changement d'adresse limité au « # » ne recharge pas le guide, ce paramètre si
   const [version, setVersion] = useState(0);
   const lastSettings = useRef(settings);
