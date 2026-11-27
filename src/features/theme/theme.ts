@@ -3,6 +3,7 @@
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { useSyncExternalStore } from "react";
 import { getCookie } from "@tanstack/react-start/server";
+import { stopSos } from "../secret/morse-sos";
 import { formatTheme, parseTheme, resolveTheme, THEME_COOKIE, themeAttributes, type ThemeChoice } from "./logic";
 
 /** Évènement de la page quand le thème change (les composants qui en dépendent se mettent à jour) */
@@ -27,6 +28,8 @@ export function setTheme(c: ThemeChoice) {
   const { theme, scheme } = resolveTheme(c, matchMedia("(prefers-color-scheme: dark)").matches);
   html.dataset.theme = theme;
   html.dataset.scheme = scheme;
+  // clignotements coupés : un S.O.S en cours s'arrête aussi
+  if (!c.logoBlink) stopSos();
   window.dispatchEvent(new Event(CHANGE));
 }
 

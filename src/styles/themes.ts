@@ -156,7 +156,7 @@ export const THEME_SHADOWS: Record<ExtraTheme, Record<string, string>> = {
   },
 };
 
-/** Dégradés redéfinis (jetons `gradients`) : aucun dans ces thèmes */
+/** Dégradés redéfinis (jetons `gradients`) : volume et arête des cartes, lumière de l'onglet actif, encre des titres */
 export const THEME_GRADIENTS: Record<ExtraTheme, Record<string, string>> = {
   classique: {},
   // cartes en verre (translucides, floutées dans cardFrame) : le coucher de soleil passe derrière
