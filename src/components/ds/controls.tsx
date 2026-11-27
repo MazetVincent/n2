@@ -141,7 +141,7 @@ export function Segmented<V extends string>({
       <SegmentGroup.Indicator
         ref={indicator}
         className={css({
-          bg: { base: "accent.soft", _osDark: "transparent" },
+          bg: { base: "accent.soft", _dark: "transparent" },
           borderRadius: "full",
           boxShadow: "neonFrame",
           w: "var(--width)",
@@ -149,7 +149,7 @@ export function Segmented<V extends string>({
           top: "var(--top)",
           left: "var(--left)",
           transition: "all 0.15s",
-          "[data-ignite] > &": { animation: { _osDark: "neon-ignite 0.5s steps(1)" } },
+          "[data-ignite] > &": { animation: { _dark: "neon-ignite 0.5s steps(1)" } },
         })}
       />
       {items.map((it) => (
@@ -172,7 +172,7 @@ export function Segmented<V extends string>({
             whiteSpace: "nowrap",
             _hover: { color: "text" },
             _checked: { color: "text", textShadow: "neonText" },
-            "[data-ignite] > &": { _checked: { animation: { _osDark: "neon-ignite 0.5s steps(1)" } } },
+            "[data-ignite] > &": { _checked: { animation: { _dark: "neon-ignite 0.5s steps(1)" } } },
             _focusVisible: { outline: "2px solid token(colors.accent)", outlineOffset: "1px" },
           })}
         >

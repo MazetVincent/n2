@@ -53,6 +53,7 @@ const COLORS = [
   ["accent", "accent"],
   ["accent.soft", "accent-soft"],
   ["neon", "neon"],
+  ["sign", "sign"],
   ["tube", "tube"],
   ["tube.off", "tube-off"],
   ["screw", "screw"],

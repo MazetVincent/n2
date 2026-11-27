@@ -7,7 +7,7 @@ export const TONES: readonly Tone[] = ["ok", "warn", "bad", "info", "accent", "n
 
 // Enseigne, sombre : la pastille devient un petit tube de sa couleur (cadre, lueur, fond vide) ; en clair, fond pâle.
 const tube = {
-  _osDark: {
+  _dark: {
     bg: "transparent",
     borderColor: "currentColor",
     boxShadow: "0 0 6px color-mix(in srgb, currentColor 45%, transparent), inset 0 0 4px color-mix(in srgb, currentColor 30%, transparent)",

@@ -20,7 +20,7 @@ export const cardFrame = css({
   position: "relative",
   bg: "surface",
   bgGradient: "card",
-  backgroundAttachment: { _osDark: "fixed, scroll" },
+  backgroundAttachment: { _dark: "fixed, scroll" },
   border: "1px solid token(colors.border)",
   borderRadius: "md",
   _after: {
@@ -35,7 +35,7 @@ export const cardFrame = css({
   boxShadow: "card",
   minW: 0,
   transition: "box-shadow 0.2s, border-color 0.2s",
-  _hover: { boxShadow: "cardHover", borderColor: { _osDark: "rgb(255 61 119 / 45%)" } },
+  _hover: { boxShadow: "cardHover", borderColor: { _dark: "rgb(255 61 119 / 45%)" } },
   _before: {
     content: '""',
     position: "absolute",

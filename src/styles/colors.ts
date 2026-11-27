@@ -19,6 +19,8 @@ export const COLORS = {
   accent: ["#e5007d", "#ff3d77"],
   // cœur d'un tube de néon (logo, titres de cartes en sombre) ; en clair, simple couleur du texte
   neon: ["#1c2130", "#ffe3ec"],
+  // le logo : une enseigne allumée dans tous les thèmes (en clair, un tube magenta ; en sombre, le cœur blanc rosé du tube)
+  sign: ["#ff2d6f", "#ffe3ec"],
   // Enseigne : verre d'un tube allumé (cadre du bouton principal, gaz de l'interrupteur) et d'un tube éteint ;
   // en clair, l'enseigne est éteinte de jour : le tube allumé est simplement magenta, sans lueur
   tube: ["#e5007d", "#ffd3df"],

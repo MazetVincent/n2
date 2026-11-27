@@ -108,7 +108,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         // Thème sombre : le logo, une enseigne au néon, irradie sa couleur sur la barre (halo autour du logo et lueur
         // qui court sur le bord du bas), au rythme de ses battements. --logo-x : centre du logo (marge + 18px).
         "--logo-x": "calc(max(24px, (100% - 1392px) / 2) + 18px)",
-        "@media (prefers-color-scheme: dark)": {
+        _dark: {
           "&::before, &::after": { content: '""', position: "absolute", pointerEvents: "none", zIndex: -1, animation: "neon-flicker 9s linear infinite" },
           _before: { inset: 0, bgImage: "radial-gradient(720px 170px at var(--logo-x) 26px, rgb(255 61 119 / 30%), rgb(255 61 119 / 10%) 45%, transparent 78%)" },
           _after: { left: 0, right: 0, bottom: "-1px", h: "1px", bgImage: "linear-gradient(90deg, transparent, rgb(255 61 119 / 85%) var(--logo-x), rgb(255 61 119 / 25%) calc(var(--logo-x) + 360px), transparent calc(var(--logo-x) + 720px))" },
@@ -118,7 +118,8 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
       <Link
         to="/dashboard"
         aria-label={m.topbar_n2_home()}
-        // police d'enseigne (Tilt Neon) ; clair : carré rose ; sombre : enseigne au néon, sans fond, qui bat de temps en temps
+        // l'enseigne N2, la même dans tous les thèmes : police d'enseigne (Tilt Neon), tube allumé qui bat de temps en temps
+        // (en clair, tube magenta à la lueur plus courte). Elle ne prend aucune couleur du thème (jetons sign et neonSign).
         className={css({
           gridArea: "logo",
           position: "relative",
@@ -127,15 +128,14 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
           w: "36px",
           h: "36px",
           borderRadius: "lg",
-          bg: { base: "accent", _osDark: "transparent" },
-          color: { base: "white", _osDark: "neon" },
+          color: "sign",
           fontFamily: "sign",
           fontWeight: "normal",
-          fontSize: { base: "17px", _osDark: "24px" },
+          fontSize: "24px",
           textDecoration: "none",
         })}
       >
-        <span ref={logoRef} className={css({ textShadow: "neonSign", animation: { _osDark: "neon-flicker 9s linear infinite" } })}>N2</span>
+        <span ref={logoRef} className={css({ textShadow: "neonSign", animation: "neon-flicker 9s linear infinite" })}>N2</span>
         <DemoBadge />
       </Link>
       <nav
@@ -192,7 +192,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
                 "&[data-status=active]": { color: "text", borderBottomColor: "accent", textShadow: "neonText", bgGradient: "tabGlow", borderTopRadius: "lg" },
                 "&[data-status=active] > span": { textShadow: "none" },
                 // sombre : le trait de l'onglet actif devient un tube de néon
-                "@media (prefers-color-scheme: dark)": {
+                _dark: {
                   "&[data-status=active]::after": { content: '""', position: "absolute", left: 0, right: 0, bottom: "-2px", h: "2px", borderRadius: "full", bg: "neon", boxShadow: "neonTube" },
                 },
                 "&[data-group-start]": { ml: "6", mdDown: { ml: "3" } },

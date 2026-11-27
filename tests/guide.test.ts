@@ -398,7 +398,7 @@ describe("isolement du guide", () => {
 });
 
 describe("guide adapté à N2", () => {
-  const settings: GuideSettings = { lang: "fr", editor: "vscode", folder: "/Users/me/monprojet", references: true, terms: false };
+  const settings: GuideSettings = { lang: "fr", editor: "vscode", folder: "/Users/me/monprojet", references: true, terms: false, themeMode: "auto" };
   const page = `<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <script type="module">const t=\`<head></head>\`;</script>\n  </head><body></body></html>`;
 
   /** Exécute les scripts ajoutés par N2 dans une fenêtre où le stockage est refusé (comme dans le bac à sable) */
@@ -465,9 +465,22 @@ describe("guide adapté à N2", () => {
     expect(css).toMatch(/\[data-preferences-trigger\][^{]*\[aria-label="Langue"\],\[aria-label="Language"\]\{display:none!important\}/);
   });
 
+  it("couleurs sombres selon le thème de N2 : avec macOS, jamais, ou toujours", () => {
+    expect(guideStyle("auto")).toContain(`@media screen and (prefers-color-scheme:dark){html:root:not(#n2-guide){--colors-canvas:${COLORS.bg[1]};`);
+    // toujours le jour : seulement les couleurs claires, même si macOS est en sombre
+    expect(guideStyle("day")).not.toContain(COLORS.bg[1]);
+    expect(guideStyle("day")).toContain(`--colors-canvas:${COLORS.bg[0]};`);
+    // toujours la nuit : les couleurs sombres passent après les claires, sans condition sur macOS
+    const night = guideStyle("night");
+    expect(night).not.toContain("prefers-color-scheme");
+    expect(night.indexOf(`--colors-canvas:${COLORS.bg[1]};`)).toBeGreaterThan(night.indexOf(`--colors-canvas:${COLORS.bg[0]};`));
+    expect(embedGuide(page, { ...settings, themeMode: "night" })).not.toContain("prefers-color-scheme");
+  });
+
   it("réglages du guide tirés des préférences de N2", () => {
     const guide = { enabled: true, path: "/g.html", references: true, terms: false };
-    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en")).toEqual({ lang: "en", editor: "vscode", folder: "/p", references: true, terms: false });
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en")).toEqual({ lang: "en", editor: "vscode", folder: "/p", references: true, terms: false, themeMode: "auto" });
+    expect(guideSettings({ editor: "vscode", projectPath: "/p", guide }, "en", "night").themeMode).toBe("night");
     // le dossier ne sert qu'à VS Code et Cursor : le guide ne le reçoit pas sinon
     expect(guideSettings({ editor: "jetbrains", projectPath: "/p", guide }, "en").folder).toBe("");
     expect(guideSettings({ editor: "github", projectPath: "/p", guide: { ...guide, references: false, terms: true } }, "fr")).toMatchObject({ references: false, terms: true });

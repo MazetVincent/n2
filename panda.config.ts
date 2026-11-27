@@ -5,10 +5,11 @@ import { COLORS, type ColorName } from "./src/styles/colors";
 
 /*
  * Panda CSS : styles générés dans `styled-system/` (non versionné, `bun run codegen`).
- * Les couleurs sont des « semantic tokens » clair / sombre (préférence du système).
+ * Les couleurs sont des « semantic tokens » clair / sombre : le schéma du thème affiché (condition `_dark`, attribut
+ * data-scheme de <html>, posé avant l'affichage par src/features/theme selon le thème choisi et le réglage de macOS).
  * Ils sont aussi exposés en variables CSS (--colors-…), utilisées par src/styles/map.css.
  */
-const pair = (base: string, dark: string) => ({ value: { base, _osDark: dark } });
+const pair = (base: string, dark: string) => ({ value: { base, _dark: dark } });
 const c = (name: ColorName) => {
   const [base, dark] = COLORS[name];
   return pair(base, dark);
@@ -22,6 +23,8 @@ export default defineConfig({
   outdir: "styled-system",
   importMap: "styled-system",
   jsxFramework: "react",
+  // `_dark` : thème affiché en sombre (et non plus « macOS en sombre ») : le choix des Préférences peut le contredire
+  conditions: { extend: { dark: "[data-scheme=dark] &" } },
   theme: {
     extend: {
       tokens: {
@@ -44,6 +47,7 @@ export default defineConfig({
           border: c("border"),
           text: c("text"),
           neon: c("neon"),
+          sign: c("sign"),
           tube: { DEFAULT: c("tube"), off: c("tube.off") },
           screw: c("screw"),
           contrast: c("contrast"),
@@ -80,7 +84,8 @@ export default defineConfig({
           //   neonSign : enseigne (logo) · neonText : titre de carte, onglet actif · neonTube : trait lumineux (onglet actif)
           //   neonButton / neonButtonHover : tube du bouton principal (et d'un bouton encadré qui s'allume au survol)
           //   neonGas : gaz allumé de l'interrupteur · neonFrame : tube autour du segment choisi · neonField : champ actif
-          neonSign: pair("none", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
+          // le logo est une enseigne allumée dans tous les thèmes : en clair, un tube magenta à la lueur plus courte
+          neonSign: pair("0 0 1px rgb(255 255 255 / 90%), 0 0 6px rgb(255 61 119 / 55%), 0 0 16px rgb(255 61 119 / 30%)", "0 0 2px #fff, 0 0 7px #ff3d77, 0 0 16px #ff3d77, 0 0 34px rgb(255 61 119 / 70%)"),
           neonText: pair("none", "0 0 1px rgb(255 255 255 / 60%), 0 0 6px rgb(255 61 119 / 80%), 0 0 16px rgb(255 61 119 / 40%)"),
           neonTube: pair("none", "0 0 6px #ff3d77, 0 0 16px rgb(255 61 119 / 60%)"),
           neonButton: pair("none", "0 0 4px #ff3d77, 0 0 12px rgb(255 61 119 / 65%), inset 0 0 6px rgb(255 61 119 / 55%)"),
@@ -120,13 +125,15 @@ export default defineConfig({
     },
   },
   globalCss: {
-    ":root": { colorScheme: "light dark" },
+    // contrôles natifs, barres de défilement (et guide, dans son cadre) dans le schéma du thème affiché
+    ":root": { colorScheme: "light" },
+    ":root[data-scheme=dark]": { colorScheme: "dark" },
     "html, body": { bg: "bg", color: "text", fontFamily: "body", fontSize: "base", lineHeight: "1.45" },
     // Relief (sombre) : une trame fine et une lueur en haut de page, sous les cartes. Sur html (toute la fenêtre,
     // même quand la page est plus courte), body transparent par-dessus.
-    "@media (prefers-color-scheme: dark)": {
-      body: { background: "transparent" },
-      html: {
+    "[data-scheme=dark]": {
+      "& body": { background: "transparent" },
+      "&": {
         background:
           "linear-gradient(rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgb(255 255 255 / 2.2%) 1px, transparent 1px) 0 0 / 32px 32px, radial-gradient(120% 60% at 50% -10%, #1e1424, transparent 60%), token(colors.bg)",
         backgroundAttachment: "fixed",
@@ -135,7 +142,7 @@ export default defineConfig({
       // les onglets. Fixe (la barre du haut, et donc le logo, reste en place au défilement), au rythme des battements du
       // logo (même animation, src/styles/app.css). Centre : celui du logo (marge de la barre + 18px). Même géométrie
       // que la couche de lumière du jeton « card », pour que la lumière se raccorde au bord des cartes.
-      "body::before": {
+      "& body::before": {
         content: '""',
         position: "fixed",
         inset: 0,

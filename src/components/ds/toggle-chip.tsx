@@ -14,9 +14,9 @@ import { Icon } from "./icon";
 
 /** Apparence « sélectionné » (tube allumé), commune aux pastilles et aux boutons à bascule */
 export const selected = {
-  bg: { base: "accent.soft", _osDark: "transparent" },
+  bg: { base: "accent.soft", _dark: "transparent" },
   borderColor: "tube",
-  color: { base: "text", _osDark: "neon" },
+  color: { base: "text", _dark: "neon" },
   textShadow: "neonText",
   boxShadow: "neonButton",
 } as const;
@@ -35,7 +35,7 @@ export const toggleChip = cva({
     px: "3",
     py: "1.5",
     border: "1px solid",
-    borderColor: { base: "border", _osDark: "tube.off" },
+    borderColor: { base: "border", _dark: "tube.off" },
     color: "muted",
     borderRadius: "full",
     bg: "surface",
@@ -51,7 +51,7 @@ export const toggleChip = cva({
     "&[aria-pressed=true]:hover:enabled": selectedHover,
     "& > [data-check]": { flex: "none", opacity: 0, transition: "opacity 0.12s" },
     // coche (ou cadenas) lumineuse : en sombre, le verre du tube et un halo rose
-    "&[aria-pressed=true] > [data-check]": { opacity: 1, color: { base: "accent", _osDark: "tube" }, filter: { _osDark: "drop-shadow(0 0 3px #ff3d77)" } },
+    "&[aria-pressed=true] > [data-check]": { opacity: 1, color: { base: "accent", _dark: "tube" }, filter: { _dark: "drop-shadow(0 0 3px #ff3d77)" } },
     _disabled: { cursor: "default" },
   },
   variants: {

@@ -80,3 +80,25 @@ test("Remind me : ajouter puis cocher un rappel (fichier en mémoire en mode dé
   await expect(card.getByRole("button", { name: /^(Faits|Done) \(2\)$/ })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("Apparence : « Toujours la nuit » s'applique tout de suite et reste après un rechargement", async ({ page }) => {
+  const errors = watchErrors(page);
+  // macOS (émulé) en clair : en Automatique, N2 est en clair
+  await page.emulateMedia({ colorScheme: "light" });
+  await unlock(page, "/dashboard?fenetre=preferences");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-scheme", "light");
+  await page.getByRole("dialog").getByText(/^(Toujours la nuit|Always night)$/).click();
+  await expect(html).toHaveAttribute("data-scheme", "dark");
+  await expect(html).toHaveAttribute("data-theme", "enseigne");
+  // rendu par le serveur dès le chargement (cookie), sans attendre la page
+  await page.reload();
+  await expect(html).toHaveAttribute("data-mode", "night");
+  await expect(html).toHaveAttribute("data-scheme", "dark");
+  // Automatique : suit de nouveau macOS, y compris quand il change
+  await page.getByRole("dialog").getByText(/^(Automatique|Automatic)$/).click();
+  await expect(html).toHaveAttribute("data-scheme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(html).toHaveAttribute("data-scheme", "dark");
+  expect(errors).toEqual([]);
+});

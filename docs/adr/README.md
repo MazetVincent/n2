@@ -14,3 +14,4 @@ Les grands choix de N2, en quelques lignes chacun : le contexte, la décision, c
 | 0008 | [Les autres outils lisent N2 par des interfaces versionnées](0008-integrations-par-interfaces-versionnees.md) |
 | 0009 | [Le guide de l'équipe s'affiche dans un bac à sable](0009-guide-dans-un-bac-a-sable.md) |
 | 0010 | [N2 écrit dans un fichier de rappels, le tien](0010-fichier-de-rappels.md) |
+| 0011 | [Le thème est un réglage du navigateur, posé avant l'affichage](0011-theme-dans-un-cookie.md) |
