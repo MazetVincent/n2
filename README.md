@@ -1,75 +1,102 @@
+<div align="center">
+
 # N2
 
-Tableau de bord **local** pour le travail au quotidien : PR GitHub, sprint Jira, Slack, agenda, erreurs Sentry, alarmes et déploiements AWS, carte du code et guide de l'équipe, au même endroit.
+**Your whole working day on one local dashboard.**
 
-N2 tourne sur ta machine (`http://n2.localhost:4747`), s'appuie sur les outils en ligne de commande **déjà connectés** (`gh`, `acli`, `aws`, `sentry-cli`) et ne garde aucun token dans le projet.
+GitHub pull requests · Jira sprint · Slack · calendar · Sentry errors · AWS alarms and deployments · code map · team guide
 
-Stack : **TanStack Start + React + TanStack Query + Panda CSS + Ark UI**, lancé avec **Bun**.
+[![CI](https://github.com/MazetVincent/n2/actions/workflows/ci.yml/badge.svg)](https://github.com/MazetVincent/n2/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Runs with Bun](https://img.shields.io/badge/runs%20with-Bun-f9f1e1?logo=bun&logoColor=black)
+![macOS · Linux · WSL2](https://img.shields.io/badge/macOS%20·%20Linux%20·%20WSL2-555)
 
-- [Les parties de N2](#les-parties-de-n2)
-- [Démarrer](#démarrer)
-- [La configuration (`config.local.json`)](#la-configuration-configlocaljson)
-- [Brancher chaque partie](#brancher-chaque-partie)
-- [Fonctions transverses](#fonctions-transverses)
-- [Démarrage automatique](#démarrage-automatique-facultatif)
-- [Commandes](#commandes)
-- [Dépannage](#dépannage)
-- [Sécurité](#sécurité--rien-de-sensible-dans-git-rien-dexposé)
-- [Architecture](#architecture)
-- [Carte du projet : comment c'est calculé](#carte-du-projet--comment-cest-calculé)
+**English** · [Français](README.fr.md)
+
+</div>
 
 ---
 
-## Les parties de N2
+N2 runs on your machine (`http://n2.localhost:4747`), relies on the command-line tools **you have already signed in to** (`gh`, `acli`, `aws`, `sentry-cli`) and keeps no token in the project.
 
-Les onglets sont rangés en trois groupes. Les touches **1 à 9** suivent cet ordre.
+```bash
+bun install && bun run demo   # try it with made-up data, nothing to configure
+```
 
-### Le travail du jour
+|   |   |
+|---|---|
+| 🔒 **Local and locked** | Listens on `127.0.0.1` only, and every request needs your session cookie. Colleagues on the same network and websites in your browser get nothing. |
+| 🔑 **No token in the project** | GitHub, Jira, Sentry and AWS go through their own CLIs. Your account settings live in an untracked `config.local.json`. |
+| 👀 **Read-only** | N2 shows and links, it never merges, deploys or approves anything. |
+| 🧩 **Independent parts** | A missing tool or config section only breaks its own cards, with the steps to fix it. The rest keeps working. |
+| 🤖 **AI agents welcome** | An MCP server tells Claude Code, Codex and the like what is waiting and what a branch touches. |
+| 🎨 **Themes** | A day theme and a night theme (Neon sign, Classic, Miami, Retrowave, Holo, Soft aubergine), following your system's light or dark setting. |
 
-| Touche | Onglet | Contenu | Branché sur |
-|---|---|---|---|
-| 1 | **Dashboard** | **À faire** : ce qui demande une action (revues demandées, PR bloquées ou prêtes à fusionner, tickets en revue sans PR, alarmes, nouvelles erreurs, failles, pipeline en échec, session AWS qui expire). **Remind me** : les points à revoir plus tard, dans ton fichier Markdown (`remind.path`) ; ajouter, cocher, supprimer ou modifier tout le texte depuis N2. **Agenda** du jour ou de la semaine, avec « Rejoindre ». **Slack** : messages directs, mentions, salons suivis. **GitHub · Jira** : mentions et réponses. **Ma branche** : fichiers modifiés, parties touchées, passages du guide à relire. | tout ce qui est configuré |
-| 2 | **Pull requests** | Revues demandées, mes PR, approuvées, commentées. Pour chaque PR : CI, revue, conflits, tickets Jira liés, et si elle est en prod ou attend la prod. | `gh`, `acli`, `aws` |
-| 3 | **Sprint Jira** | Tickets du sprint actif en 3 colonnes, avec les PR qui les citent. | `acli`, `gh` |
+Stack: **TanStack Start + React + TanStack Query + Panda CSS + Ark UI**, run with **Bun**.
 
-### Le code
+## Contents
 
-| Touche | Onglet | Contenu | Branché sur |
-|---|---|---|---|
-| 4 | **Carte** | Les parties du projet par couche (Front / API / Back / Partagé / Infra / Outillage), leurs liens, leurs librairies et des exemples réels. **Analyse d'impact** d'un fichier, **points chauds** et **ma branche** en calques. Recherche avec autocomplétion : librairies, parties, fichiers clés, **README du projet** et **guide** ; la fiche d'une librairie liste les passages de la doc qui la citent. | le dépôt local (`codemap`) |
-| 5 | **Guide** | Le guide de l'équipe (fichier HTML) affiché dans N2, ouvert à la bonne section depuis les autres onglets. **Passages à revoir** : le code cité par le guide qui a changé depuis sa révision. | `guide.path` |
-| 6 | **Librairies** | Versions installées, mises à jour, alertes de sécurité, notes de version, PR de mise à jour ouvertes (Renovate, Dependabot ou faites à la main) et parties de la carte qui utilisent chaque librairie. Deux vues : les librairies **critiques** (`libs.packages`) et **toutes les dépendances**, par `package.json`. | le dépôt local, registre npm, `gh` |
-
-### La prod
-
-| Touche | Onglet | Contenu | Branché sur |
-|---|---|---|---|
-| 7 | **Observabilité** | Erreurs Sentry (nouvelles, plus fréquentes, depuis la mise en prod, avant la prod ; par environnement) avec leur **trace rattachée au code** (→ éditeur, → carte, → guide). Alarmes CloudWatch : état, **courbe sur 24 h** avec le seuil ou la bande d'anomalie de l'alarme (en rouge si la courbe les a dépassés, même sans déclenchement), et **déclenchements sur 7 jours** ; autoscaling masqué si on veut. **Logs Insights** : les requêtes enregistrées par l'équipe dans CloudWatch, lancées au clic sur 1 h ou 24 h (facturées au volume parcouru, affiché ; jamais lancées toutes seules). | `sentry-cli`, `aws` |
-| 8 | **Déploiements** | **CI GitHub** (Actions) de la branche principale et de « ma branche » : dernière exécution de chaque workflow, échecs et relances réussies sur 14 jours (signe d'un test instable) ; une CI rouge sur la branche principale remonte dans « À faire ». Le pipeline CodePipeline de la branche principale en frise (Source → Staging/Quality → validation manuelle → Production), ce qui attend la prod, ce qui est en prod, les dernières exécutions, et les environnements dynamiques des branches (celui de « ma branche » en tête). **Lecture seule** : la validation prod se fait dans la console AWS. | `aws` |
-| — | **Statistiques** (onglet discret, voir Préférences) | Délai de première revue, temps de l'ouverture à la fusion, PR fusionnées et erreurs Sentry sur 8 semaines, pour toute l'équipe ou mes PR seulement. | `gh`, `sentry-cli` |
-
-Chaque partie est indépendante : si un outil n'est pas connecté ou qu'une section de la config manque, seules les cartes concernées affichent une erreur (avec la marche à suivre), le reste de N2 fonctionne.
+| Use it | Set it up | Under the hood |
+|---|---|---|
+| [What's in N2](#whats-in-n2) | [Configuration](#configuration-configlocaljson) | [Security](#security-nothing-sensitive-in-git-nothing-exposed) |
+| [Getting started](#getting-started) | [Connecting each part](#connecting-each-part) | [Architecture](#architecture) |
+| [Everyday features](#everyday-features) | [Autostart](#autostart-optional) | [Project map: how it's computed](#project-map-how-its-computed) |
+| [Commands](#commands) | [Troubleshooting](#troubleshooting) | [License](#license) |
 
 ---
 
-## Démarrer
+## What's in N2
 
-### Essayer sans rien configurer : le mode démo
+Tabs come in three groups. Keys **1 to 9** follow this order.
+
+### Today's work
+
+| Key | Tab | What it shows | Powered by |
+|---|---|---|---|
+| 1 | **Dashboard** | **To do**: what needs action (requested reviews, blocked or ready-to-merge PRs, tickets in review without a PR, alarms, new errors, vulnerabilities, failing pipeline, AWS session about to expire). **Remind me**: things to look at later, kept in your own Markdown file (`remind.path`); add, tick, delete or edit the whole text from N2. **Calendar** for the day or the week, with "Join". **Slack**: direct messages, mentions, followed channels. **GitHub · Jira**: mentions and replies. **My branch**: changed files, parts touched, guide sections to reread. | everything configured |
+| 2 | **Pull requests** | Requested reviews, my PRs, approved, commented. For each PR: CI, review, conflicts, linked Jira tickets, and whether it is in production or waiting for it. | `gh`, `acli`, `aws` |
+| 3 | **Jira sprint** | Active sprint tickets in 3 columns, with the PRs that mention them. | `acli`, `gh` |
+
+### The code
+
+| Key | Tab | What it shows | Powered by |
+|---|---|---|---|
+| 4 | **Map** | The project's parts by layer (Front / API / Back / Shared / Infra / Tooling), their links, their libraries and real examples. **Impact analysis** of a file, **hot spots** and **my branch** as overlays. Search with autocomplete: libraries, parts, key files, **the project's READMEs** and **the guide**; a library's card lists the doc passages that mention it. | the local repository (`codemap`) |
+| 5 | **Guide** | The team guide (an HTML file) shown inside N2, opened at the right section from the other tabs. **Passages to review**: code quoted by the guide that changed since the guide's revision. | `guide.path` |
+| 6 | **Libraries** | Installed versions, updates, security alerts, release notes, open update PRs (Renovate, Dependabot or hand-made) and the map parts that use each library. Two views: **critical** libraries (`libs.packages`) and **all dependencies**, per `package.json`. | the local repository, npm registry, `gh` |
+
+### Production
+
+| Key | Tab | What it shows | Powered by |
+|---|---|---|---|
+| 7 | **Observability** | Sentry errors (new, most frequent, since the last release, before production; per environment) with their **stack trace linked to the code** (→ editor, → map, → guide). CloudWatch alarms: state, **24-hour chart** with the alarm's threshold or anomaly band (red if the line crossed it, even without firing), and **firings over 7 days**; autoscaling can be hidden. **Logs Insights**: the queries your team saved in CloudWatch, run on click over 1 h or 24 h (billed by the data scanned, which is shown; never run on their own). | `sentry-cli`, `aws` |
+| 8 | **Deployments** | **GitHub CI** (Actions) for the main branch and "my branch": latest run of each workflow, failures and successful reruns over 14 days (a sign of a flaky test); a red CI on the main branch shows up in "To do". The main branch's CodePipeline as a timeline (Source → Staging/Quality → manual approval → Production), what is waiting for production, what is in production, recent runs, and the branches' dynamic environments ("my branch" first). **Read-only**: production approval happens in the AWS console. | `aws` |
+| — | **Statistics** (discreet tab, see Preferences) | Time to first review, open-to-merge time, merged PRs and Sentry errors over 8 weeks, for the whole team or only my PRs. | `gh`, `sentry-cli` |
+
+Each part stands on its own: if a tool is not connected or a config section is missing, only the cards concerned show an error (with what to do), and the rest of N2 works.
+
+> The interface is in **French by default**, with **English** one click away (language picker in the top bar).
+
+---
+
+## Getting started
+
+### Try it without configuring anything: demo mode
 
 ```bash
 bun install && bun run demo
 ```
 
-N2 démarre sur `http://n2.localhost:4848` avec des données inventées pour tout ce qui demande un compte (PR, sprint, Sentry, AWS, Slack, agenda), sans `config.local.json` ni CLI connectée ; un badge « Démo » le rappelle sous le logo. La carte du code, « Ma branche » et la recherche dans les README analysent N2 lui-même. Déverrouille-le une fois avec `N2_PORT=4848 bun run open`. Les préférences ne sont pas enregistrées.
+N2 starts on `http://n2.localhost:4848` with made-up data for everything that needs an account (PRs, sprint, Sentry, AWS, Slack, calendar), without `config.local.json` or any connected CLI; a "Demo" badge under the logo reminds you. The code map, "My branch" and the README search analyse N2 itself. Unlock it once with `N2_PORT=4848 bun run open`. Preferences are not saved.
 
-### Prérequis
+### Requirements
 
-- **macOS**, **Linux**, ou **Windows avec WSL2** (voir [Linux et Windows (WSL2)](#linux-et-windows-wsl2) ; Windows sans WSL n'est pas pris en charge) ;
-- **[Bun](https://bun.sh)** ;
-- **Google Chrome** (les liens s'ouvrent dans un nouvel onglet Chrome ; sous Linux sans Chrome et sous WSL, dans le navigateur par défaut) ;
-- **PhpStorm** (facultatif, pour ouvrir un fichier à la bonne ligne ; un autre IDE JetBrains, VS Code ou Cursor marchent aussi) ;
-- une copie locale (clonée) du **projet à suivre** ;
-- les CLI des outils que tu veux brancher, voir [Brancher chaque partie](#brancher-chaque-partie).
+- **macOS**, **Linux**, or **Windows with WSL2** (see [Linux and Windows (WSL2)](#linux-and-windows-wsl2); Windows without WSL is not supported);
+- **[Bun](https://bun.sh)**;
+- **Google Chrome** (links open in a new Chrome tab; on Linux without Chrome and on WSL, in the default browser);
+- **PhpStorm** (optional, to open a file at the right line; another JetBrains IDE, VS Code or Cursor work too);
+- a local clone of **the project you want to follow**;
+- the CLIs of the tools you want to connect, see [Connecting each part](#connecting-each-part).
 
 ### Installation
 
@@ -81,146 +108,146 @@ bun install
 bun run setup
 ```
 
-`setup` active les hooks anti-secrets (`.githooks/`), crée `config.local.json` à partir de `config.example.json` s'il n'existe pas, et génère les styles Panda.
+`setup` turns on the anti-secret hooks (`.githooks/`), creates `config.local.json` from `config.example.json` if it does not exist, and generates the Panda styles.
 
-Remplis ensuite `config.local.json` (voir plus bas), puis :
+Then fill in `config.local.json` (see below), and run:
 
 ```bash
 bun run dev
 ```
 
-N2 répond sur **http://n2.localhost:4747**, mais il est **verrouillé** : seul ton navigateur peut l'ouvrir. La première fois (puis une fois par an et par navigateur), déverrouille-le avec :
+N2 answers on **http://n2.localhost:4747**, but it is **locked**: only your browser can open it. The first time (then once a year per browser), unlock it with:
 
 ```bash
 bun run open
 ```
 
-Chrome s'ouvre sur N2, déverrouillé ; ensuite tes favoris et `http://n2.localhost:4747` marchent directement. Voir [Qui peut ouvrir N2 ?](#qui-peut-ouvrir-n2-).
+Chrome opens on N2, unlocked; from then on your bookmarks and `http://n2.localhost:4747` work directly. See [Who can open N2?](#who-can-open-n2).
 
-**Pourquoi `n2.localhost` ?** Tout nom en `.localhost` mène à ta machine, sans rien installer ni configurer (Chrome le sait). Un ancien favori sur `http://127.0.0.1:4747` est renvoyé vers `http://n2.localhost:4747` ; déverrouille alors N2 une fois sous ce nom (`bun run open`). Les préférences gardées dans le navigateur (éléments reportés, filtre « Ma branche », notifications, langue) sont propres à chaque adresse : à refaire une fois. Pour garder l'ancienne adresse (navigateur qui ne connaîtrait pas `.localhost`) : `N2_HOST=127.0.0.1`, pour le serveur comme pour `bun run open`.
+**Why `n2.localhost`?** Any `.localhost` name leads to your own machine, with nothing to install or configure (Chrome knows it). An old bookmark on `http://127.0.0.1:4747` is redirected to `http://n2.localhost:4747`; unlock N2 once under that name (`bun run open`). Preferences kept in the browser (snoozed items, "My branch" filter, notifications, language) belong to each address: set them again once. To keep the old address (for a browser that would not know `.localhost`): `N2_HOST=127.0.0.1`, for the server as well as for `bun run open`.
 
-Pour changer de port : `N2_PORT=4800 bun run dev` (puis `N2_PORT=4800 bun run open`). Le champ `port` de la config est obsolète.
+To change the port: `N2_PORT=4800 bun run dev` (then `N2_PORT=4800 bun run open`). The config's `port` field is obsolete.
 
-> `config.local.json` est lu **une seule fois** au démarrage : relance le serveur après chaque modification (seul le fichier du guide est relu à chaud).
+> `config.local.json` is read **only once** at startup: restart the server after each change (only the guide file is reloaded live).
 
-### Linux et Windows (WSL2)
+### Linux and Windows (WSL2)
 
-N2 tourne aussi sous **Linux** et sous **Windows avec WSL2** (N2 dans la distribution Linux, le navigateur dans Windows). Installation identique (`bun install`, `bun run setup`, `bun run dev`) ; les CLI (`git`, `gh`, `aws`, `acli`) s'installent dans Linux. Ce qui change selon le système :
+N2 also runs on **Linux** and on **Windows with WSL2** (N2 in the Linux distribution, the browser in Windows). Same installation (`bun install`, `bun run setup`, `bun run dev`); the CLIs (`git`, `gh`, `aws`, `acli`) are installed in Linux. What changes by system:
 
 | | macOS | Linux | WSL2 |
 |---|---|---|---|
-| Liens | nouvel onglet Chrome (`open -a`) | `google-chrome` s'il est installé, sinon le navigateur par défaut (`xdg-open`) | navigateur par défaut de Windows (`rundll32.exe url.dll,FileProtocolHandler`) |
-| `bun run open` | Chrome, par AppleScript | même commande que les liens ; sans écran graphique (SSH), l'adresse est affichée | même commande que les liens |
-| Lanceur JetBrains | `/Applications/<IDE>.app/Contents/MacOS/<ide>` | script de JetBrains Toolbox (`~/.local/share/JetBrains/Toolbox/scripts/phpstorm`, défaut) ou `/opt/<IDE>/bin/<ide>.sh` | idem Linux (IDE installé dans WSL, affiché par WSLg) ; plus simple : VS Code ou Cursor |
-| VS Code, Cursor | `vscode://file/…` | idem, par `xdg-open` | `vscode://vscode-remote/wsl+<distribution>/…` : l'éditeur de Windows ouvre le fichier dans WSL (extension **WSL** requise) |
-| Token Slack | trousseau, ou `SLACK_USER_TOKEN` | `SLACK_USER_TOKEN` seulement | `SLACK_USER_TOKEN` seulement |
-| Démarrage automatique | launchd | service utilisateur systemd | non (explication affichée), voir [Démarrage automatique](#démarrage-automatique-facultatif) |
+| Links | new Chrome tab (`open -a`) | `google-chrome` if installed, otherwise the default browser (`xdg-open`) | Windows default browser (`rundll32.exe url.dll,FileProtocolHandler`) |
+| `bun run open` | Chrome, through AppleScript | same command as links; without a display (SSH), the address is printed | same command as links |
+| JetBrains launcher | `/Applications/<IDE>.app/Contents/MacOS/<ide>` | JetBrains Toolbox script (`~/.local/share/JetBrains/Toolbox/scripts/phpstorm`, default) or `/opt/<IDE>/bin/<ide>.sh` | same as Linux (IDE installed in WSL, shown through WSLg); simpler: VS Code or Cursor |
+| VS Code, Cursor | `vscode://file/…` | same, through `xdg-open` | `vscode://vscode-remote/wsl+<distribution>/…`: the Windows editor opens the file in WSL (**WSL** extension required) |
+| Slack token | keychain, or `SLACK_USER_TOKEN` | `SLACK_USER_TOKEN` only | `SLACK_USER_TOKEN` only |
+| Autostart | launchd | systemd user service | no (explanation shown), see [Autostart](#autostart-optional) |
 
-**WSL2** : garde le projet suivi et N2 dans le système de fichiers Linux (`~/…`, pas `/mnt/c/…` : beaucoup plus lent). Le navigateur de Windows joint `http://n2.localhost:4747` (un nom en `.localhost` mène à `127.0.0.1`) grâce au renvoi de `localhost` de WSL2 (actif par défaut ; vérifier qu'il n'est pas coupé par `localhostForwarding=false` dans `.wslconfig`). Le lien de déverrouillage de `bun run open` s'ouvre dans ce navigateur.
+**WSL2**: keep the followed project and N2 in the Linux file system (`~/…`, not `/mnt/c/…`: much slower). The Windows browser reaches `http://n2.localhost:4747` (a `.localhost` name leads to `127.0.0.1`) thanks to WSL2's `localhost` forwarding (on by default; check it is not turned off by `localhostForwarding=false` in `.wslconfig`). The unlock link from `bun run open` opens in that browser.
 
-**Windows sans WSL** : non pris en charge (scripts `sh`, droits des fichiers `600`, chemins `/`).
+**Windows without WSL**: not supported (`sh` scripts, `600` file permissions, `/` paths).
 
 ---
 
-## La configuration (`config.local.json`)
+## Configuration (`config.local.json`)
 
-Tout ce qui est propre à ton compte et à ton projet est dans `config.local.json`, **ignoré par git**. Seul `config.example.json` (valeurs factices) est versionné.
+Everything specific to your account and project lives in `config.local.json`, **ignored by git**. Only `config.example.json` (dummy values) is versioned.
 
-| Section | Obligatoire | Sert à |
+| Section | Required | Used for |
 |---|---|---|
-| `github` | oui | Pull requests, Sprint (PR liées), GitHub · Jira, Statistiques, Déploiements (liens vers les commits) |
-| `jira` | oui | Sprint Jira, tickets liés aux PR, GitHub · Jira, liens ⌘K |
-| `libs` | oui | Librairies ; aussi le dépôt suivi par défaut (Carte, Ma branche) |
-| `sentry` | oui | Observabilité, Statistiques, « À faire » |
-| `aws` | oui | Observabilité (CloudWatch), Déploiements, session AWS dans la barre du haut |
-| `codemap` | non | Carte, analyse d'impact, traces Sentry → code, ouverture dans l'IDE |
-| `deploy` | pour l'onglet Déploiements | préfixe des pipelines, branche principale, adresse des environnements de branche |
-| `calendar` | non | Agenda du Dashboard |
-| `slack` | non | carte Slack du Dashboard |
-| `guide` | non | onglet Guide et liens « Dans le guide » |
-| `remind` | non | fichier Markdown de « Remind me » (`remind.path`, `~/.config/n2/remind.md` par défaut ; à régler ici seulement, pas dans les Préférences) |
-| `links` | non | liens rapides personnels dans ⌘K |
-| `ui` | non | préférences réglées dans N2 (boulon en haut à droite) : onglets affichés (`ui.tabs`), éditeur où ouvrir le code (`ui.editor` : `jetbrains`, `vscode`, `cursor` ou `github`) |
+| `github` | yes | Pull requests, Sprint (linked PRs), GitHub · Jira, Statistics, Deployments (links to commits) |
+| `jira` | yes | Jira sprint, tickets linked to PRs, GitHub · Jira, ⌘K links |
+| `libs` | yes | Libraries; also the default followed repository (Map, My branch) |
+| `sentry` | yes | Observability, Statistics, "To do" |
+| `aws` | yes | Observability (CloudWatch), Deployments, AWS session in the top bar |
+| `codemap` | no | Map, impact analysis, Sentry traces → code, opening in the IDE |
+| `deploy` | for the Deployments tab | pipeline prefix, main branch, branch environment address |
+| `calendar` | no | Dashboard calendar |
+| `slack` | no | Dashboard Slack card |
+| `guide` | no | Guide tab and "In the guide" links |
+| `remind` | no | Markdown file for "Remind me" (`remind.path`, `~/.config/n2/remind.md` by default; set here only, not in Preferences) |
+| `links` | no | personal quick links in ⌘K |
+| `ui` | no | preferences set inside N2 (bolt icon, top right): visible tabs (`ui.tabs`), editor to open code in (`ui.editor`: `jetbrains`, `vscode`, `cursor` or `github`) |
 
-Les sections « obligatoires » doivent exister dans le fichier ; si tu n'utilises pas l'outil correspondant, laisse les valeurs d'exemple : la carte concernée affichera simplement une erreur.
+"Required" sections must exist in the file; if you don't use the matching tool, keep the example values: the card concerned will simply show an error.
 
-**Préférences** (icône boulon, à droite de la cloche) : langue, onglets affichés (le Dashboard l'est toujours), éditeur où ouvrir le code (JetBrains, VS Code, Cursor ou GitHub), chemin du projet, guide activé ou non et son chemin. Tout sauf la langue (cookie du navigateur) est écrit dans `config.local.json` ; N2 vérifie les chemins avant d'enregistrer et relit ses sources aussitôt, sans redémarrage. Statistiques est un onglet discret : toujours le dernier à droite, invisible, absent de ⌘K et des touches 1 à 9. Un onglet masqué reste trouvable dans ⌘K ; les touches 1 à 9 suivent les onglets affichés.
+**Preferences** (bolt icon, right of the bell): language, appearance, visible tabs (the Dashboard always is), editor to open code in (JetBrains, VS Code, Cursor or GitHub), project path, guide on or off and its path. Everything except language and appearance (browser cookies) is written to `config.local.json`; N2 checks paths before saving and reloads its sources straight away, without restarting. Statistics is a discreet tab: always last on the right, invisible, absent from ⌘K and from keys 1 to 9. A hidden tab can still be found in ⌘K; keys 1 to 9 follow the visible tabs.
 
-Exemple complet : [`config.example.json`](config.example.json). Le détail de chaque option est dans la section de la partie concernée ci-dessous. Les chemins acceptent `~/`.
+Full example: [`config.example.json`](config.example.json). Each option is detailed in the section of the part concerned below. Paths accept `~/`.
 
 ---
 
-## Brancher chaque partie
+## Connecting each part
 
-Récapitulatif :
+Summary:
 
-| Partie | Outil | Connexion | Config |
+| Part | Tool | Sign-in | Config |
 |---|---|---|---|
-| GitHub (PR, statistiques, librairies) | `gh` | `gh auth login` | `github` |
+| GitHub (PRs, statistics, libraries) | `gh` | `gh auth login` | `github` |
 | Jira | `acli` | `acli jira auth login` | `jira` |
-| Projet local (carte, librairies, ma branche) | `git` | dépôt cloné en local | `libs`, `codemap` |
+| Local project (map, libraries, my branch) | `git` | repository cloned locally | `libs`, `codemap` |
 | Sentry | `sentry-cli` | `sentry-cli login` | `sentry` |
-| AWS (CloudWatch, Déploiements) | `aws` | profil SSO avec une session valide | `aws`, `deploy` |
-| Agenda Teams / Outlook | — | lien ICS ou Microsoft Graph | `calendar` |
-| Slack | app Slack interne | token utilisateur dans le trousseau (Linux, WSL : `SLACK_USER_TOKEN`) | `slack` |
-| Guide de l'équipe | — | fichier HTML local | `guide` |
-| Liens rapides | — | — | `links` |
+| AWS (CloudWatch, Deployments) | `aws` | SSO profile with a valid session | `aws`, `deploy` |
+| Teams / Outlook calendar | — | ICS link or Microsoft Graph | `calendar` |
+| Slack | internal Slack app | user token in the keychain (Linux, WSL: `SLACK_USER_TOKEN`) | `slack` |
+| Team guide | — | local HTML file | `guide` |
+| Quick links | — | — | `links` |
 
 ### GitHub
 
-**Connexion** : installe [`gh`](https://cli.github.com) (`brew install gh`), puis connecte-toi avec ton compte pro :
+**Sign-in**: install [`gh`](https://cli.github.com) (`brew install gh`), then sign in with your work account:
 
 ```bash
 gh auth login
 ```
 
-N2 appelle `gh` à chaque requête : aucun token ne passe par N2.
+N2 calls `gh` on each request: no token goes through N2.
 
-**Config** :
+**Config**:
 
 ```json
-"github": { "repos": ["mon-org/mon-depot"], "recentDays": 14 }
+"github": { "repos": ["my-org/my-repo"], "recentDays": 14 }
 ```
 
-| Option | Rôle |
+| Option | Purpose |
 |---|---|
-| `repos` | dépôts suivis (`propriétaire/nom`) pour les PR, les statistiques, l'activité et les liens ⌘K |
-| `recentDays` | fenêtre, en jours, des PR récentes et des fils GitHub · Jira du Dashboard |
+| `repos` | followed repositories (`owner/name`) for PRs, statistics, activity and ⌘K links |
+| `recentDays` | window, in days, for recent PRs and the Dashboard's GitHub · Jira threads |
 
 ### Jira
 
-**Connexion** : installe l'[Atlassian CLI](https://developer.atlassian.com/cloud/acli/) (`acli`), puis :
+**Sign-in**: install the [Atlassian CLI](https://developer.atlassian.com/cloud/acli/) (`acli`), then:
 
 ```bash
 acli jira auth login
 ```
 
-**Config** :
+**Config**:
 
 ```json
-"jira": { "site": "mon-entreprise.atlassian.net", "projectKey": "ABC", "boardId": 1, "onlyMine": true }
+"jira": { "site": "my-company.atlassian.net", "projectKey": "ABC", "boardId": 1, "onlyMine": true }
 ```
 
-| Option | Rôle |
+| Option | Purpose |
 |---|---|
-| `site` | domaine Jira (sans `https://`) ; c'est aussi le seul site Jira que N2 accepte d'ouvrir |
-| `projectKey` | clé du projet (`ABC` dans `ABC-123`) : sert à repérer les tickets cités dans les PR et les branches |
-| `boardId` | identifiant du tableau (dans l'URL du board : `…/boards/1`) ; N2 y lit le sprint actif |
-| `onlyMine` | `true` : seulement mes tickets dans l'onglet Sprint ; `false` : tout le sprint |
+| `site` | Jira domain (without `https://`); also the only Jira site N2 agrees to open |
+| `projectKey` | project key (`ABC` in `ABC-123`): used to spot tickets mentioned in PRs and branches |
+| `boardId` | board ID (in the board's URL: `…/boards/1`); N2 reads the active sprint from it |
+| `onlyMine` | `true`: only my tickets in the Sprint tab; `false`: the whole sprint |
 
-### Projet local : Carte, Librairies, Ma branche
+### Local project: Map, Libraries, My branch
 
-N2 lit le dépôt cloné sur ta machine (fichiers, `package.json`, `package-lock.json`, `git log`, branches). Rien n'est écrit dans ce dépôt : choisir une branche dans N2 ne fait **aucun checkout**.
+N2 reads the repository cloned on your machine (files, `package.json`, `package-lock.json`, `git log`, branches). Nothing is written to that repository: picking a branch in N2 does **no checkout**.
 
-**Config** :
+**Config**:
 
 ```json
 "libs": {
-  "projectPath": "~/chemin/vers/le/projet",
+  "projectPath": "~/path/to/project",
   "packages": ["react", "zod"]
 },
 "codemap": {
-  "projectPath": "~/chemin/vers/le/projet",
+  "projectPath": "~/path/to/project",
   "ide": "/Applications/PhpStorm.app/Contents/MacOS/phpstorm",
   "splitThreshold": 400,
   "categories": {},
@@ -228,153 +255,153 @@ N2 lit le dépôt cloné sur ta machine (fichiers, `package.json`, `package-lock
 }
 ```
 
-| Option | Défaut | Rôle |
+| Option | Default | Purpose |
 |---|---|---|
-| `libs.projectPath` | — | dossier du projet ; doit contenir un `package-lock.json` |
-| `libs.packages` | — | librairies **critiques** suivies de près (vue par défaut de l'onglet Librairies, failles reprises dans « À faire ») |
-| `codemap.projectPath` | `libs.projectPath` | dossier à cartographier, s'il diffère |
-| `codemap.ide` | PhpStorm | lanceur de l'IDE JetBrains, appelé avec `--line N fichier` (ex. `/Applications/WebStorm.app/Contents/MacOS/webstorm` ; sous Linux `~/.local/share/JetBrains/Toolbox/scripts/webstorm` ou `/opt/WebStorm/bin/webstorm.sh`) ; réglable dans les Préférences |
-| `codemap.splitThreshold` | `400` | au-delà de ce nombre de fichiers, une partie est découpée par sous-dossier de `src/` |
-| `codemap.categories` | `{}` | corriger la couche d'une partie : `{ "apps/admin": "front" }` (`front`, `api`, `back`, `shared`, `infra`, `tooling`) |
-| `codemap.descriptions` | `{}` | description d'une partie : `{ "apps/web/src/features": "Écrans et logique métier du site" }` |
+| `libs.projectPath` | — | project folder; must contain a `package-lock.json` |
+| `libs.packages` | — | **critical** libraries, watched closely (default view of the Libraries tab, vulnerabilities shown in "To do") |
+| `codemap.projectPath` | `libs.projectPath` | folder to map, if different |
+| `codemap.ide` | PhpStorm | JetBrains IDE launcher, called with `--line N file` (e.g. `/Applications/WebStorm.app/Contents/MacOS/webstorm`; on Linux `~/.local/share/JetBrains/Toolbox/scripts/webstorm` or `/opt/WebStorm/bin/webstorm.sh`); can be set in Preferences |
+| `codemap.splitThreshold` | `400` | above this number of files, a part is split by `src/` subfolder |
+| `codemap.categories` | `{}` | fix a part's layer: `{ "apps/admin": "front" }` (`front`, `api`, `back`, `shared`, `infra`, `tooling`) |
+| `codemap.descriptions` | `{}` | a part's description: `{ "apps/web/src/features": "Site screens and business logic" }` |
 
-**Ma branche** : le tag à côté de la recherche, dans la barre du haut. Par défaut, la branche sur laquelle est le dépôt ; un clic ouvre une fenêtre avec une recherche et trois sections (branche actuelle, branches locales, branches distantes) ; le bouton **git fetch** met à jour les branches distantes sans jamais demander d'identifiants. L'interrupteur **Filtrer** à côté du tag (retenu dans le navigateur) limite Pull requests, Sprint, Carte (calque « Ma branche »), Déploiements (environnement et exécutions de la branche) et Guide (sections à relire) à cette branche. Le Dashboard montre toujours sa carte « Ma branche », sur la même branche que le tag.
+**My branch**: the tag next to the search box, in the top bar. By default, the branch the repository is on; a click opens a window with a search and three sections (current branch, local branches, remote branches); the **git fetch** button updates remote branches without ever asking for credentials. The **Filter** switch next to the tag (remembered in the browser) narrows Pull requests, Sprint, Map ("My branch" overlay), Deployments (the branch's environment and runs) and Guide (sections to reread) to that branch. The Dashboard always shows its "My branch" card, on the same branch as the tag.
 
-Les librairies utilisent aussi le registre npm public (versions, notes de version) et GitHub (failles, PR de mise à jour). Les **scopes npm privés** déclarés dans le `.npmrc` du projet ne sont jamais envoyés au registre public.
+Libraries also use the public npm registry (versions, release notes) and GitHub (vulnerabilities, update PRs). **Private npm scopes** declared in the project's `.npmrc` are never sent to the public registry.
 
 ### Sentry
 
-**Connexion** : installe `sentry-cli` (`brew install getsentry/tools/sentry-cli`), puis :
+**Sign-in**: install `sentry-cli` (`brew install getsentry/tools/sentry-cli`), then:
 
 ```bash
 sentry-cli login
 ```
 
-N2 lit le token dans `~/.sentryclirc` au moment de l'appel (ou dans la variable `SENTRY_AUTH_TOKEN`).
+N2 reads the token from `~/.sentryclirc` at call time (or from the `SENTRY_AUTH_TOKEN` variable).
 
-**Config** :
+**Config**:
 
 ```json
-"sentry": { "org": "mon-org", "project": "mon-projet", "environment": "production", "preprodEnvironments": ["staging"] }
+"sentry": { "org": "my-org", "project": "my-project", "environment": "production", "preprodEnvironments": ["staging"] }
 ```
 
-| Option | Rôle |
+| Option | Purpose |
 |---|---|
-| `org` | slug de l'organisation Sentry |
-| `project` | slug du projet |
-| `environment` | facultatif : environnement de production. Observabilité et « À faire » n'en montrent que les erreurs (chiffres de cet environnement seulement) ; un sélecteur dans Observabilité permet d'en voir un autre, ou tous. Absent : tous les environnements |
-| `preprodEnvironments` | facultatif, avec `environment` : environnements d'avant la prod (`staging`, `qa`…). Vue **« Avant la prod »** : les erreurs vues dans ces environnements ces 7 derniers jours et jamais en production, à regarder avant de valider une mise en prod ; « À faire » les signale |
+| `org` | Sentry organization slug |
+| `project` | project slug |
+| `environment` | optional: production environment. Observability and "To do" only show its errors (counts for that environment only); a picker in Observability shows another one, or all. Absent: all environments |
+| `preprodEnvironments` | optional, with `environment`: pre-production environments (`staging`, `qa`…). **"Before production"** view: errors seen in these environments over the last 7 days and never in production, to check before approving a release; "To do" flags them |
 
-Pour que les traces soient rattachées au code (PhpStorm, carte, guide), il faut aussi que le projet local soit configuré (`codemap` ou `libs.projectPath`).
+For traces to be linked to the code (PhpStorm, map, guide), the local project must be configured too (`codemap` or `libs.projectPath`).
 
-### AWS : CloudWatch, Déploiements, session
+### AWS: CloudWatch, Deployments, session
 
-**Connexion** : installe la CLI `aws` et un profil (SSO ou autre) avec une session valide. La barre du haut affiche le temps restant de la session et passe en alerte quand elle expire ; « À faire » le signale aussi.
+**Sign-in**: install the `aws` CLI and a profile (SSO or other) with a valid session. The top bar shows the session's remaining time and turns into an alert when it expires; "To do" flags it too.
 
-**Config** :
+**Config**:
 
 ```json
 "aws": {
-  "profile": "mon-profil",
+  "profile": "my-profile",
   "region": "eu-west-1",
   "alarmPrefix": "",
   "hideAutoscaling": true,
-  "reconnectHint": "Reconnecte-toi à AWS puis rafraîchis",
-  "reconnect": { "projectPath": "~/chemin/vers/le/projet", "script": "aws:login" }
+  "reconnectHint": "Sign in to AWS again, then refresh",
+  "reconnect": { "projectPath": "~/path/to/project", "script": "aws:login" }
 },
 "deploy": {
-  "pipelinePrefix": "monprojet-",
+  "pipelinePrefix": "myproject-",
   "mainBranch": "main",
   "envUrl": "https://preview-{slug}.site.example/"
 }
 ```
 
-| Option | Défaut | Rôle |
+| Option | Default | Purpose |
 |---|---|---|
-| `aws.profile` | — | profil AWS utilisé pour tous les appels |
-| `aws.region` | — | région des alarmes et des pipelines |
-| `aws.alarmPrefix` | `""` | ne garder que les alarmes dont le nom commence par ce préfixe |
-| `aws.hideAutoscaling` | `true` | masque les alarmes d'autoscaling (`false` pour les voir) |
-| `aws.reconnectHint` | — | message affiché quand la session a expiré |
-| `aws.reconnect` | — | facultatif : un clic sur « AWS expirée » lance `npm run <script>` dans `projectPath` (le script ouvre lui-même le navigateur pour se connecter). Une seule à la fois, arrêtée au bout de 5 minutes. |
-| `deploy.pipelinePrefix` | — | **obligatoire pour l'onglet Déploiements** : préfixe des pipelines du projet, nommés `<préfixe><branche ou ticket>-pipeline…` (ex. `monprojet-main-pipeline-…`, `monprojet-abc-123-pipeline-…`) |
-| `deploy.mainBranch` | `main` | branche déployée en prod ; c'est aussi la référence des « Passages à revoir » du guide |
-| `deploy.envUrl` | — | facultatif : modèle d'URL des environnements de branche ; `{slug}` est remplacé par le ticket de la branche (`abc-123`). Sans lui, pas de lien « Ouvrir » vers l'environnement, et N2 n'accepte d'en ouvrir aucun |
+| `aws.profile` | — | AWS profile used for every call |
+| `aws.region` | — | region of the alarms and pipelines |
+| `aws.alarmPrefix` | `""` | keep only alarms whose name starts with this prefix |
+| `aws.hideAutoscaling` | `true` | hides autoscaling alarms (`false` to see them) |
+| `aws.reconnectHint` | — | message shown when the session has expired |
+| `aws.reconnect` | — | optional: a click on "AWS expired" runs `npm run <script>` in `projectPath` (the script opens the browser itself to sign in). One at a time, stopped after 5 minutes. |
+| `deploy.pipelinePrefix` | — | **required for the Deployments tab**: prefix of the project's pipelines, named `<prefix><branch or ticket>-pipeline…` (e.g. `myproject-main-pipeline-…`, `myproject-abc-123-pipeline-…`) |
+| `deploy.mainBranch` | `main` | branch deployed to production; also the reference for the guide's "Passages to review" |
+| `deploy.envUrl` | — | optional: URL template for branch environments; `{slug}` is replaced by the branch's ticket (`abc-123`). Without it, no "Open" link to the environment, and N2 agrees to open none |
 
-Seule la ligne `expiration` du fichier d'identifiants AWS est lue par N2, pour afficher le temps restant.
+N2 only reads the `expiration` line of the AWS credentials file, to show the remaining time.
 
-### Agenda Teams / Outlook
+### Teams / Outlook calendar
 
-Deux façons de le brancher dans `calendar`, utilisables ensemble : Graph est utilisé dès qu'on est connecté, le lien ICS sinon.
+Two ways to connect it in `calendar`, usable together: Graph is used once you are signed in, the ICS link otherwise.
 
 ```json
 "calendar": {
   "icsUrl": "",
-  "graph": { "tenantId": "mon-entreprise.onmicrosoft.com", "clientId": "00000000-0000-0000-0000-000000000000" }
+  "graph": { "tenantId": "my-company.onmicrosoft.com", "clientId": "00000000-0000-0000-0000-000000000000" }
 }
 ```
 
-**Option 1 : lien ICS (sans admin)**
+**Option 1: ICS link (no admin needed)**
 
-1. Dans Outlook web : Paramètres → Calendrier → Calendriers partagés → **Publier un calendrier**, avec « Peut afficher tous les détails ».
-2. Copier le lien **ICS** dans `calendar.icsUrl`.
+1. In Outlook on the web: Settings → Calendar → Shared calendars → **Publish a calendar**, with "Can view all details".
+2. Copy the **ICS** link into `calendar.icsUrl`.
 
-Ce lien donne accès à ton agenda : il ne doit jamais sortir de `config.local.json`. Outlook met le fichier publié à jour avec un peu de retard.
+This link gives access to your calendar: it must never leave `config.local.json`. Outlook updates the published file with some delay.
 
-**Option 2 : Microsoft Graph (à jour en temps réel)**
+**Option 2: Microsoft Graph (real time)**
 
-1. Déclarer une app dans **Entra ID** (Azure AD) avec la permission **déléguée** `Calendars.Read`, et activer « Autoriser les flux clients publics » (onglet Authentification).
-2. Renseigner `calendar.graph.tenantId` et `calendar.graph.clientId`, relancer N2.
-3. Cliquer sur **Se connecter à Microsoft** dans le Dashboard, puis saisir le code affiché sur la page Microsoft.
+1. Register an app in **Entra ID** (Azure AD) with the **delegated** permission `Calendars.Read`, and turn on "Allow public client flows" (Authentication tab).
+2. Fill in `calendar.graph.tenantId` and `calendar.graph.clientId`, restart N2.
+3. Click **Sign in to Microsoft** on the Dashboard, then enter the code shown on the Microsoft page.
 
-Les jetons sont gardés dans `~/.config/n2/microsoft.json` (lisible par toi seul), hors du projet, et ne sont jamais envoyés au navigateur.
+Tokens are kept in `~/.config/n2/microsoft.json` (readable by you only), outside the project, and are never sent to the browser.
 
 ### Slack
 
-1. Sur [api.slack.com/apps](https://api.slack.com/apps) : **Create New App → From a manifest**, choisir l'espace de travail, coller [`slack-app-manifest.yml`](slack-app-manifest.yml). L'app ne demande que des droits de **lecture** (salons, messages directs, recherche, noms).
-2. **Install to Workspace**. Selon les réglages de l'espace, un admin doit approuver l'app.
-3. Copier le **User OAuth Token** (`xoxp-…`, page *OAuth & Permissions*) dans le trousseau macOS (sous Linux et WSL, voir plus bas). La commande le demande sans l'afficher ni le garder dans l'historique :
+1. On [api.slack.com/apps](https://api.slack.com/apps): **Create New App → From a manifest**, pick the workspace, paste [`slack-app-manifest.yml`](slack-app-manifest.yml). The app only asks for **read** permissions (channels, direct messages, search, names).
+2. **Install to Workspace**. Depending on the workspace settings, an admin has to approve the app.
+3. Copy the **User OAuth Token** (`xoxp-…`, *OAuth & Permissions* page) into the macOS keychain (on Linux and WSL, see below). The command asks for it without showing it or keeping it in the history:
 
    ```bash
    security add-generic-password -a "$USER" -s n2-slack -w
    ```
 
-   Pour le remplacer : la même commande avec `-U`. À défaut, N2 lit la variable d'environnement `SLACK_USER_TOKEN`.
+   To replace it: the same command with `-U`. Failing that, N2 reads the `SLACK_USER_TOKEN` environment variable.
 
-   **Linux, WSL** : pas de trousseau, seule `SLACK_USER_TOKEN` compte. Avec le démarrage automatique, mets-la dans `~/.config/n2/env`, lisible par toi seul : crée le fichier, puis ajoutes-y la ligne `SLACK_USER_TOKEN=xoxp-…` dans ton éditeur,
+   **Linux, WSL**: no keychain, only `SLACK_USER_TOKEN` counts. With autostart, put it in `~/.config/n2/env`, readable by you only: create the file, then add the line `SLACK_USER_TOKEN=xoxp-…` in your editor,
 
    ```bash
    mkdir -p ~/.config/n2 && touch ~/.config/n2/env && chmod 600 ~/.config/n2/env && ${EDITOR:-nano} ~/.config/n2/env
    ```
 
-   puis redémarre le service :
+   then restart the service:
 
    ```bash
    systemctl --user restart n2-dashboard
    ```
 
-   Sans le service : `export SLACK_USER_TOKEN=…` dans le terminal, avant `bun run dev`.
-4. Dans `config.local.json` :
+   Without the service: `export SLACK_USER_TOKEN=…` in the terminal, before `bun run dev`.
+4. In `config.local.json`:
 
    ```json
    "slack": { "channels": ["dev-front", "releases"], "messages": 5 }
    ```
 
-| Option | Défaut | Rôle |
+| Option | Default | Purpose |
 |---|---|---|
-| `channels` | `[]` | salons suivis, par nom (sans `#`) ou identifiant (`C0123ABCD`) ; 8 au plus |
-| `messages` | `5` | nombre de messages affichés par salon (1 à 20) |
+| `channels` | `[]` | followed channels, by name (without `#`) or ID (`C0123ABCD`); 8 at most |
+| `messages` | `5` | number of messages shown per channel (1 to 20) |
 
-Les mentions et les messages directs marchent sans salon : `"slack": {}`.
+Mentions and direct messages work without any channel: `"slack": {}`.
 
-### Guide de l'équipe
+### Team guide
 
-Un guide HTML de l'équipe (une application compilée, au format pris en charge par `src/features/guide/parse.ts`), affiché dans N2 et relié au code.
+A team guide in HTML (a compiled application, in the format supported by `src/features/guide/parse.ts`), shown in N2 and linked to the code.
 
 ```json
 "guide": {
   "path": "~/Documents/guide.html",
-  "name": "Guide Monprojet",
+  "name": "My project guide",
   "links": {
     "deploy": ["guide/page-b/section-1"],
     "observability": ["guide/page-a/section-1"],
@@ -383,109 +410,111 @@ Un guide HTML de l'équipe (une application compilée, au format pris en charge 
 }
 ```
 
-| Option | Défaut | Rôle |
+| Option | Default | Purpose |
 |---|---|---|
-| `path` | — | chemin du fichier HTML |
-| `name` | « Guide de l'équipe » | nom affiché (recherche ⌘K, passages à revoir) |
-| `links` | aucun | sections proposées en haut des onglets Déploiements, Observabilité et Pull requests, par adresse dans le guide (`page/ancre`, celle de l'onglet Guide) ; leurs titres sont lus dans le guide, une adresse qui n'existe plus est ignorée |
+| `path` | — | path of the HTML file |
+| `name` | "Team guide" | displayed name (⌘K search, passages to review) |
+| `links` | none | sections offered at the top of the Deployments, Observability and Pull requests tabs, by address in the guide (`page/anchor`, as in the Guide tab); their titles are read from the guide, an address that no longer exists is ignored |
 
-Pour passer à une nouvelle version du guide, remplace le fichier : N2 le relit dès qu'il change, sans redémarrage.
+To move to a new version of the guide, replace the file: N2 reloads it as soon as it changes, without restarting.
 
-- **Onglet Guide** : le guide s'ouvre directement à la section demandée. Les autres onglets y mènent :
-  - Déploiements, Observabilité et Pull requests : liens « Dans le guide » vers les sections choisies dans `guide.links` ;
-  - trace d'une erreur Sentry, analyse d'impact et parties de la Carte : sections qui citent ces fichiers ;
-  - « Ma branche » : « À relire dans le guide », les sections qui parlent des fichiers modifiés.
-- **⌘K** cherche aussi dans les sections et le glossaire du guide.
-- **Passages à revoir** : compare le code cité entre le commit de révision du guide (son pied de page) et `origin/<deploy.mainBranch>`. Une citation avec des numéros de ligne est « modifiée » si ces lignes ont changé ; un fichier cité en entier n'est signalé que s'il a été déplacé ou supprimé. Le commit de révision doit être présent dans le dépôt local (`git fetch`). Une liste à copier est prête pour l'auteur du guide.
-- **Isolement** : le guide contient du JS écrit par quelqu'un d'autre. N2 le sert dans un bac à sable (CSP `sandbox` sans `allow-same-origin`, `connect-src 'none'`) : il ne peut ni appeler N2, ni lire ses cookies, ni faire d'appel réseau. Côté serveur, N2 lit ses données sans jamais exécuter son JS.
+- **Guide tab**: the guide opens directly at the requested section. The other tabs lead to it:
+  - Deployments, Observability and Pull requests: "In the guide" links to the sections picked in `guide.links`;
+  - a Sentry error's trace, impact analysis and Map parts: sections that quote those files;
+  - "My branch": "Reread in the guide", the sections about the changed files.
+- **⌘K** also searches the guide's sections and glossary.
+- **Passages to review**: compares the quoted code between the guide's revision commit (in its footer) and `origin/<deploy.mainBranch>`. A quote with line numbers is "changed" if those lines changed; a file quoted as a whole is only flagged if it was moved or deleted. The revision commit must be in the local repository (`git fetch`). A ready-to-copy list is prepared for the guide's author.
+- **Isolation**: the guide contains JS written by someone else. N2 serves it in a sandbox (CSP `sandbox` without `allow-same-origin`, `connect-src 'none'`): it can neither call N2, nor read its cookies, nor make any network call. On the server side, N2 reads its data without ever running its JS.
 
-### Liens rapides (⌘K)
+### Quick links (⌘K)
 
-Sans rien régler, ⌘K propose déjà les dépôts GitHub (code, PR ouvertes, actions), le tableau et le backlog Jira, le projet Sentry, les alarmes, tableaux de bord et journaux CloudWatch, CodePipeline, le pipeline de prod et les environnements dynamiques.
+Out of the box, ⌘K already offers the GitHub repositories (code, open PRs, actions), the Jira board and backlog, the Sentry project, CloudWatch alarms, dashboards and logs, CodePipeline, the production pipeline and dynamic environments.
 
-Pour ajouter tes propres liens (prod, staging, back-office…) :
+To add your own links (production, staging, back office…):
 
 ```json
 "links": [
-  { "label": "Back-office", "url": "https://bo.site.example/", "group": "Prod", "keywords": "admin bo" }
+  { "label": "Back office", "url": "https://bo.site.example/", "group": "Prod", "keywords": "admin bo" }
 ]
 ```
 
-| Champ | Rôle |
+| Field | Purpose |
 |---|---|
-| `label` | texte affiché |
-| `url` | lien `https` uniquement ; N2 accepte ensuite d'ouvrir ce site exact dans Chrome (pas ses sous-domaines) |
-| `group` | rubrique dans ⌘K (« Liens » par défaut), cherchable |
-| `keywords` | mots-clés supplémentaires pour la recherche (« prod bo ») |
+| `label` | displayed text |
+| `url` | `https` links only; N2 then agrees to open that exact site in Chrome (not its subdomains) |
+| `group` | section in ⌘K ("Links" by default), searchable |
+| `keywords` | extra search keywords ("prod bo") |
 
-### Ce qui marche sans configuration supplémentaire
+### What works without extra configuration
 
-- **GitHub · Jira** (Dashboard) : les fils où d'autres ont écrit depuis ton dernier message, sur `github.recentDays` jours. Un fil disparaît dès que tu y réponds.
-  - *Mention* : `@login` sur GitHub, mention Jira ;
-  - *Sur ta PR / ton ticket* : commentaire sur une PR dont tu es l'auteur ou l'assigné, ou sur un ticket qui t'est assigné ou que tu as créé ;
-  - *Réponse* : nouveau message dans le fil d'un autre où tu avais écrit.
+- **GitHub · Jira** (Dashboard): threads where others wrote since your last message, over `github.recentDays` days. A thread disappears as soon as you reply.
+  - *Mention*: `@login` on GitHub, Jira mention;
+  - *On your PR / your ticket*: a comment on a PR you authored or are assigned to, or on a ticket assigned to you or created by you;
+  - *Reply*: a new message in someone else's thread where you had written.
 
-  Les robots sont ignorés ; la boîte de notifications de GitHub n'est pas utilisée.
-- **Statistiques** : avec `gh` et `sentry-cli`.
-  - *Délai de première revue* : du passage en « prête pour revue » (ou de l'ouverture) à la première revue d'une autre personne, compté dans la semaine de cette revue ;
-  - *Ouverture → fusion* : du même point de départ à la fusion, compté dans la semaine de la fusion, plus le nombre de PR fusionnées ;
-  - *Erreurs Sentry* (événements reçus) et *nouveaux problèmes* (Sentry ne compte pas au-delà de 100).
+  Bots are ignored; GitHub's notification inbox is not used.
+- **Statistics**: with `gh` and `sentry-cli`.
+  - *Time to first review*: from "ready for review" (or opening) to the first review by someone else, counted in the week of that review;
+  - *Open → merge*: from the same starting point to the merge, counted in the week of the merge, plus the number of merged PRs;
+  - *Sentry errors* (events received) and *new issues* (Sentry does not count beyond 100).
 
-  Durées médianes en heures ouvrées (week-ends exclus), PR des robots exclues. Aussi : les PR les plus longues à fusionner des deux dernières semaines, et un tableau semaine par semaine.
+  Median durations in working hours (weekends excluded), bot PRs excluded. Also: the slowest PRs to merge over the last two weeks, and a week-by-week table.
 
 ---
 
-## Fonctions transverses
+## Everyday features
 
-**Reporter / ignorer** : l'horloge d'un élément de « À faire » le masque 1 heure, jusqu'au prochain jour ouvré à 9 h, ou jusqu'à ce qu'il change (nouvelle raison de blocage, nouvelle erreur, nouvelle faille ; 30 jours au plus). Les éléments masqués sont listés en bas de la carte. Choix gardés dans le navigateur.
+**Snooze / ignore**: the clock on a "To do" item hides it for 1 hour, until the next working day at 9 am, or until it changes (new blocking reason, new error, new vulnerability; 30 days at most). Hidden items are listed at the bottom of the card. Choices are kept in the browser.
 
-**Notifications** : le titre de l'onglet affiche le nombre d'urgences (« (3) N2 ») et les onglets portent des compteurs. La cloche de la barre du haut active les notifications du système (via le navigateur) : nouvelles urgences, réunion dans 5 minutes (clic = rejoindre), messages directs et mentions Slack, nouveautés GitHub · Jira. Une seule fois par nouveauté, rien pour ce qui existait déjà à l'activation. Un onglet N2 doit rester ouvert.
+**Notifications**: the tab title shows the number of urgent items ("(3) N2") and tabs carry counters. The bell in the top bar turns on system notifications (through the browser): new urgent items, meeting in 5 minutes (click = join), Slack direct messages and mentions, GitHub · Jira news. Once per new item, nothing for what already existed when you turned it on. An N2 tab must stay open.
 
-**Recherche globale : ⌘K** : PR, tickets, erreurs, parties, sous-dossiers, librairies, fichiers, sections et glossaire du guide, liens rapides. Un élément externe s'ouvre dans un **nouvel onglet Chrome**, un fichier dans **l'éditeur choisi** (Préférences) à la bonne ligne.
+**Global search: ⌘K**: PRs, tickets, errors, parts, subfolders, libraries, files, guide sections and glossary, quick links. An external item opens in a **new Chrome tab**, a file in **the chosen editor** (Preferences) at the right line.
 
-**État des sources** (⌘K « État des sources », ou Préférences → Diagnostic) : pour chaque source depuis le démarrage de N2, l'état de la dernière lecture, sa durée, le dernier succès, le nombre de lectures et d'échecs, et la dernière erreur ; une source sans section de config est « non configurée », pas en échec. Le journal de N2 ne note que l'utile : les échecs, les lectures de plus de 5 s et le retour à la normale (`[n2] source=… ms échec=…`).
+**Source status** (⌘K "Source status", or Preferences → Diagnostics): for each source since N2 started, the state of the last read, its duration, the last success, the number of reads and failures, and the last error; a source without a config section is "not configured", not failing. N2's log only records what matters: failures, reads longer than 5 s and the return to normal (`[n2] source=… ms échec=…`).
 
-**Agents IA (MCP)** : une session Claude Code, Codex ou tout client MCP peut demander à N2 ce qui attend (`n2_status` : urgences, CI, sources en échec) et le contexte d'une branche (`n2_branch` : fichiers modifiés, parties touchées, PR, CI, tickets). Lecture seule, par N2 en marche et avec ton jeton de session, comme `bun run status`.
+**AI agents (MCP)**: a Claude Code or Codex session, or any MCP client, can ask N2 what is waiting (`n2_status`: urgent items, CI, failing sources) and a branch's context (`n2_branch`: changed files, parts touched, PRs, CI, tickets). Read-only, through the running N2 and with your session token, like `bun run status`.
 
 ```bash
-claude mcp add n2 -- bun /chemin/vers/n2/scripts/mcp.ts
+claude mcp add n2 -- bun /path/to/n2/scripts/mcp.ts
 ```
 
-Pour Codex : la même commande dans la section `mcp_servers` de `~/.codex/config.toml`. Ce que l'agent reçoit vient de tes outils pro (PR, alarmes, erreurs) : branche-le seulement sur un agent à qui tu confies déjà ce projet.
+For Codex: the same command in the `mcp_servers` section of `~/.codex/config.toml`. What the agent receives comes from your work tools (PRs, alarms, errors): only connect it to an agent you already trust with this project.
 
-**Raccourcis** : touches **1 à 9** pour les onglets, **⌘K** pour la recherche. Le bouton de rafraîchissement recharge toutes les données et affiche l'heure de la dernière mise à jour.
+**Appearance** (Preferences): a day theme (**Neon sign**, **Classic**, **Miami**) and a night theme (**Neon sign**, **Retrowave**, **Holo**, **Soft aubergine**), shown according to your system's light or dark setting, or always one of the two. Kept in a cookie, per browser, and applied before the first paint (no flash). The neon N2 logo flickers now and then and calls for help in Morse code; that can be turned off in the same place.
 
-**Langue** : français par défaut, anglais en option (sélecteur de la barre du haut, gardé dans un cookie). Tous les textes sont dans `messages/fr.json` et `messages/en.json`, voir [Traductions](#traductions).
+**Shortcuts**: keys **1 to 9** for tabs, **⌘K** for search. The refresh button reloads all data and shows the time of the last update.
+
+**Language**: French by default, English as an option (picker in the top bar, kept in a cookie). All texts are in `messages/fr.json` and `messages/en.json`, see [Translations](#translations).
 
 ---
 
-## Démarrage automatique (facultatif)
+## Autostart (optional)
 
 ```bash
 sh scripts/autostart.sh install
 ```
 
-N2 démarre avec la session et redémarre s'il plante : LaunchAgent sous macOS, service utilisateur systemd sous Linux (`~/.config/systemd/user/n2-dashboard.service`, variables secrètes dans `~/.config/n2/env`). Le cookie de déverrouillage dure un an : pas besoin de relancer `bun run open` après un redémarrage.
+N2 starts with your session and restarts if it crashes: a LaunchAgent on macOS, a systemd user service on Linux (`~/.config/systemd/user/n2-dashboard.service`, secret variables in `~/.config/n2/env`). The unlock cookie lasts a year: no need to run `bun run open` again after a restart.
 
-Le service lance N2 en **mode production** (`scripts/service.sh` → `bun run start` : build en quelques secondes, puis serveur de production). Rien n'est rechargé à chaud : après une mise à jour du code de N2 (`git pull`, fusion…), redémarre le service, qui refait le build :
+The service runs N2 in **production mode** (`scripts/service.sh` → `bun run start`: a build in a few seconds, then the production server). Nothing hot-reloads: after updating N2's code (`git pull`, merge…), restart the service, which rebuilds:
 
 ```bash
 launchctl kickstart -k gui/$(id -u)/local.n2.dashboard
 ```
 
-Sous Linux : `systemctl --user restart n2-dashboard`. Pour développer N2 lui-même, arrête le service et lance `bun run dev` (rechargement à chaud).
+On Linux: `systemctl --user restart n2-dashboard`. To work on N2 itself, stop the service and run `bun run dev` (hot reload).
 
-**Journal (macOS)** : `~/Library/Logs/n2.log`. Au démarrage, s'il dépasse 5 Mo, il devient `n2.log.1` (un seul ancien journal gardé). Sous Linux, c'est journald qui s'en occupe.
+**Log (macOS)**: `~/Library/Logs/n2.log`. At startup, if it is over 5 MB, it becomes `n2.log.1` (a single old log is kept). On Linux, journald takes care of it.
 
-Après une mise à jour de N2 qui change ce démarrage (comme le passage en mode production), réinstalle le service : `sh scripts/autostart.sh install`.
+After an N2 update that changes this startup (like the move to production mode), reinstall the service: `sh scripts/autostart.sh install`.
 
-Sous Linux, le service démarre à l'ouverture de session ; pour qu'il démarre avec la machine, sans session ouverte : `loginctl enable-linger`. Sous **WSL**, rien n'est installé : la distribution s'arrête quand plus aucun terminal ne l'utilise, le script explique comment lancer N2 à la main (ou forcer le service systemd si systemd est activé dans WSL : `N2_FORCE_SYSTEMD=1`).
+On Linux, the service starts when you log in; to start it with the machine, without an open session: `loginctl enable-linger`. On **WSL**, nothing is installed: the distribution stops when no terminal uses it anymore, and the script explains how to start N2 by hand (or force the systemd service if systemd is on in WSL: `N2_FORCE_SYSTEMD=1`).
 
 ```bash
 sh scripts/autostart.sh status
 ```
 
-État du service et journal (`~/Library/Logs/n2.log` sous macOS, `journalctl --user -u n2-dashboard` sous Linux).
+Service state and log (`~/Library/Logs/n2.log` on macOS, `journalctl --user -u n2-dashboard` on Linux).
 
 ```bash
 sh scripts/autostart.sh uninstall
@@ -493,188 +522,189 @@ sh scripts/autostart.sh uninstall
 
 ---
 
-## Commandes
+## Commands
 
-| Commande | Rôle |
+| Command | Purpose |
 |---|---|
-| `bun run setup` | hooks anti-secrets, `config.local.json`, traductions, styles Panda |
-| `bun run dev` | serveur de développement (rechargement à chaud) |
-| `bun run demo` | N2 avec des données inventées (port 4848), sans config ni compte : pour essayer, montrer ou tester |
-| `bun run open` | ouvre N2 dans Chrome et le déverrouille pour ce navigateur ; `--reset` : nouveau jeton, déconnecte tous les navigateurs |
-| `bun run status` | l'état de N2 en une ligne (urgences, CI de la branche principale et de ta branche, sources en échec) ; `--json` : le JSON versionné de `/api/status` (`schemaVersion`), pour une barre de menus ou un script |
-| `bun run mcp` | serveur MCP de N2 (stdio), à déclarer dans Claude Code ou Codex ; voir [Fonctions transverses](#fonctions-transverses) |
-| `bun run build` | build de production |
-| `bun run start` | build puis serveur de production (utilisé par le démarrage automatique) |
-| `bun run test` | tests (Vitest) : garde-fous, carte, impact, « À faire », agenda, Slack, déploiements, guide, recherche… |
-| `bun run test:e2e` | tests de navigateur (Playwright, N2 en mode démo) : chaque onglet sans erreur, verrou, accessibilité. En local avec le Google Chrome installé ; à lancer depuis une autre copie que celle servie par le démarrage automatique |
-| `bun run typecheck` | vérification TypeScript |
-| `bun run codegen` | régénère les styles Panda (`styled-system/`) |
-| `bun run i18n` | compile `messages/*.json` en fonctions typées (`src/paraglide/`) ; `dev`, `test` et `typecheck` le font déjà |
-| `bun run lint` | linter Biome (règles dans `biome.jsonc`) ; aussi au commit sur les fichiers indexés, et en CI |
-| `bun run check:secrets` | analyse de tous les fichiers suivis par git |
-| `bun run check:server` | vérifie les protections du serveur en cours d'exécution (développement ou production) |
-| `bun run autostart` | raccourci vers `scripts/autostart.sh` |
+| `bun run setup` | anti-secret hooks, `config.local.json`, translations, Panda styles |
+| `bun run dev` | development server (hot reload) |
+| `bun run demo` | N2 with made-up data (port 4848), no config or account: to try it, show it or test it |
+| `bun run open` | opens N2 in Chrome and unlocks it for that browser; `--reset`: new token, signs out every browser |
+| `bun run status` | N2's state in one line (urgent items, CI of the main branch and of your branch, failing sources); `--json`: the versioned JSON from `/api/status` (`schemaVersion`), for a menu bar or a script |
+| `bun run mcp` | N2's MCP server (stdio), to declare in Claude Code or Codex; see [Everyday features](#everyday-features) |
+| `bun run build` | production build |
+| `bun run start` | build, then production server (used by autostart) |
+| `bun run test` | tests (Vitest): safeguards, map, impact, "To do", calendar, Slack, deployments, guide, search… |
+| `bun run test:e2e` | browser tests (Playwright, N2 in demo mode): every tab without errors, lock, accessibility. Locally with the installed Google Chrome; run it from a different copy than the one served by autostart |
+| `bun run typecheck` | TypeScript check |
+| `bun run codegen` | regenerates the Panda styles (`styled-system/`) |
+| `bun run i18n` | compiles `messages/*.json` into typed functions (`src/paraglide/`); `dev`, `test` and `typecheck` already do it |
+| `bun run lint` | Biome linter (rules in `biome.jsonc`); also at commit time on staged files, and in CI |
+| `bun run check:secrets` | scans every file tracked by git |
+| `bun run check:server` | checks the protections of the running server (development or production) |
+| `bun run autostart` | shortcut to `scripts/autostart.sh` |
 
 ---
 
-## Dépannage
+## Troubleshooting
 
-| Symptôme | Cause probable |
+| Symptom | Likely cause |
 |---|---|
-| `config.local.json introuvable` | lancer `bun run setup`, puis remplir le fichier |
-| « N2 est verrouillé » | lancer `bun run open` (le cookie a expiré, a été effacé, ou c'est un autre navigateur) |
-| Une modification de la config n'est pas prise en compte | relancer le serveur (la config est lue une seule fois) |
-| Une mise à jour du code de N2 n'apparaît pas | avec le démarrage automatique, N2 tourne en production : redémarrer le service (voir [Démarrage automatique](#démarrage-automatique-facultatif)) |
-| « `gh` n'est pas installé » (ou `acli`, `aws`…) | installer l'outil ; s'il l'est, vérifier qu'il est dans le `PATH` du serveur (notamment avec le démarrage automatique) |
-| Carte Jira, GitHub ou Sentry en erreur d'authentification | refaire la connexion de la CLI (`gh auth login`, `acli jira auth login`, `sentry-cli login`) |
-| « Session AWS expirée » | se reconnecter au profil AWS, ou cliquer sur « AWS expirée » si `aws.reconnect` est configuré |
-| « Déploiements non configurés » | ajouter `deploy.pipelinePrefix` dans `config.local.json` |
-| « Aucun pipeline principal trouvé » | vérifier `deploy.pipelinePrefix` et `deploy.mainBranch` |
-| `package-lock.json introuvable` | vérifier `libs.projectPath` |
-| « IDE introuvable » | vérifier `codemap.ide` (sous Linux, le lanceur par défaut est le script PhpStorm de JetBrains Toolbox) |
-| « Aucun token Slack trouvé » | ajouter le token au trousseau (service `n2-slack`) ; sous Linux et WSL, définir `SLACK_USER_TOKEN` |
-| Linux : un lien ne s'ouvre pas | installer `xdg-utils` (`xdg-open`) ou Google Chrome |
-| WSL : `http://n2.localhost:4747` ne répond pas dans Windows | vérifier que le renvoi de `localhost` de WSL2 est actif (`.wslconfig`) et que `bun run dev` tourne dans WSL |
-| « Passages à revoir » vide ou en erreur | `git fetch` dans le projet, pour avoir le commit de révision du guide |
-| Une carte reste en erreur, sans savoir pourquoi ni depuis quand | ⌘K « État des sources » : dernière erreur, dernier succès, nombre d'échecs ; et le journal (`sh scripts/autostart.sh status`) |
-| Pas de notification | activer la cloche, autoriser le navigateur dans les notifications du système, garder un onglet N2 ouvert |
+| `config.local.json introuvable` (not found) | run `bun run setup`, then fill in the file |
+| "N2 is locked" | run `bun run open` (the cookie expired, was cleared, or this is another browser) |
+| A config change is not taken into account | restart the server (the config is read only once) |
+| An update to N2's code does not show | with autostart, N2 runs in production: restart the service (see [Autostart](#autostart-optional)) |
+| "`gh` is not installed" (or `acli`, `aws`…) | install the tool; if it is, check it is in the server's `PATH` (especially with autostart) |
+| Jira, GitHub or Sentry card with an authentication error | sign in to the CLI again (`gh auth login`, `acli jira auth login`, `sentry-cli login`) |
+| "AWS session expired" | sign in to the AWS profile again, or click "AWS expired" if `aws.reconnect` is configured |
+| "Deployments not configured" | add `deploy.pipelinePrefix` to `config.local.json` |
+| "No main pipeline found" | check `deploy.pipelinePrefix` and `deploy.mainBranch` |
+| `package-lock.json introuvable` (not found) | check `libs.projectPath` |
+| "IDE not found" | check `codemap.ide` (on Linux, the default launcher is JetBrains Toolbox's PhpStorm script) |
+| "No Slack token found" | add the token to the keychain (service `n2-slack`); on Linux and WSL, set `SLACK_USER_TOKEN` |
+| Linux: a link does not open | install `xdg-utils` (`xdg-open`) or Google Chrome |
+| WSL: `http://n2.localhost:4747` does not answer in Windows | check that WSL2's `localhost` forwarding is on (`.wslconfig`) and that `bun run dev` runs in WSL |
+| "Passages to review" empty or failing | `git fetch` in the project, to get the guide's revision commit |
+| A card stays in error, with no idea why or since when | ⌘K "Source status": last error, last success, number of failures; and the log (`sh scripts/autostart.sh status`) |
+| No notification | turn on the bell, allow the browser in the system's notification settings, keep an N2 tab open |
 
 ---
 
-## Sécurité : rien de sensible dans git, rien d'exposé
+## Security: nothing sensitive in git, nothing exposed
 
-- **Aucun token dans le projet** : N2 passe par les CLI déjà connectées. Le token Sentry et l'expiration AWS sont lus au moment de l'appel. Pour AWS, seule la ligne `expiration` du fichier d'identifiants est lue. Les jetons Microsoft (agenda) sont dans `~/.config/n2/microsoft.json`, le token Slack dans le trousseau macOS (Linux, WSL : la variable `SLACK_USER_TOKEN`, ou `~/.config/n2/env` en 600 avec le service) ; ni l'un ni l'autre n'est envoyé au navigateur.
-- **Tout ce qui est propre au compte pro** est dans `config.local.json`, **ignoré par git** et lisible par toi seul (600 : `bun run setup` le crée ainsi, `bun run check:server` le vérifie ; il peut contenir le lien ICS de l'agenda). Seul `config.example.json` est versionné.
-- **Garde-fous au commit** (`.githooks/pre-commit`, activé par `bun run setup`) et dans la CI : le script maison (`scripts/check-secrets.sh` : secrets ; et l'email pro et les noms du projet pro et de l'entreprise, listés hors du dépôt, une regex par ligne, dans `~/.config/n2/forbidden-words` (600) et dans le secret GitHub `N2_FORBIDDEN_WORDS` pour la CI), puis **gitleaks** s'il est installé (`brew install gitleaks`).
-- **Serveur local verrouillé** :
-  - il n'écoute que sur `127.0.0.1` ;
-  - les requêtes adressées à un autre nom d'hôte que `n2.localhost`, `127.0.0.1` ou `localhost` sont refusées (anti « DNS rebinding ») ; une page ouverte sur `127.0.0.1` est renvoyée vers `n2.localhost` ;
-  - **chaque requête doit porter le cookie de session** de la personne qui a lancé N2 (`src/server/session.ts`) : pages, fonctions serveur, mais aussi les fichiers sources, le client de Vite et son WebSocket de rechargement à chaud. Sans lui, N2 affiche « N2 est verrouillé » ;
-  - les fonctions serveur exigent une requête venant de N2 lui-même (middleware CSRF de TanStack Start) ;
-  - Vite refuse de servir `config.local.json`, `.env`, les clés et le dossier `.git` (`vite.config.ts`).
+- **No token in the project**: N2 goes through the CLIs you are already signed in to. The Sentry token and the AWS expiration are read at call time. For AWS, only the `expiration` line of the credentials file is read. Microsoft tokens (calendar) are in `~/.config/n2/microsoft.json`, the Slack token in the macOS keychain (Linux, WSL: the `SLACK_USER_TOKEN` variable, or `~/.config/n2/env` with mode 600 with the service); neither is sent to the browser.
+- **Everything specific to your work account** is in `config.local.json`, **ignored by git** and readable by you only (600: `bun run setup` creates it that way, `bun run check:server` checks it; it may contain the calendar's ICS link). Only `config.example.json` is versioned.
+- **Safeguards at commit time** (`.githooks/pre-commit`, turned on by `bun run setup`) and in CI: the in-house script (`scripts/check-secrets.sh`: secrets; plus the work email and the names of the work project and company, listed outside the repository, one regex per line, in `~/.config/n2/forbidden-words` (600) and in the GitHub secret `N2_FORBIDDEN_WORDS` for CI), then **gitleaks** if it is installed (`brew install gitleaks`).
+- **Locked local server**:
+  - it only listens on `127.0.0.1`;
+  - requests addressed to any host name other than `n2.localhost`, `127.0.0.1` or `localhost` are refused (against DNS rebinding); a page opened on `127.0.0.1` is redirected to `n2.localhost`;
+  - **every request must carry the session cookie** of the person who started N2 (`src/server/session.ts`): pages, server functions, but also source files, Vite's client and its hot-reload WebSocket. Without it, N2 shows "N2 is locked";
+  - server functions require a request coming from N2 itself (TanStack Start's CSRF middleware);
+  - Vite refuses to serve `config.local.json`, `.env`, keys and the `.git` folder (`vite.config.ts`).
 
-  Le verrou est appliqué par le serveur de Vite (`vite.config.ts`) et par les middlewares de TanStack Start (`src/start.ts`, pour un build de production). `bun run check:server` vérifie tout cela sur le serveur lancé.
+  The lock is enforced by Vite's server (`vite.config.ts`) and by TanStack Start's middlewares (`src/start.ts`, for a production build). `bun run check:server` checks all of this on the running server.
 
-### Qui peut ouvrir N2 ?
+### Who can open N2?
 
-| Qui | Accès | Pourquoi |
+| Who | Access | Why |
 |---|---|---|
-| Toi, dans ton navigateur déverrouillé | ✅ | cookie de session (`HttpOnly`, `SameSite=Strict`, un an) |
-| Un collègue sur le même réseau (Wi-Fi, VPN) | ❌ | N2 n'écoute que sur `127.0.0.1` : depuis le réseau, la connexion est refusée (vérifié avec l'adresse réseau du Mac) |
-| Un site web ouvert dans ton navigateur | ❌ | nom d'hôte vérifié (anti DNS rebinding), cookie `SameSite=Strict`, CSRF sur les fonctions serveur |
-| Un autre compte macOS sur ton Mac | ❌ | `127.0.0.1` est commun à tous les comptes du Mac, mais il n'a pas le cookie, et le jeton (`~/.config/n2/session`, 600) n'est lisible que par toi |
-| Un programme lancé par toi | ⚠️ | il peut lire tes fichiers, donc le jeton, comme il peut déjà lire tes sessions `gh`, `aws`… Le verrou ne protège pas de ce cas, aucun outil local ne le peut |
+| You, in your unlocked browser | ✅ | session cookie (`HttpOnly`, `SameSite=Strict`, one year) |
+| A colleague on the same network (Wi-Fi, VPN) | ❌ | N2 only listens on `127.0.0.1`: from the network, the connection is refused (checked with the Mac's network address) |
+| A website open in your browser | ❌ | host name checked (against DNS rebinding), `SameSite=Strict` cookie, CSRF on server functions |
+| Another macOS account on your Mac | ❌ | `127.0.0.1` is shared by every account on the Mac, but it does not have the cookie, and the token (`~/.config/n2/session`, 600) is readable by you only |
+| A program you run | ⚠️ | it can read your files, hence the token, just as it can already read your `gh`, `aws`… sessions. The lock does not protect against this, and no local tool can |
 
-**`127.0.0.1`, c'est quoi ?** L'adresse « cette machine-ci » (interface de bouclage). Elle ne sort jamais sur le réseau, et macOS refuse un paquet venu du réseau qui la viserait. Quand un collègue tape `http://127.0.0.1:4747`, il arrive **sur sa propre machine**, pas sur la tienne.
+**What is `127.0.0.1`?** The "this machine" address (loopback interface). It never goes out on the network, and macOS refuses a packet from the network aimed at it. When a colleague types `http://127.0.0.1:4747`, they land **on their own machine**, not yours.
 
-**Deux personnes avec N2 sur le même port, sur le même réseau ?** Aucun problème : chacun a son N2 sur sa machine, sur le port 4747, et chacun voit son propre compte (ses CLI `gh`, `acli`, `aws`… et sa config). Il n'y a ni conflit, ni croisement possible.
+**Two people with N2 on the same port, on the same network?** No problem: each one has their own N2 on their own machine, on port 4747, and each sees their own account (their own `gh`, `acli`, `aws`… CLIs and config). No conflict, no crossover possible.
 
-**Deux comptes macOS sur le même Mac ?** Un seul N2 peut écouter sur un port donné (`strictPort`). Le second doit prendre un autre port (`N2_PORT=4748`). Chacun a son propre jeton dans son dossier personnel : l'un ne peut pas ouvrir le N2 de l'autre.
+**Two macOS accounts on the same Mac?** Only one N2 can listen on a given port (`strictPort`). The second one has to use another port (`N2_PORT=4748`). Each has their own token in their home folder: one cannot open the other's N2.
 
-**Le jeton** est créé au premier démarrage dans `~/.config/n2/session` (dossier 700, fichier 600). `bun run open` ne met jamais ce jeton dans une URL : il écrit un **code à usage unique** (`~/.config/n2/login`, 600, valable 2 minutes), que N2 vérifie, supprime, puis échange contre le cookie. L'adresse est passée à Chrome par AppleScript, sans apparaître dans la liste des processus. Pour changer de jeton et déconnecter tous les navigateurs : `bun run open --reset` (pris en compte tout de suite, sans redémarrer N2).
+**The token** is created at first start in `~/.config/n2/session` (folder 700, file 600). `bun run open` never puts this token in a URL: it writes a **one-time code** (`~/.config/n2/login`, 600, valid for 2 minutes), which N2 checks, deletes, then exchanges for the cookie. The address is passed to Chrome through AppleScript, without showing up in the process list. To change the token and sign out every browser: `bun run open --reset` (effective immediately, without restarting N2).
 
-> Les cookies ne tiennent pas compte du port : un cookie posé pour `127.0.0.1` part vers **tous** les serveurs de `127.0.0.1`, quel que soit leur port. C'est pour cela que N2 s'ouvre sous `n2.localhost` : son cookie n'est envoyé qu'à ce nom, pas aux autres serveurs locaux (ouverts sous `localhost` ou `127.0.0.1`), et l'ancien cookie de `127.0.0.1` est effacé à la redirection. Reste un cas : un autre serveur de ta machine que tu ouvrirais toi-même sous `http://n2.localhost:<autre port>`. En cas de doute, `bun run open --reset` rend l'ancien cookie inutilisable.
-- **Ouvertures contrôlées côté serveur** : Chrome n'ouvre que GitHub, le site Jira configuré, Sentry, la console AWS, npm, Teams, Outlook, la page de connexion Microsoft, Slack, les environnements dynamiques (`deploy.envUrl`), les liens rapides de la config (site exact) et les liens de documentation lus dans le registre npm. L'éditeur (JetBrains, VS Code, Cursor, GitHub) n'ouvre que des fichiers du projet cartographié.
-- **Préférences écrites dans `config.local.json`** : seuls les onglets, l'éditeur, le chemin du projet, le lanceur JetBrains et le guide peuvent être changés depuis la page, et chaque chemin modifié est vérifié côté serveur (projet : chemin absolu d'un dépôt git ; lanceur : exécutable dans `…/Applications/<IDE>.app/Contents/MacOS/` ; guide : fichier `.html`). Une page compromise ne peut donc ni faire lancer un programme quelconque, ni faire servir un fichier qui n'est pas du HTML.
-- **Commandes lancées** : uniquement celles prévues par le code ou la config (`aws.reconnect`) ; le navigateur n'envoie jamais de commande. `git fetch` ne demande jamais d'identifiants.
-- **Scopes npm privés** (déclarés dans le `.npmrc` du projet) : leur nom n'est jamais envoyé au registre public.
-- **Code du projet pro** : l'analyse de la carte et les extraits de code sont calculés à la demande, **en mémoire uniquement**. Rien n'est écrit dans le dépôt N2.
+> Cookies ignore the port: a cookie set for `127.0.0.1` is sent to **every** server on `127.0.0.1`, whatever its port. That is why N2 opens as `n2.localhost`: its cookie is only sent to that name, not to other local servers (opened as `localhost` or `127.0.0.1`), and the old `127.0.0.1` cookie is erased on redirect. One case remains: another server on your machine that you would yourself open as `http://n2.localhost:<other port>`. When in doubt, `bun run open --reset` makes the old cookie useless.
+
+- **Openings controlled on the server**: Chrome only opens GitHub, the configured Jira site, Sentry, the AWS console, npm, Teams, Outlook, the Microsoft sign-in page, Slack, dynamic environments (`deploy.envUrl`), quick links from the config (exact site) and documentation links read from the npm registry. The editor (JetBrains, VS Code, Cursor, GitHub) only opens files of the mapped project.
+- **Preferences written to `config.local.json`**: only tabs, editor, project path, JetBrains launcher and guide can be changed from the page, and every changed path is checked on the server (project: absolute path of a git repository; launcher: executable inside `…/Applications/<IDE>.app/Contents/MacOS/`; guide: `.html` file). A compromised page can therefore neither launch an arbitrary program nor have a non-HTML file served.
+- **Commands run**: only those planned by the code or the config (`aws.reconnect`); the browser never sends a command. `git fetch` never asks for credentials.
+- **Private npm scopes** (declared in the project's `.npmrc`): their name is never sent to the public registry.
+- **Work project code**: the map analysis and code excerpts are computed on demand, **in memory only**. Nothing is written to the N2 repository.
 
 ---
 
 ## Architecture
 
-Les grands choix (et leurs raisons) sont dans [`docs/adr/`](docs/adr/README.md).
+The main decisions (and their reasons) are in [`docs/adr/`](docs/adr/README.md) (in French).
 
 ```
 src/
-  server/                    code serveur uniquement (jamais envoyé au navigateur)
-    fns.ts                   fonctions serveur appelées par l'interface (createServerFn + validation zod)
-    config.ts                lecture de config.local.json
-    run.ts                   lancement des CLI (gh, acli, aws, git…), appels HTTP avec délai (httpFetch), cache
-    open.ts                  ouverture dans Chrome / l'IDE, avec la liste des sites autorisés
-    types.ts                 types partagés avec l'interface, rangés par source dans types/
-    sources/                 une source = des fonctions pures :
+  server/                    server-only code (never sent to the browser)
+    fns.ts                   server functions called by the UI (createServerFn + zod validation)
+    config.ts                reads config.local.json
+    run.ts                   runs the CLIs (gh, acli, aws, git…), HTTP calls with timeout (httpFetch), cache
+    open.ts                  opens in Chrome / the IDE, with the list of allowed sites
+    types.ts                 types shared with the UI, grouped by source in types/
+    sources/                 one source = pure functions:
                                github, jira, libs, sentry, cloudwatch, aws-session, aws-reconnect,
-                               calendar + microsoft-auth (agenda), slack, activity (GitHub · Jira),
+                               calendar + microsoft-auth (calendar), slack, activity (GitHub · Jira),
                                stats, deploy (CodePipeline), branches, guide,
-                               codemap (carte, impact, points chauds, ma branche, traces),
-                               codemap-detect (couches, imports, README), lib-details (fiche d'une librairie)
-  start.ts                   middlewares de sécurité (hôte + CSRF)
-  routes/                    un fichier par onglet (TanStack Router)
-  components/                barre du haut, recherche ⌘K, liens
-    ds/                      design system : boutons, pastilles, cartes, listes, contrôles, menus et fenêtres
-                             (Panda + Ark UI) ; galerie dans l'onglet caché /design-system (⌘K « Design system »)
-  features/                  logique d'interface, par partie : todo (« À faire » et reports), calendar, slack,
-                             activity, notify, badges (compteurs), search, branches, map, libs, deploy,
-                             guide, prs, stats, links ; map/panel/ : les vues du panneau de la carte
-  lib/                       données (TanStack Query), actions (Chrome, PhpStorm), formats, langue (i18n.ts)
-  paraglide/                 généré par Paraglide depuis messages/ (non versionné)
-  styles/                    app.css (Panda) et map.css (carte)
-messages/                    textes de l'interface : fr.json (référence) et en.json
-project.inlang/              réglages Paraglide (langues, format des fichiers de messages)
-tests/                       Vitest, sur un faux monorepo créé à la volée (aucun code pro)
-scripts/                     autostart, service (lancé par le démarrage automatique), check-secrets, check-server, i18n
-.github/workflows/ci.yml     CI GitHub Actions à chaque push (Linux) : secrets, typecheck, tests
+                               codemap (map, impact, hot spots, my branch, traces),
+                               codemap-detect (layers, imports, READMEs), lib-details (a library's card)
+  start.ts                   security middlewares (host + CSRF)
+  routes/                    one file per tab (TanStack Router)
+  components/                top bar, ⌘K search, links
+    ds/                      design system: buttons, badges, cards, lists, controls, menus and dialogs
+                             (Panda + Ark UI); gallery in the hidden /design-system tab (⌘K "Design system")
+  features/                  UI logic, per part: todo ("To do" and snoozes), calendar, slack,
+                             activity, notify, badges (counters), search, branches, map, libs, deploy,
+                             guide, prs, stats, links, theme; map/panel/: the map panel's views
+  lib/                       data (TanStack Query), actions (Chrome, PhpStorm), formats, language (i18n.ts)
+  paraglide/                 generated by Paraglide from messages/ (not versioned)
+  styles/                    app.css (Panda), map.css (map), themes.ts (what each theme changes)
+messages/                    UI texts: fr.json (reference) and en.json
+project.inlang/              Paraglide settings (languages, message file format)
+tests/                       Vitest, on a fake monorepo created on the fly (no work code)
+scripts/                     autostart, service (run by autostart), check-secrets, check-server, i18n
+.github/workflows/ci.yml     GitHub Actions CI on every push (Linux): secrets, typecheck, tests
 ```
 
-**Styles** : couleurs, ombres et styles de texte (`textStyle` : `title`, `heading`, `body`, `caption`, `overline`, `label`) sont dans `panda.config.ts`. Un motif qui revient (bouton, pastille, menu, fenêtre…) passe par `src/components/ds` ; un `css()` dans un onglet ne sert qu'à sa mise en page. Pour remplacer une propriété d'une recette, fusionner : `css(button.raw({ variant: "link" }), { … })` (avec `cx`, deux classes sur la même propriété : c'est l'ordre de la feuille qui décide).
+**Styles**: colors, shadows and text styles (`textStyle`: `title`, `heading`, `body`, `caption`, `overline`, `label`) are in `panda.config.ts`. A recurring pattern (button, badge, menu, dialog…) goes through `src/components/ds`; a `css()` in a tab is only for its layout. To override a recipe property, merge: `css(button.raw({ variant: "link" }), { … })` (with `cx`, two classes on the same property: the stylesheet order decides).
 
-### Traductions
+### Translations
 
-Les textes sont dans **`messages/fr.json`** (référence) et **`messages/en.json`**, une clé par texte. [Paraglide JS](https://paraglidejs.com) les compile en fonctions typées dans `src/paraglide/` : une clé ou un paramètre oublié est une erreur TypeScript.
+Texts are in **`messages/fr.json`** (reference) and **`messages/en.json`**, one key per text. [Paraglide JS](https://paraglidejs.com) compiles them into typed functions in `src/paraglide/`: a forgotten key or parameter is a TypeScript error.
 
 ```json
-// messages/fr.json
-"prs_review_requested": "Revue demandée",
-"topbar_last_updated_at": "Dernière mise à jour à {lastUpdate}",
+// messages/en.json
+"prs_review_required": "Review required",
+"topbar_last_updated_at": "Last updated at {lastUpdate}",
 "sprint_left": [{ "declarations": ["input count", "local countPlural = count: plural"], "selectors": ["countPlural"],
-                  "match": { "countPlural=one": "{count} jour restant", "countPlural=other": "{count} jours restants" } }]
+                  "match": { "countPlural=one": "{count} day left", "countPlural=other": "{count} days left" } }]
 ```
 
 ```tsx
 import { m } from "~/lib/i18n";
-m.prs_review_requested();
+m.prs_review_required();
 m.topbar_last_updated_at({ lastUpdate: "10:42" });
 m.sprint_left({ count: 3 });
 ```
 
-- **Clés** en `snake_case`, préfixées par leur partie : `dashboard_`, `prs_`, `map_`, `libs_`, `topbar_`, `ds_`… ; `common_` pour un texte partagé, `srv_` pour les messages du serveur.
-- **Accolades littérales** : `\\{` et `\\}` dans le JSON (`{nom}` est un paramètre).
-- **Messages du serveur** : le serveur n'écrit aucune phrase. Il renvoie `{ key: "srv_…", params }` (`msg()` dans `src/server/messages.ts`), et l'interface l'affiche avec `msg()` de `src/lib/i18n.ts`. Les paramètres passent par `redact()` avant de partir vers le navigateur.
-- **Langue** : `getLocale()` de Paraglide est branché sur le cookie `n2-lang` (`src/lib/i18n.ts`), côté serveur comme côté navigateur : la page arrive directement dans la bonne langue.
-- **Plugin de format** : `@inlang/plugin-message-format` est installé avec npm et référencé en chemin local dans `project.inlang/settings.json`, pour que la compilation ne télécharge rien.
-- `tests/i18n.test.ts` vérifie que les deux fichiers ont les mêmes clés et les mêmes paramètres, que chaque clé sert et qu'il ne reste aucun texte en dur.
+- **Keys** in `snake_case`, prefixed by their part: `dashboard_`, `prs_`, `map_`, `libs_`, `topbar_`, `ds_`…; `common_` for a shared text, `srv_` for server messages.
+- **Literal braces**: `\\{` and `\\}` in the JSON (`{name}` is a parameter).
+- **Server messages**: the server writes no sentence. It returns `{ key: "srv_…", params }` (`msg()` in `src/server/messages.ts`), and the UI displays it with `msg()` from `src/lib/i18n.ts`. Parameters go through `redact()` before leaving for the browser.
+- **Language**: Paraglide's `getLocale()` is wired to the `n2-lang` cookie (`src/lib/i18n.ts`), on the server as in the browser: the page arrives in the right language straight away.
+- **Format plugin**: `@inlang/plugin-message-format` is installed with npm and referenced by local path in `project.inlang/settings.json`, so compiling downloads nothing.
+- `tests/i18n.test.ts` checks that both files have the same keys and parameters, that every key is used and that no hard-coded text is left.
 
-**Ajouter une source** : une fonction pure dans `src/server/sources/`, une fonction serveur dans `fns.ts`, un hook dans `src/lib/data.ts`, puis l'affichage dans `routes/` ou `features/`. Si elle a besoin d'options, les déclarer dans l'interface `Config` (`src/server/config.ts`) et dans `config.example.json`.
+**Adding a source**: a pure function in `src/server/sources/`, a server function in `fns.ts`, a hook in `src/lib/data.ts`, then the display in `routes/` or `features/`. If it needs options, declare them in the `Config` interface (`src/server/config.ts`) and in `config.example.json`.
 
-> Dans `src/server/fns.ts`, tout le code serveur doit rester **dans** `.handler(...)`. C'est ce qui permet au compilateur de TanStack Start de le retirer du code envoyé au navigateur.
-
----
-
-## Carte du projet : comment c'est calculé
-
-- **Parties** : chaque dossier qui a son propre `package.json`. Celles de plus de `codemap.splitThreshold` fichiers (400 par défaut) sont découpées par sous-dossier de `src/`.
-- **Liens** : imports résolus via les chemins relatifs, les alias de `tsconfig.json` / `tsconfig.base.json` (`~/…`) et le champ `exports` des `package.json`.
-- **Couche** d'un fichier, déduite de ses imports :
-  - Infra : `aws-cdk-lib` ;
-  - Outillage : CLI, `scripts/` ;
-  - API : `@trpc/server`, OpenAPI, dossiers `api/` ;
-  - Back : `node:*`, sessions, cache, `server/` ;
-  - Front : `react`, `@mui/*`, `.tsx`.
-
-  La couche d'une partie est celle de la majorité de ses fichiers. Pour corriger un classement : `codemap.categories`.
-- **Descriptions** : `codemap.descriptions`, sinon le `description` du `package.json`, sinon le premier paragraphe du README.
-- **Impact** : tous les fichiers qui dépendent d'un fichier, directement ou en cascade, par partie.
-- **Points chauds** : fichiers à la fois très importés et souvent modifiés (`git log` sur 30 jours).
-- **Ma branche** : fichiers modifiés depuis la base (`origin/HEAD`), commités ou non, pour la branche choisie dans le sélecteur.
-- **Navigation** :
-  - survol = liens de la partie ; ⌘ + molette (ou pincement) = zoom ; glisser le fond = déplacement ;
-  - bandeau des couches : clic = filtre, survol = menu en cascade ;
-  - tags : historique des sélections, et fermer le tag actif ramène au précédent.
+> In `src/server/fns.ts`, all server code must stay **inside** `.handler(...)`. That is what lets the TanStack Start compiler strip it from the code sent to the browser.
 
 ---
 
-## Licence
+## Project map: how it's computed
 
-[MIT](LICENSE) : libre d'utiliser, de modifier et de redistribuer N2, en gardant la mention de copyright.
+- **Parts**: each folder with its own `package.json`. Those with more than `codemap.splitThreshold` files (400 by default) are split by `src/` subfolder.
+- **Links**: imports resolved through relative paths, the aliases of `tsconfig.json` / `tsconfig.base.json` (`~/…`) and the `exports` field of `package.json` files.
+- **Layer** of a file, deduced from its imports:
+  - Infra: `aws-cdk-lib`;
+  - Tooling: CLI, `scripts/`;
+  - API: `@trpc/server`, OpenAPI, `api/` folders;
+  - Back: `node:*`, sessions, cache, `server/`;
+  - Front: `react`, `@mui/*`, `.tsx`.
+
+  A part's layer is the one of most of its files. To fix a classification: `codemap.categories`.
+- **Descriptions**: `codemap.descriptions`, otherwise the `package.json`'s `description`, otherwise the README's first paragraph.
+- **Impact**: every file that depends on a file, directly or transitively, per part.
+- **Hot spots**: files that are both heavily imported and often changed (`git log` over 30 days).
+- **My branch**: files changed since the base (`origin/HEAD`), committed or not, for the branch picked in the selector.
+- **Navigation**:
+  - hover = the part's links; ⌘ + scroll wheel (or pinch) = zoom; drag the background = pan;
+  - layer strip: click = filter, hover = cascading menu;
+  - tags: selection history, and closing the active tag goes back to the previous one.
+
+---
+
+## License
+
+[MIT](LICENSE): free to use, modify and redistribute N2, as long as the copyright notice is kept.
