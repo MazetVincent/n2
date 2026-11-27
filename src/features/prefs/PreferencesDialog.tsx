@@ -263,9 +263,9 @@ function Body({ onDone }: { onDone: () => void }) {
   );
 }
 
-const THEME_LABEL: Record<ThemeId, () => string> = { enseigne: m.theme_enseigne, classique: m.theme_classique, aubergine: m.theme_aubergine };
+const THEME_LABEL: Record<ThemeId, () => string> = { enseigne: m.theme_enseigne, classique: m.theme_classique, miami: m.theme_miami, retrowave: m.theme_retrowave, aubergine: m.theme_aubergine };
 
-/** Apparence : quand afficher le thème de jour ou de nuit, et lesquels. Appliqué tout de suite (cookie, src/features/theme). */
+/** Apparence : quand afficher le thème de jour ou de nuit, lesquels, et les clignotements du logo. Appliqué tout de suite (cookie, src/features/theme). */
 function ThemeField() {
   const [theme, setChoice] = useState(getTheme);
   const change = (patch: Partial<ThemeChoice>) => {
@@ -295,6 +295,7 @@ function ThemeField() {
         <span className={label}>{m.prefs_theme_night()}</span>
         <Segmented label={m.prefs_theme_night()} value={theme.night} onChange={(night) => change({ night })} items={NIGHT_THEMES.map((t) => ({ value: t, label: THEME_LABEL[t]() }))} />
       </div>
+      <SettingSwitch title={m.prefs_logo_blink()} hint={m.prefs_logo_blink_hint()} checked={theme.logoBlink} onChange={(logoBlink) => change({ logoBlink })} />
     </Field>
   );
 }

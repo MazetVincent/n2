@@ -3,8 +3,10 @@
 // barre du haut (::before, ::after du header) et la lumière qu'il projette dans la page (body::before, voir
 // panda.config.ts). En clair, seules les lettres du logo clignotent (les lumières n'existent qu'en sombre).
 // Animation par script (Web Animations) : elle passe devant les battements CSS (neon-flicker) le temps du message,
-// puis les laisse reprendre. Rien si le système demande moins de mouvement, ni quand l'onglet est caché.
+// puis les laisse reprendre. Rien si le système demande moins de mouvement, si les clignotements du logo sont coupés
+// (Préférences, Apparence), ni quand l'onglet est caché.
 import { useEffect, type RefObject } from "react";
+import { logoStill } from "../theme/logic";
 
 /**
  * Durée d'un point (ms) ; un trait vaut 3 points, l'espace entre deux signes 1, entre deux lettres 3.
@@ -76,7 +78,7 @@ export function useMorseSos(header: RefObject<HTMLElement | null>, logo: RefObje
     const schedule = () => {
       const delay = SOS_DELAY_MS.min + Math.random() * (SOS_DELAY_MS.max - SOS_DELAY_MS.min);
       timer = setTimeout(() => {
-        if (!calm.matches && !document.hidden) playSos(header.current, logo.current);
+        if (!calm.matches && !logoStill() && !document.hidden) playSos(header.current, logo.current);
         schedule();
       }, delay);
     };

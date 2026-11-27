@@ -1,6 +1,7 @@
 // Thème de N2 : cookie lu et écrit, thème affiché selon le choix et macOS, script de <head> fidèle à cette règle.
 import { describe, expect, it } from "vitest";
-import { DEFAULT_THEME, formatTheme, parseTheme, resolveTheme, THEME_MODES, THEME_SCRIPT, themeAttributes, type ThemeChoice } from "../src/features/theme/logic.ts";
+import { THEME_SCHEME, THEME_COLORS, EXTRA_THEMES } from "../src/styles/themes.ts";
+import { DAY_THEMES, DEFAULT_THEME, formatTheme, logoStill, parseTheme, resolveTheme, THEME_MODES, NIGHT_THEMES, THEME_SCRIPT, themeAttributes, type ThemeChoice } from "../src/features/theme/logic.ts";
 
 /** Lance THEME_SCRIPT sur un faux <html> ; `systemDark` : réglage de macOS. Renvoie le <html> et de quoi changer macOS. */
 function runScript(attrs: Record<string, string>, systemDark: boolean) {
@@ -20,22 +21,26 @@ function runScript(attrs: Record<string, string>, systemDark: boolean) {
 
 describe("thème", () => {
   it("par défaut (pas de cookie, cookie inconnu) : automatique, Enseigne de jour comme de nuit", () => {
-    expect(parseTheme(undefined)).toEqual({ mode: "auto", day: "enseigne", night: "enseigne" });
+    expect(parseTheme(undefined)).toEqual({ mode: "auto", day: "enseigne", night: "enseigne", logoBlink: true });
     expect(parseTheme("n'importe.quoi")).toEqual(DEFAULT_THEME);
     // un thème retiré (ou d'une autre version) reprend sa valeur par défaut, le reste est gardé
-    expect(parseTheme("night.disparu.enseigne")).toEqual({ mode: "night", day: "enseigne", night: "enseigne" });
+    expect(parseTheme("night.disparu.enseigne")).toEqual({ mode: "night", day: "enseigne", night: "enseigne", logoBlink: true });
   });
 
   it("cookie écrit puis relu à l'identique", () => {
     for (const mode of THEME_MODES) {
-      const c: ThemeChoice = { mode, day: "enseigne", night: "enseigne" };
-      expect(formatTheme(c)).toMatch(/^[\w.-]+$/);
-      expect(parseTheme(formatTheme(c))).toEqual(c);
+      for (const logoBlink of [true, false]) {
+        const c: ThemeChoice = { mode, day: "classique", night: "aubergine", logoBlink };
+        expect(formatTheme(c)).toMatch(/^[\w.-]+$/);
+        expect(parseTheme(formatTheme(c))).toEqual(c);
+      }
     }
   });
 
   it("automatique suit macOS ; « jour » et « nuit » l'ignorent", () => {
-    const c = (mode: ThemeChoice["mode"]): ThemeChoice => ({ mode, day: "enseigne", night: "enseigne" });
+    const c = (mode: ThemeChoice["mode"]): ThemeChoice => ({ ...DEFAULT_THEME, mode, day: "classique", night: "aubergine" });
+    expect(resolveTheme(c("auto"), true)).toEqual({ theme: "aubergine", scheme: "dark" });
+    expect(resolveTheme(c("auto"), false)).toEqual({ theme: "classique", scheme: "light" });
     expect(resolveTheme(c("auto"), true).scheme).toBe("dark");
     expect(resolveTheme(c("auto"), false).scheme).toBe("light");
     expect(resolveTheme(c("day"), true).scheme).toBe("light");
@@ -45,7 +50,7 @@ describe("thème", () => {
   it("le script de <head> applique la même règle, puis suit macOS quand il change", () => {
     for (const mode of THEME_MODES) {
       for (const systemDark of [false, true]) {
-        const c: ThemeChoice = { mode, day: "enseigne", night: "enseigne" };
+        const c: ThemeChoice = { ...DEFAULT_THEME, mode, day: "classique", night: "aubergine" };
         const { dataset } = runScript(themeAttributes(c), systemDark);
         expect({ theme: dataset.theme, scheme: dataset.scheme }).toEqual(resolveTheme(c, systemDark));
       }
@@ -57,5 +62,21 @@ describe("thème", () => {
     auto.dataset.mode = "day";
     auto.setSystemDark(true);
     expect(auto.dataset.scheme).toBe("light");
+  });
+
+  it("clignotements du logo : coupés seulement par « still », posés sur <html>", () => {
+    expect(parseTheme("auto.enseigne.enseigne.still").logoBlink).toBe(false);
+    expect(themeAttributes({ ...DEFAULT_THEME, logoBlink: false })["data-logo"]).toBe("still");
+    expect(themeAttributes(DEFAULT_THEME)["data-logo"]).toBe("blink");
+    // hors d'une page (serveur, tests) : rien n'est coupé
+    expect(logoStill()).toBe(false);
+  });
+
+  it("chaque thème est proposé du bon côté : clairs le jour, sombres la nuit ; aucun ne touche au logo", () => {
+    expect(DAY_THEMES.filter((t) => t !== "enseigne").every((t) => THEME_SCHEME[t] === "light")).toBe(true);
+    expect(NIGHT_THEMES.filter((t) => t !== "enseigne").every((t) => THEME_SCHEME[t] === "dark")).toBe(true);
+    // tout thème défini dans src/styles/themes.ts est proposé dans les Préférences
+    expect([...EXTRA_THEMES].sort()).toEqual([...DAY_THEMES, ...NIGHT_THEMES].filter((t) => t !== "enseigne").sort());
+    for (const t of EXTRA_THEMES) expect(THEME_COLORS[t]).not.toHaveProperty("sign");
   });
 });

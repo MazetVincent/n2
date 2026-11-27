@@ -72,7 +72,7 @@ export function Switch({
           borderRadius: "full",
           border: "1px solid token(colors.border)",
           bg: "surface.alt",
-          "&::before, &::after": { content: '""', position: "absolute", top: "1px", w: "5px", h: "8px", borderRadius: "1px", bg: "screw" },
+          "&::before, &::after": { content: '""', position: "absolute", top: "1px", w: "5px", h: "8px", borderRadius: "1px", bg: "electrode" },
           _before: { left: "-6px" },
           _after: { right: "-6px" },
         })}
