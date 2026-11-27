@@ -1,6 +1,7 @@
-// Préférences (icône boulon, à droite de la cloche) : langue, onglets affichés, éditeur où ouvrir le code,
-// chemin du projet, guide (fichier et lecture), et le fichier de « Remind me » (affiché seulement). La langue est un cookie du navigateur (la page se recharge) ; le reste est écrit dans
-// config.local.json par le serveur, qui vérifie les chemins avant d'enregistrer.
+// Préférences (icône boulon, à droite de la cloche) : langue, apparence (thèmes), onglets affichés, éditeur où ouvrir le code,
+// chemin du projet, guide (fichier et lecture), et le fichier de « Remind me » (affiché seulement). La langue et le thème
+// sont des cookies du navigateur (la langue recharge la page, le thème s'applique tout de suite, sans « Enregistrer ») ;
+// le reste est écrit dans config.local.json par le serveur, qui vérifie les chemins avant d'enregistrer.
 import { Dialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,8 @@ import { getLang, m, msg, setLang } from "~/lib/i18n";
 import { savePreferences } from "~/server/fns";
 import type { Message } from "~/server/types";
 import { useGuideTouched } from "~/features/secret/Konami";
+import { DAY_THEMES, NIGHT_THEMES, type ThemeChoice, type ThemeId, type ThemeMode } from "~/features/theme/logic";
+import { getTheme, setTheme } from "~/features/theme/theme";
 import { CHOOSABLE_TABS, EDITOR_LABEL, EDITORS, HOME_TAB, TAB_GROUPS, type Preferences, type TabPath } from "./logic";
 
 const TAB_LABEL: Record<string, () => string> = {
@@ -156,6 +159,8 @@ function Body({ onDone }: { onDone: () => void }) {
           />
         </Field>
 
+        <ThemeField />
+
         {/* le titre est un simple texte ; « Tout afficher / Tout masquer » sur sa ligne ; une ligne par groupe de la barre */}
         <Field
           title={m.prefs_tabs()}
@@ -255,6 +260,42 @@ function Body({ onDone }: { onDone: () => void }) {
         </Button>
       </div>
     </form>
+  );
+}
+
+const THEME_LABEL: Record<ThemeId, () => string> = { enseigne: m.theme_enseigne };
+
+/** Apparence : quand afficher le thème de jour ou de nuit, et lesquels. Appliqué tout de suite (cookie, src/features/theme). */
+function ThemeField() {
+  const [theme, setChoice] = useState(getTheme);
+  const change = (patch: Partial<ThemeChoice>) => {
+    const next = { ...theme, ...patch };
+    setTheme(next);
+    setChoice(next);
+  };
+  const row = css({ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: "3", rowGap: "1" });
+  const label = css({ fontSize: "sm", color: "muted", minW: "110px" });
+  return (
+    <Field title={m.prefs_theme()} hint={m.prefs_theme_hint()}>
+      <Segmented<ThemeMode>
+        label={m.prefs_theme_when()}
+        value={theme.mode}
+        onChange={(mode) => change({ mode })}
+        items={[
+          { value: "auto", label: m.prefs_theme_auto() },
+          { value: "day", label: m.prefs_theme_day_only() },
+          { value: "night", label: m.prefs_theme_night_only() },
+        ]}
+      />
+      <div className={row}>
+        <span className={label}>{m.prefs_theme_day()}</span>
+        <Segmented label={m.prefs_theme_day()} value={theme.day} onChange={(day) => change({ day })} items={DAY_THEMES.map((t) => ({ value: t, label: THEME_LABEL[t]() }))} />
+      </div>
+      <div className={row}>
+        <span className={label}>{m.prefs_theme_night()}</span>
+        <Segmented label={m.prefs_theme_night()} value={theme.night} onChange={(night) => change({ night })} items={NIGHT_THEMES.map((t) => ({ value: t, label: THEME_LABEL[t]() }))} />
+      </div>
+    </Field>
   );
 }
 

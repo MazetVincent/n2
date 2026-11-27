@@ -13,6 +13,7 @@ import { useEditorName } from "~/features/prefs/useEditorName";
 import { ok, useBranch, useGuide, useGuideFreshness, usePreferences } from "~/lib/data";
 import { nf, plural } from "~/lib/format";
 import { getLang, m } from "~/lib/i18n";
+import { useThemeChoice } from "~/features/theme/theme";
 import type { GuideFreshness, GuideIndex, GuideRefState, GuideStaleRef } from "~/server/types";
 
 // Guide de l'équipe : son fichier HTML, affiché dans N2.
@@ -110,13 +111,14 @@ function BranchSections() {
 
 // Le guide dans un cadre isolé (voir src/routes/guide-html.ts). Chaque lien de N2 vers le guide y ouvre la section,
 // même si on a navigué dans le guide entre-temps (d'où la clé de navigation). Le guide reçoit les réglages de N2 à
-// son chargement : il est rechargé quand ils changent dans les préférences. Le guide (autre origine) ne dit pas où
+// son chargement : il est rechargé quand ils changent dans les préférences (thème compris). Le guide (autre origine) ne dit pas où
 // on en était : après ce rechargement, il rouvre la section demandée par N2 (?p), ou son accueil.
 function GuideFrame({ target }: { target?: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const navKey = useRouterState({ select: (s) => s.location.state.__TSR_key });
   const prefs = usePreferences().data;
-  const settings = prefs?.ok ? JSON.stringify(guideSettings(prefs.data, getLang())) : undefined;
+  const themeMode = useThemeChoice().mode;
+  const settings = prefs?.ok ? JSON.stringify(guideSettings(prefs.data, getLang(), themeMode)) : undefined;
   // version de la page : un changement d'adresse limité au « # » ne recharge pas le guide, ce paramètre si
   const [version, setVersion] = useState(0);
   const lastSettings = useRef(settings);

@@ -4,12 +4,15 @@
 // (origine opaque), ce stockage lui est refusé. N2 lui en donne un en mémoire, déjà rempli avec ses propres réglages :
 //  - guide-locale : la langue de N2 ;
 //  - guide-sources : où ouvrir les fichiers (éditeur et dossier du projet des préférences N2) et la lecture ;
-//  - pas de guide-theme : le guide suit le thème du système, comme N2.
-// Une feuille de style lui donne les couleurs de N2 (src/styles/colors.ts) et masque ses propres contrôles
-// (langue, Préférences), puisque ces réglages viennent de N2.
+//  - pas de guide-theme : le guide prend les couleurs de N2.
+// Une feuille de style lui donne les couleurs de N2 (src/styles/colors.ts), claires ou sombres comme le thème de N2
+// (Préférences, Apparence : selon macOS, ou toujours le jour, ou toujours la nuit), et masque ses propres contrôles
+// (langue, Préférences), puisque ces réglages viennent de N2. Le cadre du guide ne voit pas le thème de la page qui
+// l'affiche (il ne voit que le réglage de macOS) : N2 le lui donne au chargement.
 import type { Lang } from "../../lib/i18n.ts";
 import { COLORS, type ColorName } from "../../styles/colors.ts";
 import type { Editor, Preferences } from "../prefs/logic.ts";
+import type { ThemeMode } from "../theme/logic.ts";
 
 export interface GuideSettings {
   lang: Lang;
@@ -20,16 +23,18 @@ export interface GuideSettings {
   references: boolean;
   /** « Expliquer les termes » : vocabulaire du guide souligné, définition au survol */
   terms: boolean;
+  /** quand afficher les couleurs sombres : selon macOS (auto), jamais (day), toujours (night) */
+  themeMode: ThemeMode;
 }
 
 /**
  * Réglages du guide tirés de ceux de N2. Le serveur s'en sert pour remplir la page du guide ; la page de N2,
  * pour la recharger quand ils changent.
  */
-export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "guide">, lang: Lang): GuideSettings {
+export function guideSettings(p: Pick<Preferences, "editor" | "projectPath" | "guide">, lang: Lang, themeMode: ThemeMode = "auto"): GuideSettings {
   // le dossier ne sert qu'aux liens VS Code et Cursor : le guide (code d'un tiers) ne le reçoit pas sinon
   const folder = p.editor === "vscode" || p.editor === "cursor" ? p.projectPath : "";
-  return { lang, editor: p.editor, folder, references: p.guide.references, terms: p.guide.terms };
+  return { lang, editor: p.editor, folder, references: p.guide.references, terms: p.guide.terms, themeMode };
 }
 
 /** Couleurs de l'interface du guide (--colors-…) → couleur de N2. Les palettes d'illustration (code, schémas) restent les siennes. */
@@ -61,12 +66,13 @@ const vars = (i: 0 | 1) =>
 /** Sélecteur des couleurs de N2 : plus fort que ceux des jetons du guide (`:where(:root)`, `[data-theme=…]`), quel que soit l'ordre des styles */
 const ROOT = "html:root:not(#n2-guide)";
 
-/** Feuille de style ajoutée au guide : couleurs de N2 en clair et en sombre, contrôles du guide masqués */
-export function guideStyle(): string {
+/** Feuille de style ajoutée au guide : couleurs de N2 en clair, et en sombre selon le thème (`mode`), contrôles du guide masqués */
+export function guideStyle(mode: ThemeMode = "auto"): string {
+  const dark = { auto: "@media screen and (prefers-color-scheme:dark)", night: "@media screen", day: "" }[mode];
   return [
     // écran seulement : à l'impression, le guide garde sa palette (texte sombre sur papier blanc)
     `@media screen{${ROOT}{${vars(0)}}}`,
-    `@media screen and (prefers-color-scheme:dark){${ROOT}{${vars(1)}}}`,
+    ...(dark ? [`${dark}{${ROOT}{${vars(1)}}}`] : []),
     // contrôles du guide repris par N2 : bouton et panneau Préférences, sélecteur de langue
     `[data-preferences-trigger],[data-preferences-panel],[aria-label="Langue"],[aria-label="Language"]{display:none!important}`,
   ].join("\n");
@@ -104,5 +110,5 @@ function insertAt(html: string): number {
 /** HTML du guide adapté à N2 : stockage rempli et styles de N2 en tête, avant les scripts du guide */
 export function embedGuide(html: string, s: GuideSettings): string {
   const at = insertAt(html);
-  return `${html.slice(0, at)}<script data-n2>${storageScript(s)}</script><style data-n2>\n${guideStyle()}\n</style>${html.slice(at)}`;
+  return `${html.slice(0, at)}<script data-n2>${storageScript(s)}</script><style data-n2>\n${guideStyle(s.themeMode)}\n</style>${html.slice(at)}`;
 }

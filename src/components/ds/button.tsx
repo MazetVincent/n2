@@ -33,26 +33,26 @@ export const button = cva({
       // Enseigne. Sombre : un tube de néon allumé (cadre clair, lueur rose, fond vide), qui vacille quand on le presse.
       // Clair (enseigne éteinte de jour) : la pilule magenta pleine.
       solid: {
-        bg: { base: "accent", _osDark: "transparent" },
+        bg: { base: "accent", _dark: "transparent" },
         borderColor: "tube",
-        borderWidth: { _osDark: "2px" },
+        borderWidth: { _dark: "2px" },
         borderRadius: "full",
-        color: { base: "white", _osDark: "neon" },
+        color: { base: "white", _dark: "neon" },
         fontWeight: "semibold",
         textShadow: "neonText",
         boxShadow: "neonButton",
-        _hover: { _enabled: { filter: { base: "brightness(1.08)", _osDark: "none" }, bg: { _osDark: "rgb(255 61 119 / 8%)" }, boxShadow: "neonButtonHover" } },
-        _active: { _enabled: { animation: { _osDark: "neon-flick 0.3s steps(1)" } } },
+        _hover: { _enabled: { filter: { base: "brightness(1.08)", _dark: "none" }, bg: { _dark: "rgb(255 61 119 / 8%)" }, boxShadow: "neonButtonHover" } },
+        _active: { _enabled: { animation: { _dark: "neon-flick 0.3s steps(1)" } } },
       },
       // tube éteint, qui s'allume au survol (sombre)
       outline: {
         bg: "surface",
-        borderColor: { base: "border", _osDark: "tube.off" },
+        borderColor: { base: "border", _dark: "tube.off" },
         borderRadius: "full",
-        _hover: { _enabled: { bg: "surface.alt", borderColor: { _osDark: "tube" }, boxShadow: { _osDark: "neonButton" } } },
+        _hover: { _enabled: { bg: "surface.alt", borderColor: { _dark: "tube" }, boxShadow: { _dark: "neonButton" } } },
         // bouton à bascule (aria-pressed) : même apparence « sélectionné » (tube allumé) que les pastilles activables
         // (ds/toggle-chip.tsx) ; le survol ne change pas l'état affiché : éteint, le tube ne s'allume pas
-        "&[aria-pressed=false]:hover:enabled": { borderColor: { base: "border", _osDark: "tube.off" }, boxShadow: "none" },
+        "&[aria-pressed=false]:hover:enabled": { borderColor: { base: "border", _dark: "tube.off" }, boxShadow: "none" },
         "&[aria-pressed=true]": selected,
         "&[aria-pressed=true]:hover:enabled": selectedHover,
       },

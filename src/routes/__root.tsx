@@ -12,6 +12,8 @@ import { Konami } from "~/features/secret/Konami";
 import { TopBar, useTabShortcuts } from "~/components/top-bar";
 import { toaster } from "~/lib/actions";
 import { getLang } from "~/lib/i18n";
+import { THEME_SCRIPT, themeAttributes } from "~/features/theme/logic";
+import { getTheme } from "~/features/theme/theme";
 import appCss from "~/styles/app.css?url";
 import fontsCss from "~/styles/fonts.css?url";
 import mapCss from "~/styles/map.css?url";
@@ -93,9 +95,13 @@ function Shortcuts() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
+  // thème choisi (cookie) : le script pose le thème affiché et son schéma avant l'affichage ; il ajoute des attributs à
+  // <html> que React ne rend pas (data-theme, data-scheme), d'où suppressHydrationWarning (cet élément seulement)
   return (
-    <html lang={getLang()}>
+    <html lang={getLang()} {...themeAttributes(getTheme())} suppressHydrationWarning>
       <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: script constant écrit dans le code (src/features/theme/logic.ts) */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
