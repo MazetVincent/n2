@@ -74,6 +74,7 @@ export default defineConfig({
           sign: c("sign"),
           tube: { DEFAULT: c("tube"), off: c("tube.off") },
           screw: { DEFAULT: c("screw"), ring: c("screw.ring") },
+          electrode: c("electrode"),
           contrast: c("contrast"),
           heat: c("heat"),
           muted: c("muted"),
@@ -176,6 +177,8 @@ export default defineConfig({
         background: "radial-gradient(1100px 680px at calc(max(24px, (100% - 1392px) / 2) + 18px) 0, rgb(255 61 119 / 16%), rgb(255 61 119 / 6%) 45%, transparent 75%)",
         animation: "neon-flicker 9s linear infinite",
       },
+      // clignotements du logo coupés (Préférences) : sa lumière reste allumée, sans bouger
+      "&[data-logo=still] body::before": { animation: "none" },
     },
     "code, .mono": { fontFamily: "mono" },
     code: { fontSize: "sm", bg: "surface.alt", px: "5px", py: "1px", borderRadius: "sm" },

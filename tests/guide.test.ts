@@ -468,7 +468,7 @@ describe("guide adapté à N2", () => {
   });
 
   it("couleurs sombres selon le thème de N2 : avec macOS, jamais, ou toujours", () => {
-    const theme = (mode: ThemeMode, day: DayTheme = "enseigne", night: NightTheme = "enseigne") => ({ mode, day, night });
+    const theme = (mode: ThemeMode, day: DayTheme = "enseigne", night: NightTheme = "enseigne") => ({ ...DEFAULT_THEME, mode, day, night });
     expect(guideStyle(theme("auto"))).toContain(`@media screen and (prefers-color-scheme:dark){html:root:not(#n2-guide){--colors-canvas:${COLORS.bg[1]};`);
     // toujours le jour : seulement les couleurs claires, même si macOS est en sombre
     expect(guideStyle(theme("day"))).not.toContain(COLORS.bg[1]);
@@ -481,7 +481,7 @@ describe("guide adapté à N2", () => {
   });
 
   it("couleurs du thème choisi : Aubergine douce la nuit, Enseigne le jour", () => {
-    const css = guideStyle({ mode: "night", day: "classique", night: "aubergine" });
+    const css = guideStyle({ ...DEFAULT_THEME, mode: "night", day: "classique", night: "aubergine" });
     expect(css).toContain(`--colors-canvas:${THEME_COLORS.aubergine.bg};`);
     expect(css).toContain(`--colors-accent:${THEME_COLORS.aubergine.accent};`);
     // Classique garde les couleurs claires d'Enseigne

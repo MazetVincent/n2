@@ -110,6 +110,8 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
         "--logo-x": "calc(max(24px, (100% - 1392px) / 2) + 18px)",
         _dark: {
           "&::before, &::after": { content: '""', position: "absolute", pointerEvents: "none", zIndex: -1, animation: "neon-flicker 9s linear infinite" },
+          // clignotements du logo coupés (Préférences) : son halo reste allumé, lui aussi
+          "[data-logo=still] &": { _before: { animation: "none" }, _after: { animation: "none" } },
           _before: { inset: 0, bgImage: "radial-gradient(720px 170px at var(--logo-x) 26px, rgb(255 61 119 / 30%), rgb(255 61 119 / 10%) 45%, transparent 78%)" },
           _after: { left: 0, right: 0, bottom: "-1px", h: "1px", bgImage: "linear-gradient(90deg, transparent, rgb(255 61 119 / 85%) var(--logo-x), rgb(255 61 119 / 25%) calc(var(--logo-x) + 360px), transparent calc(var(--logo-x) + 720px))" },
         },
@@ -135,7 +137,7 @@ export function TopBar({ onSearch }: { onSearch: () => void }) {
           textDecoration: "none",
         })}
       >
-        <span ref={logoRef} className={css({ textShadow: "neonSign", animation: "neon-flicker 9s linear infinite" })}>N2</span>
+        <span ref={logoRef} className={css({ textShadow: "neonSign", animation: "neon-flicker 9s linear infinite", "[data-logo=still] &": { animation: "none" } })}>N2</span>
         <DemoBadge />
       </Link>
       <nav

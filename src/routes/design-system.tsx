@@ -57,6 +57,7 @@ const COLORS = [
   ["tube", "tube"],
   ["tube.off", "tube-off"],
   ["screw", "screw"],
+  ["electrode", "electrode"],
   ["contrast", "contrast"],
   ["heat", "heat"],
   ["ok", "ok"],

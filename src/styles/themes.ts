@@ -9,7 +9,7 @@ export const THEME_SCHEME = { classique: "light", aubergine: "dark" } as const;
 export type ExtraTheme = keyof typeof THEME_SCHEME;
 export const EXTRA_THEMES = Object.keys(THEME_SCHEME) as ExtraTheme[];
 
-/** Pas de vis aux coins des cartes (caisson d'enseigne) ni d'électrodes aux interrupteurs */
+/** Pas de vis aux coins des cartes (caisson d'enseigne) ; les électrodes des interrupteurs restent (jeton electrode) */
 const NO_SCREWS = { screw: "transparent", "screw.ring": "transparent" } as const;
 
 export const THEME_COLORS: Record<ExtraTheme, Partial<Record<ColorName, string>>> = {

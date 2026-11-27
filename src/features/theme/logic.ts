@@ -6,7 +6,8 @@
 // avant l'affichage, en tire le thème affiché (data-theme) et son schéma (data-scheme), puis suit macOS en mode
 // Automatique. Les styles lisent data-scheme (condition `_dark` de panda.config.ts) : pas de flash au chargement.
 //
-// Le logo N2 (l'enseigne au néon) ne dépend d'aucun thème.
+// Le logo N2 (l'enseigne au néon) ne dépend d'aucun thème. Ses clignotements (battements, S.O.S en morse) se coupent
+// dans la même rubrique (logoBlink, attribut data-logo) : il reste alors allumé, sans bouger.
 // Fonctions pures, partagées par le serveur (rendu de <html>), la page et les tests.
 
 /** Thèmes proposés le jour (clairs) et la nuit (sombres) ; « enseigne » existe dans les deux schémas.
@@ -24,26 +25,30 @@ export interface ThemeChoice {
   mode: ThemeMode;
   day: DayTheme;
   night: NightTheme;
+  /** le logo bat de temps en temps et clignote S.O.S en morse ; false : allumé, sans bouger */
+  logoBlink: boolean;
 }
 
-export const DEFAULT_THEME: ThemeChoice = { mode: "auto", day: "enseigne", night: "enseigne" };
+export const DEFAULT_THEME: ThemeChoice = { mode: "auto", day: "enseigne", night: "enseigne", logoBlink: true };
 
 export const THEME_COOKIE = "n2-theme";
 
 const pick = <T extends string>(list: readonly T[], v: string | undefined, fallback: T): T => ((list as readonly string[]).includes(v ?? "") ? (v as T) : fallback);
 
-/** Choix lu dans le cookie (« auto.enseigne.enseigne ») ; une valeur inconnue ou un thème retiré reprend sa valeur par défaut */
+/** Choix lu dans le cookie (« auto.enseigne.enseigne.blink ») ; une valeur inconnue ou un thème retiré reprend sa valeur par défaut */
 export function parseTheme(cookie: string | null | undefined): ThemeChoice {
-  const [mode, day, night] = (cookie ?? "").split(".");
+  const [mode, day, night, logo] = (cookie ?? "").split(".");
   return {
     mode: pick(THEME_MODES, mode, DEFAULT_THEME.mode),
     day: pick(DAY_THEMES, day, DEFAULT_THEME.day),
     night: pick(NIGHT_THEMES, night, DEFAULT_THEME.night),
+    // seul « still » coupe les clignotements (un cookie d'avant ce réglage n'a pas ce morceau)
+    logoBlink: logo !== "still",
   };
 }
 
 /** Valeur du cookie (lettres, chiffres, tirets et points : rien à échapper) */
-export const formatTheme = (c: ThemeChoice): string => `${c.mode}.${c.day}.${c.night}`;
+export const formatTheme = (c: ThemeChoice): string => `${c.mode}.${c.day}.${c.night}.${c.logoBlink ? "blink" : "still"}`;
 
 /** Thème affiché et son schéma, selon le choix et le réglage de macOS (`systemDark`) */
 export function resolveTheme(c: ThemeChoice, systemDark: boolean): { theme: ThemeId; scheme: "light" | "dark" } {
@@ -52,7 +57,10 @@ export function resolveTheme(c: ThemeChoice, systemDark: boolean): { theme: Them
 }
 
 /** Attributs de <html> rendus par le serveur ; THEME_SCRIPT en tire data-theme et data-scheme */
-export const themeAttributes = (c: ThemeChoice) => ({ "data-mode": c.mode, "data-day": c.day, "data-night": c.night });
+export const themeAttributes = (c: ThemeChoice) => ({ "data-mode": c.mode, "data-day": c.day, "data-night": c.night, "data-logo": c.logoBlink ? "blink" : "still" });
+
+/** Les clignotements du logo sont-ils coupés dans cette page ? (lu à chaque fois : le réglage s'applique sans recharger) */
+export const logoStill = () => typeof document !== "undefined" && document.documentElement.dataset.logo === "still";
 
 /**
  * Script lancé dans <head>, avant l'affichage : pose data-theme et data-scheme d'après data-mode, data-day et
